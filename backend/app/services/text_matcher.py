@@ -78,7 +78,7 @@ class TextMatcher:
                     ref_scaled = cv2.resize(reference, (ref_w, ref_h), 
                                           interpolation=cv2.INTER_AREA)
                     
-                    # Use template matching
+                    # Normalized Cross-Correlation (Option A)
                     result = cv2.matchTemplate(extracted, ref_scaled, cv2.TM_CCOEFF_NORMED)
                     _, max_val, _, _ = cv2.minMaxLoc(result)
                     best_score = max(best_score, float(max_val))
@@ -89,6 +89,7 @@ class TextMatcher:
                                      (extracted.shape[1], extracted.shape[0]),
                                      interpolation=cv2.INTER_AREA)
             
+            # Normalized Cross-Correlation (Option A)
             result = cv2.matchTemplate(extracted, reference, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
             best_score = float(max_val)

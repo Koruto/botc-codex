@@ -81,27 +81,15 @@ class TokenProcessor:
             List of dictionaries with token info and file paths
         """
         saved_tokens = []
-        
         for idx, (token, x, y, r) in enumerate(extracted_tokens):
-            # Save full token
-            token_path = self.output_dir / f"{base_name}_token_{idx+1}_full.png"
+            token_path = self.output_dir / f"{idx+1}.png"
             cv2.imwrite(str(token_path), token)
-            
-            # Extract and save text region
-            text_region = self.token_detector.extract_text_region(
-                token, lower_half=True, region_ratio=0.4
-            )
-            text_path = self.output_dir / f"{base_name}_token_{idx+1}_text.png"
-            cv2.imwrite(str(text_path), text_region)
-            
             saved_tokens.append({
                 "index": idx + 1,
                 "center": (x, y),
                 "radius": r,
-                "full_token_path": str(token_path),
-                "text_region_path": str(text_path)
+                "token_path": str(token_path)
             })
-        
         return saved_tokens
     
     def get_player_name_regions(self, circles: List[Tuple[int, int, int]],

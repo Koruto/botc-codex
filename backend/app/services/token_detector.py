@@ -175,22 +175,12 @@ class TokenDetector:
         for idx, (x, y, r) in enumerate(circles):
             # Extract token (circular)
             token = self.extract_token(image, x, y, r, circular=True)
-            
-            # Save full token
-            token_path = output_dir / f"{base_name}_{idx+1}_full.png"
+            token_path = output_dir / f"{idx+1}.png"
             cv2.imwrite(str(token_path), token)
-            
-            # Extract and save text region (lower portion)
-            text_region = self.extract_text_region(token, lower_half=True, region_ratio=0.4)
-            text_path = output_dir / f"{base_name}_{idx+1}_text.png"
-            cv2.imwrite(str(text_path), text_region)
-            
             saved_tokens.append({
                 "index": idx + 1,
                 "center": (x, y),
                 "radius": r,
-                "full_token_path": str(token_path),
-                "text_region_path": str(text_path)
+                "token_path": str(token_path)
             })
-        
         return saved_tokens

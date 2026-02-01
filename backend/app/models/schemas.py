@@ -28,6 +28,33 @@ class DebugInfo(BaseModel):
     processing_steps: List[str] = []
 
 
+class TokenMatch(BaseModel):
+    """Single token-to-character match using ORB feature matching."""
+    token: int
+    character: Optional[str] = None
+    character_type: Optional[str] = None
+    confidence: float
+
+
+class MatchTokensResponse(BaseModel):
+    """Response for /api/match-tokens: ORB-matched tokens against ref-images."""
+    matches: List[TokenMatch]
+
+
+class ParsedToken(BaseModel):
+    """Single parsed token: position, player name (from extract), character (from ORB match)."""
+    token: int
+    player_name: Optional[str] = None
+    character: Optional[str] = None
+    character_type: Optional[str] = None
+    confidence: float
+
+
+class ParseGrimoireResponse(BaseModel):
+    """Response for /api/grimoire/parse: extract + match combined, correct character name per token."""
+    tokens: List[ParsedToken]
+
+
 class GrimoireResponse(BaseModel):
     status: str
     processing_method: str
