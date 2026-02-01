@@ -7,8 +7,9 @@ from typing import List, Tuple
 
 import cv2
 
-from app.models.schemas import TokenMatch
+from app.models.schemas import DEAD_SUFFIX, TokenMatch
 from app.services.orb_matcher import ORBMatcher
+from app.utils.character_matcher import get_character_type
 
 
 def collect_token_files(detected_tokens_dir: Path) -> List[Tuple[int, Path]]:
@@ -41,22 +42,31 @@ def match_tokens(
         img = cv2.imread(str(path))
         if img is None:
             matches.append(
-                TokenMatch(token=token_num, character=None, character_type=None, confidence=0.0)
+                TokenMatch(token=token_num, character=None, character_type=None, confidence=0.0, is_dead=None)
             )
             continue
         result = orb_matcher.match_character(img)
         if result:
-            character, character_type, confidence = result
+            ref_name, _, confidence = result
+            if ref_name.endswith(DEAD_SUFFIX):
+                character = ref_name[: -len(DEAD_SUFFIX)]
+                character_type = get_character_type(character)
+                is_dead = True
+            else:
+                character = ref_name
+                character_type = get_character_type(character)
+                is_dead = False
             matches.append(
                 TokenMatch(
                     token=token_num,
                     character=character,
                     character_type=character_type,
                     confidence=round(confidence, 4),
+                    is_dead=is_dead,
                 )
             )
         else:
             matches.append(
-                TokenMatch(token=token_num, character=None, character_type=None, confidence=0.0)
+                TokenMatch(token=token_num, character=None, character_type=None, confidence=0.0, is_dead=None)
             )
     return matches

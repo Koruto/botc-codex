@@ -13,6 +13,7 @@ from app.services.circle_detector import CircleDetector
 from app.services.image_processor import ImageProcessor
 from app.services.player_name_extractor import PlayerNameExtractor
 from app.services.token_processor import TokenProcessor
+from app.utils.circle_order import sort_circles_reading_order
 
 
 @dataclass
@@ -26,7 +27,7 @@ class ExtractResult:
 
 
 def extract_tokens(
-    test_images_dir: Path,
+    source_images_dir: Path,
     detected_tokens_dir: Path,
     image_processor: ImageProcessor,
     circle_detector: CircleDetector,
@@ -34,16 +35,16 @@ def extract_tokens(
     player_name_extractor: PlayerNameExtractor,
 ) -> ExtractResult:
     """
-    Run the extract-tokens pipeline: find grimoire images, detect circles, save
-    token images as 1.png, 2.png, ... and detection.png, and extract player names.
+    Run the extract-tokens pipeline: load grimoire images from source_images_dir,
+    detect circles, save token images (1.png, 2.png, …, detection.png), extract player names.
     Does not perform character matching.
     """
     processing_steps: List[str] = []
     positions_with_names: List[Tuple[int, Optional[str]]] = []
     total_tokens = 0
 
-    if not test_images_dir.exists():
-        processing_steps.append("test_images directory not found")
+    if not source_images_dir.exists():
+        processing_steps.append("Source image directory not found")
         return ExtractResult(
             positions_with_names=[],
             processing_steps=processing_steps,
@@ -52,17 +53,17 @@ def extract_tokens(
         )
 
     image_files = (
-        list(test_images_dir.glob("*.jpg"))
-        + list(test_images_dir.glob("*.jpeg"))
-        + list(test_images_dir.glob("*.png"))
-        + list(test_images_dir.glob("*.JPG"))
-        + list(test_images_dir.glob("*.JPEG"))
-        + list(test_images_dir.glob("*.PNG"))
+        list(source_images_dir.glob("*.jpg"))
+        + list(source_images_dir.glob("*.jpeg"))
+        + list(source_images_dir.glob("*.png"))
+        + list(source_images_dir.glob("*.JPG"))
+        + list(source_images_dir.glob("*.JPEG"))
+        + list(source_images_dir.glob("*.PNG"))
     )
     image_files = sorted(set(image_files))
 
     if not image_files:
-        processing_steps.append("No image files found in test_images")
+        processing_steps.append("No image files found in source directory")
         return ExtractResult(
             positions_with_names=[],
             processing_steps=processing_steps,
@@ -82,7 +83,8 @@ def extract_tokens(
         h, w = image.shape[:2]
 
         detected_circles = circle_detector.detect_circles(image)
-        processing_steps.append(f"Image {img_idx + 1}: Detected {len(detected_circles)} circular tokens")
+        detected_circles = sort_circles_reading_order(detected_circles)
+        processing_steps.append(f"Image {img_idx + 1}: Detected {len(detected_circles)} circular tokens (ordered: top-most first, then clockwise)")
         total_tokens += len(detected_circles)
 
         if not detected_circles:

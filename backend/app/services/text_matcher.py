@@ -128,10 +128,9 @@ class TextMatcher:
                             top_n: int = 5,
                             try_multiple_scales: bool = True) -> List[Tuple[str, str, float]]:
         """
-        Get top N character matches for debugging
-        Args:
-            try_multiple_scales: Whether to try multiple scales (default True for consistency)
-        Returns list of (character_name, character_type, confidence) tuples
+        Return top N character matches (for inspection or diagnostics).
+        try_multiple_scales: if True, try multiple scales for template matching.
+        Returns list of (character_name, character_type, confidence) tuples.
         """
         matches = []
         

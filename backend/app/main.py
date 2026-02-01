@@ -1,13 +1,14 @@
+import logging
 import os
 import time
 import traceback
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.services.image_processor import ImageProcessor
 from app.services.token_detector import TokenDetector
-from app.services.text_matcher import TextMatcher
 from app.services.orb_matcher import ORBMatcher
 from app.services.circle_detector import CircleDetector
 from app.services.player_name_extractor import PlayerNameExtractor
@@ -23,6 +24,8 @@ from app.models.schemas import (
     MatchTokensResponse,
     ParseGrimoireResponse,
     ParsedToken,
+    TownSquareGameState,
+    TownSquarePlayer,
 )
 
 app = FastAPI(
@@ -31,19 +34,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Directory paths
+logger = logging.getLogger(__name__)
+
 BASE_DIR = Path(__file__).parent.parent
-TEST_IMAGES_DIR = BASE_DIR / "test_images"
+GRIMOIRE_IMAGES_DIR = BASE_DIR / "test_images"
 REF_IMAGES_DIR = BASE_DIR / "ref-images"
 DETECTED_TOKENS_DIR = BASE_DIR / "detected_tokens"
 
-# Cache DEBUG environment variable
-DEBUG_MODE = os.getenv("DEBUG", "False").lower() == "true"
+INCLUDE_TRACEBACK_IN_ERROR = os.getenv("DEBUG", "false").lower() == "true"
 
-# Initialize services
 image_processor = ImageProcessor()
 token_detector = TokenDetector(min_radius_cm=1, max_radius_cm=3.5)
-text_matcher = TextMatcher(REF_IMAGES_DIR)
 orb_matcher = ORBMatcher(REF_IMAGES_DIR)
 circle_detector = CircleDetector(min_radius=50, blur_sigma=4.5)
 player_name_extractor = PlayerNameExtractor(languages=['en'], gpu=False)
@@ -52,28 +53,26 @@ token_processor = TokenProcessor(token_detector, DETECTED_TOKENS_DIR)
 
 @app.get("/")
 async def root():
-    """Root endpoint to test if the API is working"""
+    """Return API status and link to OpenAPI docs."""
     return {
         "status": "success",
-        "message": "BotC Grimoire Parser API is running!",
-        "docs": "/docs"
+        "message": "BotC Grimoire Parser API is running.",
+        "docs": "/docs",
     }
 
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "botc-grimoire-parser"
-    }
+    """Health check for load balancers and monitoring."""
+    return {"status": "healthy", "service": "botc-grimoire-parser"}
 
 
 @app.get("/api/match-tokens", response_model=MatchTokensResponse)
 async def match_tokens_route():
     """
-    Match detected tokens (1.png, 2.png, ... in detected_tokens) to ref-images using
-    ORB feature matching. Returns JSON with token number, matched character, character type, confidence.
+    Match tokens in detected_tokens (1.png, 2.png, …) to reference characters via ORB.
+    Returns token index, matched character, type, confidence, and is_dead (from -dead refs).
+    Run extract-tokens first to populate detected_tokens.
     """
     matches = run_match_tokens(DETECTED_TOKENS_DIR, orb_matcher)
     if not matches:
@@ -87,12 +86,11 @@ async def match_tokens_route():
 @app.get("/api/grimoire/parse", response_model=ParseGrimoireResponse)
 async def parse_grimoire():
     """
-    Run extract then match: process grimoire images from test_images, save tokens,
-    match to ref-images with ORB, and return JSON with correct character name per token
-    (token, player_name, character, character_type, confidence).
+    Extract tokens and player names from grimoire images, match to characters with ORB.
+    Returns token index, player_name, character, confidence, and is_dead (from -dead ref images).
     """
     extract_result = run_extract_tokens(
-        TEST_IMAGES_DIR,
+        GRIMOIRE_IMAGES_DIR,
         DETECTED_TOKENS_DIR,
         image_processor,
         circle_detector,
@@ -106,6 +104,7 @@ async def parse_grimoire():
     tokens_out = []
     for position, player_name in extract_result.positions_with_names:
         m = match_by_token.get(position)
+        is_dead = m.is_dead if m is not None else None
         tokens_out.append(
             ParsedToken(
                 token=position,
@@ -113,21 +112,92 @@ async def parse_grimoire():
                 character=m.character if m else None,
                 character_type=m.character_type if m else None,
                 confidence=m.confidence if m else 0.0,
+                is_dead=is_dead,
             )
         )
     return ParseGrimoireResponse(tokens=tokens_out)
 
 
+def _parse_result_to_townsquare(tokens: list) -> TownSquareGameState:
+    """
+    Build Town Square Load State from parsed tokens: BMR edition, bluffs from unnamed tokens,
+    players from named tokens with role and isDead from ORB match.
+    """
+    bluffs: list = []
+    players: list = []
+    for t in tokens:
+        role_id = t.character or ""
+        name = (t.player_name or "").strip() if t.player_name else ""
+        if not name:
+            if role_id:
+                bluffs.append(role_id)
+            continue
+        players.append(
+            TownSquarePlayer(
+                name=name,
+                id="",
+                role=role_id,
+                reminders=[],
+                isVoteless=False,
+                isDead=t.is_dead if t.is_dead is not None else False,
+                pronouns="",
+            )
+        )
+    return TownSquareGameState(
+        bluffs=bluffs,
+        edition={"id": "bmr"},
+        roles="",
+        fabled=[],
+        players=players,
+    )
+
+
+@app.get("/api/grimoire/townsquare", response_model=TownSquareGameState)
+async def parse_townsquare():
+    """
+    Extract and match grimoire, then return Town Square Load State JSON.
+    Use the response in Town Square: Menu > Game State > Load State.
+    """
+    extract_result = run_extract_tokens(
+        GRIMOIRE_IMAGES_DIR,
+        DETECTED_TOKENS_DIR,
+        image_processor,
+        circle_detector,
+        token_processor,
+        player_name_extractor,
+    )
+    if extract_result.total_tokens == 0:
+        state = TownSquareGameState(edition={"id": "bmr"}, roles="", fabled=[])
+        return JSONResponse(content=state.model_dump(mode="json"), media_type="application/json")
+    matches = run_match_tokens(DETECTED_TOKENS_DIR, orb_matcher)
+    match_by_token = {m.token: m for m in matches}
+    tokens_out = []
+    for position, player_name in extract_result.positions_with_names:
+        m = match_by_token.get(position)
+        tokens_out.append(
+            ParsedToken(
+                token=position,
+                player_name=player_name,
+                character=m.character if m else None,
+                character_type=m.character_type if m else None,
+                confidence=m.confidence if m else 0.0,
+                is_dead=m.is_dead if m is not None else None,
+            )
+        )
+    state = _parse_result_to_townsquare(tokens_out)
+    return JSONResponse(content=state.model_dump(mode="json"), media_type="application/json")
+
+
 @app.get("/api/grimoire/extract-tokens", response_model=GrimoireResponse)
 async def extract_tokens_and_names():
     """
-    Extract tokens and player names from test_images, then match to characters with ORB.
-    Uses run_extract_tokens() and run_match_tokens() under the hood.
+    Extract token circles and player names from grimoire images, match to reference characters.
+    Returns processing metadata, player list with character matches, and pipeline steps.
     """
     start_time = time.time()
     try:
         extract_result = run_extract_tokens(
-            TEST_IMAGES_DIR,
+            GRIMOIRE_IMAGES_DIR,
             DETECTED_TOKENS_DIR,
             image_processor,
             circle_detector,
@@ -137,7 +207,7 @@ async def extract_tokens_and_names():
         if extract_result.image_count == 0:
             raise HTTPException(
                 status_code=404,
-                detail="No image files found in test_images directory"
+                detail="No grimoire images found in source directory.",
             )
         matches = run_match_tokens(DETECTED_TOKENS_DIR, orb_matcher)
         match_by_token = {m.token: m for m in matches}
@@ -157,15 +227,15 @@ async def extract_tokens_and_names():
             )
         processing_time_ms = (time.time() - start_time) * 1000
         image_files = []
-        if TEST_IMAGES_DIR.exists():
+        if GRIMOIRE_IMAGES_DIR.exists():
             image_files = sorted(
                 set(
-                    list(TEST_IMAGES_DIR.glob("*.jpg"))
-                    + list(TEST_IMAGES_DIR.glob("*.jpeg"))
-                    + list(TEST_IMAGES_DIR.glob("*.png"))
-                    + list(TEST_IMAGES_DIR.glob("*.JPG"))
-                    + list(TEST_IMAGES_DIR.glob("*.JPEG"))
-                    + list(TEST_IMAGES_DIR.glob("*.PNG"))
+                    list(GRIMOIRE_IMAGES_DIR.glob("*.jpg"))
+                    + list(GRIMOIRE_IMAGES_DIR.glob("*.jpeg"))
+                    + list(GRIMOIRE_IMAGES_DIR.glob("*.png"))
+                    + list(GRIMOIRE_IMAGES_DIR.glob("*.JPG"))
+                    + list(GRIMOIRE_IMAGES_DIR.glob("*.JPEG"))
+                    + list(GRIMOIRE_IMAGES_DIR.glob("*.PNG"))
                 )
             )
         first_image_path = image_files[0] if image_files else None
@@ -215,14 +285,13 @@ async def extract_tokens_and_names():
     except HTTPException:
         raise
     except Exception as e:
-        processing_time_ms = (time.time() - start_time) * 1000
         error_traceback = traceback.format_exc()
-        print(f"Error occurred: {error_traceback}")
+        logger.exception("extract-tokens failed: %s", e)
         raise HTTPException(
             status_code=500,
             detail={
                 "error": str(e),
                 "error_type": type(e).__name__,
-                "traceback": error_traceback.split("\n") if DEBUG_MODE else None,
+                "traceback": error_traceback.split("\n") if INCLUDE_TRACEBACK_IN_ERROR else None,
             },
         )

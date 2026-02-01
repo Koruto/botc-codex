@@ -106,7 +106,7 @@ class ORBMatcher:
     def match_all_characters(
         self, token_image: np.ndarray, top_n: int = 1
     ) -> List[Tuple[str, str, float]]:
-        """Return top N (character_name, character_type, confidence) for debugging."""
+        """Return top N (character_name, character_type, confidence) for inspection or diagnostics."""
         gray = self._preprocess(token_image)
         _, des_q = self.orb.detectAndCompute(gray, None)
         if des_q is None or len(des_q) < 2 or not self._descriptors:

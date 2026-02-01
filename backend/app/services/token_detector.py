@@ -166,9 +166,7 @@ class TokenDetector:
     
     def save_detected_tokens(self, image: np.ndarray, circles: List[Tuple[int, int, int]], 
                            output_dir: Path, base_name: str = "token"):
-        """
-        Save detected token circles to files for testing
-        """
+        """Save detected token circles as images in the given output directory."""
         output_dir.mkdir(parents=True, exist_ok=True)
         
         saved_tokens = []
