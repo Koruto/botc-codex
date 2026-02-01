@@ -70,3 +70,6 @@ tmp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+townsquare-develop/
+detected_tokens/
