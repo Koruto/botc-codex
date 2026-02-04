@@ -1,0 +1,6 @@
+export { HomePage } from './HomePage'
+export { LoginPage } from './LoginPage'
+export { ServerPage } from './ServerPage'
+export { GamePage } from './GamePage'
+export { AddGamePage } from './AddGamePage'
+export { ProfilePage } from './ProfilePage'
