@@ -1,0 +1,217 @@
+{
+  "gameId": "wizard-game",
+  "title": "The Wizard's Gambit",
+  "subtitle": "A tale of wishes, the Amnesiac's cost, and the Evil Saint.",
+  "meta": {
+    "played": "February 2025",
+    "edition": "Custom",
+    "playerCount": 6,
+    "storyteller": "Starlow"
+  },
+  "goodWins": false,
+  "townSquare": {
+    "bluffs": ["alchemist"],
+    "edition": { "id": "custom" },
+    "roles": "",
+    "fabled": [{ "id": "fabled" }],
+    "players": [
+      {
+        "name": "Bee",
+        "id": "",
+        "role": "ojo",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": true,
+        "pronouns": "they/them"
+      },
+      {
+        "name": "Koruto",
+        "id": "",
+        "role": "amnesiac",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Commando",
+        "id": "",
+        "role": "alchemist",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "Bumblebee",
+        "id": "",
+        "role": "wizard",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "beep boop",
+        "id": "",
+        "role": "fisherman",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": "He/Him"
+      },
+      {
+        "name": "twob",
+        "id": "",
+        "role": "lunatic",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      }
+    ]
+  },
+  "players": [
+    { "name": "Bee", "role": "ojo", "pronouns": "they/them", "deathAtBeat": 3 },
+    {
+      "name": "Koruto",
+      "role": "amnesiac",
+      "pronouns": "",
+      "deathAtBeat": null
+    },
+    {
+      "name": "Commando",
+      "role": "alchemist",
+      "pronouns": "",
+      "deathAtBeat": 5
+    },
+    { "name": "Bumblebee", "role": "wizard", "pronouns": "", "deathAtBeat": 2 },
+    {
+      "name": "beep boop",
+      "role": "fisherman",
+      "pronouns": "He/Him",
+      "deathAtBeat": null
+    },
+    { "name": "twob", "role": "lunatic", "pronouns": "", "deathAtBeat": null }
+  ],
+  "timeline": {
+    "phaseLabels": [
+      "Pre-Game",
+      "Night 1",
+      "Day 1",
+      "Night 2",
+      "Day 2",
+      "Night 3"
+    ],
+    "beats": [
+      {
+        "phaseIndex": 0,
+        "title": "Pre-Game: The Grimoire Is Set",
+        "subtitle": "Six players and the Storyteller gather.",
+        "events": [
+          {
+            "label": "Setup",
+            "body": "Bee is the Ojo, the starting Demon. Twob is the Lunatic. Koruto is the Amnesiac, Commando the Alchemist with a Wizard ability, Bumblebee the Wizard, and beep boop the Fisherman. Starlow runs the game as Storyteller. The grimoire is set; the first night approaches."
+          }
+        ]
+      },
+      {
+        "phaseIndex": 1,
+        "title": "Night 1: Wishes and the Cost",
+        "subtitle": "The Wizard wishes; the Amnesiac chooses the price.",
+        "events": [
+          {
+            "label": "Wizard wish",
+            "body": "Bumblebee, the Wizard, wishes: \"Each night, a different good player might swap alignments & characters with the Demon.\""
+          },
+          {
+            "label": "Amnesiac",
+            "body": "Koruto is prompted to use their ability and does so. When asked to choose the cost of the Wizard's wish, Koruto says: \"Every day, someone different and unique role is revealed by the Story Teller which is actually true.\""
+          }
+        ]
+      },
+      {
+        "phaseIndex": 2,
+        "title": "Day 1: Revelation and Execution",
+        "subtitle": "The Amnesiac is revealed; the town votes.",
+        "events": [
+          {
+            "label": "Revelation",
+            "body": "Day breaks. The Storyteller announces that Koruto is the Amnesiac. A nomination is made against Koruto."
+          },
+          {
+            "type": "nomination",
+            "label": "Nomination & execution",
+            "body": "Twob nominates Bumblebee. The town votes. Bumblebee is executed.",
+            "nominator": "twob",
+            "nominee": "Bumblebee",
+            "votesFor": ["Koruto", "Commando", "beep boop", "twob"],
+            "votesAgainst": ["Bee", "Bumblebee"],
+            "executed": true
+          }
+        ]
+      },
+      {
+        "phaseIndex": 3,
+        "title": "Night 2: The Evil Saint Rises",
+        "subtitle": "The Ojo chooses; the Alchemist's wish reshapes the game.",
+        "events": [
+          {
+            "label": "Demon & kill",
+            "body": "The Ojo (Bee) chooses the Lunatic. Bee dies in the night."
+          },
+          {
+            "label": "Alchemist Wizard wish",
+            "body": "Commando, as Alchemist with the Wizard ability, wishes: \"Starlow becomes the evil Saint.\" Starlow, the Storyteller, is given the character of the Evil Saint and enters the game."
+          }
+        ]
+      },
+      {
+        "phaseIndex": 4,
+        "title": "Day 2: The Saint Revealed",
+        "subtitle": "The cost of the first wish comes due; the Atheist claim and a surprise nomination.",
+        "events": [
+          {
+            "label": "Revealed role",
+            "body": "Under the cost of Koruto's wish, a different and unique role is revealed by the Storyteller as true: Starlow is revealed as the Saint."
+          },
+          {
+            "label": "Fisherman consult",
+            "body": "Beep asks for a consult on his Fisherman ability. He receives: \"Keep claiming Atheist, and really try to sell that you are indeed the Atheist.\""
+          },
+          {
+            "label": "Atheist claim",
+            "body": "Beep, after receiving his Fisherman information, keeps claiming it's an Atheist game and sells the claim hard."
+          },
+          {
+            "type": "nomination",
+            "label": "Nomination & execution",
+            "body": "Commando agrees and in hurry nominates Starlow. The town votes. Starlow is executed and marked dead as the Saint.",
+            "nominator": "Commando",
+            "nominee": "Starlow",
+            "nomineeLabel": "Storyteller",
+            "nomineeIsStoryteller": true,
+            "votesFor": ["Koruto", "Commando", "beep boop", "twob"],
+            "votesAgainst": [],
+            "executed": true
+          }
+        ]
+      },
+      {
+        "phaseIndex": 5,
+        "title": "Night 3: The Grim",
+        "subtitle": "The cost of the Alchemist's wish; only two remain.",
+        "events": [
+          {
+            "label": "Cost of Commando's wish",
+            "body": "The cost of Commando's Wizard wish had been: \"If you nominate the Storyteller, they become drunk.\" By nominating Starlow (the Storyteller), Starlow had become drunk. In what would have been good win due to saint execution, but due to commando nominating instead, the saint becomes drunk."
+          },
+          {
+            "label": "Demon kill",
+            "body": "In the night, Commando is killed. Only two players are left alive. The game ends—Evil wins!"
+          }
+        ]
+      }
+    ]
+  }
+}

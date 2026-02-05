@@ -11,11 +11,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/game/:gameId" element={<GamePage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="server/:serverId" element={<ServerPage />} />
-          <Route path="game/:gameId" element={<GamePage />} />
           <Route path="server/:serverId/add-game" element={<AddGamePage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>

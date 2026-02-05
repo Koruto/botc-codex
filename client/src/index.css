@@ -1,12 +1,84 @@
 @import "tailwindcss";
 
+/* Game page: light scheme with darker, muted colors – as Tailwind theme */
+@theme {
+  --color-game-bg: #f5f2ee;
+  --color-game-bg-secondary: #ebe7e2;
+  --color-game-bg-elevated: #e2ddd6;
+  --color-game-bg-card: #d9d4cc;
+  --color-game-text: #1c1917;
+  --color-game-text-secondary: #44403c;
+  --color-game-text-muted: #78716c;
+  --color-game-accent: #92400e;
+  --color-game-accent-hover: #b45309;
+  --color-game-good: #0f766e;
+  --color-game-good-win: #1d4ed8;
+  --color-game-danger: #b91c1c;
+  --color-game-evil: #7f1d1d;
+  --color-game-border: #d6d3d1;
+  --color-game-border-subtle: #e7e5e4;
+  --font-game-display: "Cinzel", serif;
+  --font-game-body: "Lora", serif;
+  --font-game-ui: "Inter", sans-serif;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes game-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Grimoire nomination animation */
+@keyframes grimoire-clock-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes grimoire-minute-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* Hand icon: appears with variance (staggered delay), before clock hand reaches voter */
+.grimoire-hand-appear {
+  opacity: 0;
+  animation: grimoire-hand-fade-in 0.35s ease-out forwards;
+}
+@keyframes grimoire-hand-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Voters: golden fill only, keep default border (no red border) */
+.grimoire-voted-golden {
+  background-color: #fef3c7 !important;
+}
+/* Nominee: red outline when circle is done (they will be dead) */
+.grimoire-nominee-red {
+  border-color: var(--color-game-danger) !important;
 }

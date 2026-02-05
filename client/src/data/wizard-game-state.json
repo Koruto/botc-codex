@@ -1,0 +1,53 @@
+{
+  "bluffs": ["alchemist"],
+  "edition": { "id": "custom" },
+  "roles": "",
+  "fabled": [{ "id": "fabled" }],
+  "players": [
+    {
+      "name": "Bee",
+      "id": "",
+      "role": "lunatic",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": "they/them"
+    },
+    {
+      "name": "Koruto",
+      "id": "",
+      "role": "amnesiac",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": ""
+    },
+    {
+      "name": "Bumblebee",
+      "id": "",
+      "role": "wizard",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": ""
+    },
+    {
+      "name": "beep boop",
+      "id": "",
+      "role": "fisherman",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": "He/Him"
+    },
+    {
+      "name": "DevilCharlotte",
+      "id": "",
+      "role": "ojo",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": "she/her"
+    }
+  ]
+}
