@@ -3,6 +3,21 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Grimoire, type GrimoirePlayer } from '../components'
 import gameNarrative from '../data/wizard-game-narrative.json'
 
+const SM_BREAKPOINT = 640
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < SM_BREAKPOINT : false
+  )
+  useEffect(() => {
+    const m = window.matchMedia(`(max-width: ${SM_BREAKPOINT - 1}px)`)
+    const fn = () => setIsMobile(m.matches)
+    fn()
+    m.addEventListener('change', fn)
+    return () => m.removeEventListener('change', fn)
+  }, [])
+  return isMobile
+}
+
 type NominationEvent = {
   type: 'nomination'
   label: string
@@ -61,6 +76,7 @@ const PLAYERS: (GrimoirePlayer & { role: string })[] = narrative.players.map(
 
 export function GamePage() {
   const { gameId } = useParams()
+  const isMobile = useIsMobile()
   const [activeBeatIndex, setActiveBeatIndex] = useState(0)
   const [visibleBeats, setVisibleBeats] = useState<Set<number>>(new Set([0]))
   const [isAtBottom, setIsAtBottom] = useState(false)
@@ -163,15 +179,15 @@ export function GamePage() {
         aria-hidden
       />
 
-      {/* Left: vertical timeline, full viewport height */}
+      {/* Left: vertical timeline — narrow + dots only below sm, full width + labels on sm+ */}
       <aside
-        className="fixed left-0 top-0 z-1000 flex h-screen w-[140px] flex-col border-r border-game-border-subtle bg-game-bg"
+        className="fixed left-0 top-0 z-1000 flex h-screen w-14 flex-col border-r border-game-border-subtle bg-game-bg sm:w-[140px]"
         aria-label="Timeline"
       >
         <div className="relative flex h-full flex-col justify-between py-8">
           {/* Vertical line through dots */}
           <div
-            className="absolute left-5 top-8 bottom-8 w-px bg-game-border"
+            className="absolute left-3 top-8 bottom-8 w-px bg-game-border sm:left-5"
             aria-hidden
           />
           {PROGRESS_LABELS.map((label, i) => (
@@ -181,7 +197,7 @@ export function GamePage() {
               onClick={() => scrollToBeat(i)}
               aria-label={`Jump to ${label}`}
               aria-current={i === activeBeatIndex ? 'true' : undefined}
-              className="relative z-10 flex items-center gap-3 px-4 py-1 text-left transition-colors hover:opacity-90"
+              className="relative z-10 flex items-center gap-3 px-2 py-1 text-left transition-colors hover:opacity-90 sm:px-4"
             >
               <span
                 className={`flex h-2.5 w-2.5 shrink-0 items-center justify-center rounded-full transition-colors ${i === activeBeatIndex
@@ -190,7 +206,7 @@ export function GamePage() {
                   }`}
               />
               <span
-                className={`font-game-ui text-xs ${i === activeBeatIndex ? 'font-medium text-game-text' : 'text-game-text-muted'
+                className={`hidden font-game-ui text-xs sm:inline ${i === activeBeatIndex ? 'font-medium text-game-text' : 'text-game-text-muted'
                   }`}
               >
                 {label}
@@ -201,8 +217,8 @@ export function GamePage() {
       </aside>
 
       {/* Main content: right of timeline */}
-      <div className="flex min-h-screen flex-1 flex-col pl-[140px]">
-        <nav className="fixed left-[140px] right-0 top-0 z-999 flex h-14 items-center border-b border-game-border-subtle bg-game-bg px-6 md:px-10">
+      <div className="flex min-h-screen flex-1 flex-col pl-14 sm:pl-[140px]">
+        <nav className="fixed left-14 right-0 top-0 z-999 flex h-14 items-center border-b border-game-border-subtle bg-game-bg px-6 sm:left-[140px] md:px-10">
           <Link
             to="/"
             className="font-game-display text-sm tracking-wide text-game-accent no-underline hover:opacity-90"
@@ -225,8 +241,8 @@ export function GamePage() {
           onScroll={handleScroll}
           className="mt-14 flex-1 overflow-y-auto"
         >
-          <div className="grid min-h-full grid-cols-1 lg:grid-cols-[1fr_340px]">
-            <div className="mx-auto max-w-[720px] px-6 py-12 lg:px-12 lg:py-16 lg:pb-32">
+          <div className="grid min-h-full grid-cols-1 md:grid-cols-[1fr_340px]">
+            <div className="mx-auto max-w-[720px] px-6 py-12 pb-52 sm:pb-12 md:pb-32 md:px-12 md:py-16">
               <header className="mb-16 animate-[game-fade-in-up_0.8s_ease_0.2s_forwards] opacity-0">
                 <h1 className="font-game-display text-3xl font-semibold tracking-tight text-game-text md:text-4xl">
                   {narrative.title}
@@ -280,13 +296,23 @@ export function GamePage() {
               ))}
             </div>
 
-            <aside className="sticky top-0 flex h-full w-full flex-col overflow-hidden border-l border-game-border-subtle bg-game-bg px-6 py-6 font-game-ui lg:max-h-[calc(100vh-3.5rem)] lg:self-start lg:px-8">
-              <p className="shrink-0 text-[11px] font-medium uppercase tracking-widest text-game-text-muted">
-                Current beat
-              </p>
-              <p className="mt-0.5 shrink-0 font-game-display text-lg text-game-text">
-                {PROGRESS_LABELS[activeBeatIndex]}
-              </p>
+            <aside
+              className={`
+                flex w-full flex-col overflow-hidden bg-game-bg font-game-ui
+                max-[639px]:fixed max-[639px]:bottom-0 max-[639px]:left-14 max-[639px]:right-0 max-[639px]:z-10
+                max-[639px]:max-h-[220px] max-[639px]:flex-row max-[639px]:items-center max-[639px]:justify-center max-[639px]:border-t max-[639px]:border-game-border-subtle max-[639px]:py-4
+                min-[640px]:sticky min-[640px]:top-0 min-[640px]:max-h-none min-[640px]:flex-row-none min-[640px]:px-6 min-[640px]:py-6
+                md:max-h-[calc(100vh-3.5rem)] md:self-start md:px-8
+              `}
+            >
+              <div className="hidden shrink-0 flex-col min-[640px]:flex">
+                <p className="text-[11px] font-medium uppercase tracking-widest text-game-text-muted">
+                  Current beat
+                </p>
+                <p className="mt-0.5 font-game-display text-lg text-game-text">
+                  {PROGRESS_LABELS[activeBeatIndex]}
+                </p>
+              </div>
 
               <Grimoire
                 players={PLAYERS}
@@ -294,11 +320,12 @@ export function GamePage() {
                 totalBeats={PROGRESS_LABELS.length}
                 goodWins={narrative.goodWins}
                 nomination={nominationState}
+                size={isMobile ? 200 : 280}
               />
 
-              {/* Always in layout so no sidebar scroll; visible only when main content is at bottom */}
+              {/* Desktop only: visible when main content is at bottom */}
               <div
-                className={`shrink-0 border-t border-game-border-subtle pt-4 text-sm transition-opacity duration-300 ${isAtBottom ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`hidden shrink-0 border-t border-game-border-subtle pt-4 text-sm transition-opacity duration-300 min-[640px]:block ${isAtBottom ? 'opacity-100' : 'opacity-0 pointer-events-none'
                   }`}
               >
                 <button

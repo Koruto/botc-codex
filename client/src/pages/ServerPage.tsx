@@ -23,13 +23,19 @@ export function ServerPage() {
         <h2 className="mb-4 text-lg font-medium text-stone-200">Games</h2>
         <ul className="space-y-3">
           <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/abc123" className="text-amber-400 hover:underline">
-              Trouble Brewing — 7 players — 1 Feb 2025
+            <Link to="/game/wizard-game" className="text-amber-400 hover:underline">
+              The Wizard's Gambit — 6 players — Feb 2025
             </Link>
             <span className="text-xs text-stone-500">Admin</span>
           </li>
           <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/def456" className="text-amber-400 hover:underline">
+            <Link to="/game/trouble-brewing-feb-2025" className="text-amber-400 hover:underline">
+              Trouble Brewing — 7 players — 1 Feb 2025
+            </Link>
+            <span className="text-xs text-stone-500">Viewer</span>
+          </li>
+          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
+            <Link to="/game/bad-moon-rising-jan-2025" className="text-amber-400 hover:underline">
               Bad Moon Rising — 9 players — 28 Jan 2025
             </Link>
             <span className="text-xs text-stone-500">Viewer</span>
