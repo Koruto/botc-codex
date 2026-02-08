@@ -1,327 +1,263 @@
-import { useEffect, useState } from 'react'
-import { Hand } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUsers, faUser, faUserFriends, faHeartbeat, faVoteYea } from '@fortawesome/free-solid-svg-icons'
+import customIcon from '../../assets/icons/custom.png'
+import textureImg from '../../assets/9.jpg'
+import grimoireData from '../data/grimoire-players.json'
+import gameJson from '../data/game.json'
+import rolesData from '../data/roles.json'
+import type { RoleInfo, GrimoirePlayer } from '../types/grimoire'
 
-export interface GrimoirePlayer {
-  name: string
-  /** Beat index at which this player dies (inclusive). Omit or null = never dead in this game. */
-  deadAtBeat?: number | null
+type GameScript = { townsfolk: number; outsider: number; minion: number; demon: number }
+
+/** Row 2: script breakdown keys and colors (from game.json) */
+const SCRIPT_TEAMS = [
+  { key: 'townsfolk' as const, color: '#1f65ff' },
+  { key: 'outsider' as const, color: '#46d5ff' },
+  { key: 'minion' as const, color: '#ff6900' },
+  { key: 'demon' as const, color: '#ce0100' },
+] as const
+
+const iconModules = import.meta.glob<{ default: string }>(
+  '../../assets/icons/*.png',
+  { eager: true }
+)
+
+const rolesById = new Map<string, RoleInfo>(
+  (rolesData as RoleInfo[]).map((r) => [r.id, r])
+)
+
+const players: GrimoirePlayer[] = (grimoireData as { players: GrimoirePlayer[] }).players
+
+function getIconUrl(roleId: string): string {
+  if (!roleId) return customIcon
+  const id = roleId.toLowerCase().replace(/\s+/g, '')
+  const key = Object.keys(iconModules).find((k) =>
+    k.replace(/\\/g, '/').endsWith(`/${id}.png`)
+  )
+  if (key) return (iconModules[key] as { default: string }).default
+  return customIcon
 }
 
-export interface GrimoireNomination {
-  nominatorIndex: number
-  /** -1 if nominee is not in the circle (e.g. Storyteller). */
-  nomineeIndex: number
-  /** When nomineeIndex === -1, optional label to show (e.g. "Storyteller", "Starlow"). */
-  nomineeLabel?: string
-  /** When true and nominee not in circle, show ST badge. */
-  nomineeIsStoryteller?: boolean
-  votesFor: number[]
-  votesAgainst: number[]
-  executed: boolean
+function getRoleById(roleId: string): RoleInfo | null {
+  const id = roleId.toLowerCase().replace(/\s+/g, '')
+  return rolesById.get(id) ?? null
 }
 
 interface GrimoireProps {
-  players: GrimoirePlayer[]
-  currentBeatIndex: number
-  totalBeats?: number
-  goodWins?: boolean
-  size?: number
-  /** When set, runs nomination animation: clock from center to nominator→nominee, full circle, then vote highlights, then nominee marked. */
-  nomination?: GrimoireNomination
+  isDay?: boolean
+  isPreGame?: boolean
+  /** Total players (from narrative); else uses grimoire length. */
+  totalPlayers?: number
+  /** Alive count (from narrative townSquare); else defaults to total. */
+  aliveCount?: number
+  /** How many can vote (from narrative townSquare); else defaults to total. */
+  voteCount?: number
 }
 
-function polarToPercent(
-  index: number,
-  total: number,
-  rPercent: number
-): { x: number; y: number } {
-  const angle = (index / total) * 2 * Math.PI - Math.PI / 2
-  return {
-    x: 50 + rPercent * Math.cos(angle),
-    y: 50 + rPercent * Math.sin(angle),
-  }
-}
+export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount }: GrimoireProps) {
+  const total = totalPlayers ?? players.length
+  const alive = aliveCount ?? total
+  const votes = voteCount ?? total
+  const [isDayInternal, setIsDayInternal] = useState(true)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-export function Grimoire({
-  players,
-  currentBeatIndex,
-  totalBeats = 0,
-  goodWins = true,
-  size = 280,
-  nomination,
-}: GrimoireProps) {
-  const isLastBeat = totalBeats > 0 && currentBeatIndex >= totalBeats - 1
-  const showOutcome = isLastBeat
+  const isDay = isDayControlled ?? isDayInternal
+  const showToggle = isDayControlled === undefined
 
-  /** Step 0 = clock hands draw, 1 = hand icons show (right after hands), 2 = minute hand rotates (voters turn golden as it passes), 3 = circle done, red outline on nominee. */
-  const [nominationStep, setNominationStep] = useState(-1)
-  /** Minute hand rotation in degrees (0 → 360). Voters turn golden when hand passes their angle. */
-  const [minuteHandRotation, setMinuteHandRotation] = useState(0)
+  const slotCount = players.length
+  const iconUrls = useMemo(() => players.map((p) => getIconUrl(p.role)), [])
 
-  useEffect(() => {
-    if (!nomination || nomination.nominatorIndex < 0) {
-      setNominationStep(-1)
-      setMinuteHandRotation(0)
-      return
-    }
-    setNominationStep(0)
-    setMinuteHandRotation(0)
-    const t1 = setTimeout(() => setNominationStep(1), 1600)
-    const t2 = setTimeout(() => setNominationStep(2), 2200)
-    const t3 = setTimeout(() => setNominationStep(3), 4500)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      clearTimeout(t3)
-    }
-  }, [nomination?.nominatorIndex, nomination?.nomineeIndex])
+  const MIN_PLAYERS = 5
+  /** Script breakdown from game.json; index = playerCount - MIN_PLAYERS (5→0, 6→1, …). */
+  const scriptCounts = useMemo((): GameScript => {
+    const scripts = gameJson as GameScript[]
+    if (players.length < MIN_PLAYERS) return { townsfolk: 0, outsider: 0, minion: 1, demon: 1 }
+    const idx = players.length - MIN_PLAYERS
+    return scripts[idx] ?? scripts[0]
+  }, [])
 
-  /** When step 2, animate minute hand rotation 0 → 360; step 3 when done. */
-  useEffect(() => {
-    if (nominationStep !== 2) return
-    const start = performance.now()
-    const duration = 2200
-    let rafId: number
-    const tick = (now: number) => {
-      const elapsed = now - start
-      const t = Math.min(elapsed / duration, 1)
-      setMinuteHandRotation(t * 360)
-      if (t < 1) rafId = requestAnimationFrame(tick)
-    }
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [nominationStep])
-
-  const r = 36
-  const center = { x: 50, y: 50 }
-  const isExternalNominee = nomination && nomination.nomineeIndex < 0
-
-  /** Hour hand (shorter): to nominator. Minute hand: to nominee (or to nominator when external). */
-  const hourHandLength = 18
-  const minuteHandLength = 31
-  const nominatorPosShort =
-    nomination && nomination.nominatorIndex >= 0
-      ? polarToPercent(nomination.nominatorIndex, players.length, hourHandLength)
-      : null
-  const nomineePos =
-    nomination && nomination.nomineeIndex >= 0
-      ? polarToPercent(nomination.nomineeIndex, players.length, minuteHandLength)
-      : null
-  /** External: single hand from center pointing to nominator (then rotates around center). */
-  const nominatorPosLong =
-    nomination && nomination.nominatorIndex >= 0
-      ? polarToPercent(nomination.nominatorIndex, players.length, minuteHandLength)
+  const hoveredRole =
+    hoveredIndex != null && players[hoveredIndex]
+      ? getRoleById(players[hoveredIndex].role)
       : null
 
-  /** In-circle: hour center→nominator, minute center→nominee. External: one hand center→nominator only. */
-  const hourHandPath =
-    !isExternalNominee &&
-    nominatorPosShort &&
-    `M ${center.x} ${center.y} L ${nominatorPosShort.x} ${nominatorPosShort.y}`
-  const minuteHandPath =
-    nomineePos &&
-    `M ${center.x} ${center.y} L ${nomineePos.x} ${nomineePos.y}`
-  const externalHandPath =
-    isExternalNominee &&
-    nominatorPosLong &&
-    `M ${center.x} ${center.y} L ${nominatorPosLong.x} ${nominatorPosLong.y}`
-
-  /** Start angle for sweep: nominee (in-circle) or nominator (external = hand points at them). */
-  const nomineeAngleDegNorm =
-    nomination && nomination.nominatorIndex >= 0
-      ? (((nomination.nomineeIndex >= 0 ? nomination.nomineeIndex : nomination.nominatorIndex) / players.length) * 360 - 90 + 360) % 360
-      : 0
-
-  /** Has the minute hand swept past this voter's angle? */
-  const handHasPassedVoter = (voterIndex: number) => {
-    if (!nomination || nominationStep < 2) return false
-    if (minuteHandRotation >= 360) return true
-    const voterAngleDeg =
-      ((voterIndex / players.length) * 360 - 90 + 360) % 360
-    const relative = (voterAngleDeg - nomineeAngleDegNorm + 360) % 360
-    return relative < minuteHandRotation
-  }
+  /* Pre-Game = warm (amber). Day = blue/twilight. Night = dark. */
+  const statsBoxStyle = isPreGame
+    ? {
+        border: '2px solid rgba(180, 83, 9, 0.6)',
+        backgroundImage: `linear-gradient(rgba(220, 190, 120, 0.82), rgba(205, 175, 100, 0.86)), url(${textureImg})`,
+        textClass: 'text-amber-950',
+        mutedClass: 'text-amber-900',
+      }
+    : isDay
+      ? {
+          border: '2px solid rgba(56, 149, 211, 0.7)',
+          backgroundImage: `linear-gradient(rgba(186, 220, 248, 0.88), rgba(165, 205, 238, 0.92)), url(${textureImg})`,
+          textClass: 'text-sky-900',
+          mutedClass: 'text-sky-800',
+        }
+      : {
+          border: '2px solid rgba(120, 53, 15, 0.8)',
+          backgroundImage: `linear-gradient(rgba(45, 38, 32, 0.88), rgba(38, 32, 28, 0.92)), url(${textureImg})`,
+          textClass: 'text-amber-50',
+          mutedClass: 'text-amber-200/90',
+        }
 
   return (
-    <div className="my-4 flex min-h-0 flex-1 flex-col items-center justify-center">
-      <div
-        className="relative flex shrink-0 items-center justify-center rounded-full border-2 border-game-border bg-game-bg-secondary"
-        style={{ width: `min(${size}px, 100%)`, aspectRatio: '1' }}
-        aria-label="Grimoire: players in seating order"
-      >
-        {/* Center: winner at end of game */}
-        {showOutcome && (
-          <div
-            className="absolute inset-0 flex items-center justify-center text-center font-game-display text-sm font-semibold"
-            aria-live="polite"
+    <div className="flex flex-col items-center gap-4 p-4">
+      {showToggle && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setIsDayInternal(true)}
+            aria-pressed={isDay}
+            className={`rounded-lg border-2 px-4 py-2 font-semibold transition-all duration-200 ${isDay
+              ? 'border-game-accent bg-game-accent text-white'
+              : 'border-game-border bg-game-bg-card text-game-text hover:border-game-accent hover:bg-game-bg-elevated'
+              }`}
           >
-            <span
-              className={
-                goodWins ? 'text-game-good-win' : 'text-game-evil'
-              }
-            >
-              {goodWins ? 'Good wins' : 'Evil wins'}
-            </span>
-          </div>
-        )}
-
-        {/* Nomination: in-circle = center clock; external = clock from nominator, ST badge at center. */}
-        {nomination && nominationStep >= 0 && (
-          <svg
-            className="absolute inset-0 h-full w-full rounded-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="xMidYMid meet"
-            style={{ pointerEvents: 'none' }}
+            Day
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDayInternal(false)}
+            aria-pressed={!isDay}
+            className={`rounded-lg border-2 px-4 py-2 font-semibold transition-all duration-200 ${!isDay
+              ? 'border-game-accent bg-game-accent text-white'
+              : 'border-game-border bg-game-bg-card text-game-text hover:border-game-accent hover:bg-game-bg-elevated'
+              }`}
           >
-            {/* In-circle: hour hand center → nominator */}
-            {hourHandPath && (
-              <path
-                d={hourHandPath}
-                pathLength={1}
-                fill="none"
-                stroke="var(--color-game-text-muted)"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeDasharray="1"
-                strokeDashoffset={nominationStep === 0 ? '1' : '0'}
-                style={{
-                  animation:
-                    nominationStep === 0
-                      ? 'grimoire-clock-draw 0.7s ease-out forwards'
-                      : 'none',
-                }}
-              />
-            )}
-            {/* In-circle: minute hand from center to nominee, rotates around center */}
-            {minuteHandPath && !isExternalNominee && (
-              <g transform={`rotate(${minuteHandRotation} 50 50)`}>
-                <path
-                  d={minuteHandPath}
-                  pathLength={1}
-                  fill="none"
-                  stroke="var(--color-game-accent)"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeDasharray="1"
-                  strokeDashoffset={nominationStep === 0 ? '1' : '0'}
-                  style={{
-                    animation:
-                      nominationStep === 0
-                        ? 'grimoire-minute-draw 0.8s 0.5s ease-out forwards'
-                        : 'none',
-                  }}
-                />
-              </g>
-            )}
-            {/* External (e.g. ST): single hand from center to nominator, rotates around center */}
-            {externalHandPath && (
-              <g transform={`rotate(${minuteHandRotation} 50 50)`}>
-                <path
-                  d={externalHandPath}
-                  pathLength={1}
-                  fill="none"
-                  stroke="var(--color-game-accent)"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeDasharray="1"
-                  strokeDashoffset={nominationStep === 0 ? '1' : '0'}
-                  style={{
-                    animation:
-                      nominationStep === 0
-                        ? 'grimoire-minute-draw 0.8s ease-out forwards'
-                        : 'none',
-                  }}
-                />
-              </g>
-            )}
-          </svg>
-        )}
+            Night
+          </button>
+        </div>
+      )}
 
-        {/* External nominee (e.g. Storyteller): badge at center; red outline when circle done */}
-        {nomination && isExternalNominee && nominationStep >= 0 && (
-          <div
-            className={`absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-lg border-2 px-2 py-1 ${
-              nominationStep === 3
-                ? 'border-game-danger bg-game-bg-elevated/90'
-                : 'border-game-border bg-game-bg-secondary/90'
-            }`}
-            aria-label={nomination.nomineeLabel ?? 'Storyteller'}
-          >
-            <span className="font-game-ui text-[10px] font-semibold uppercase tracking-wider text-game-text-muted">
-              {nomination.nomineeIsStoryteller !== false ? 'ST' : ''}
-            </span>
-            {nomination.nomineeLabel && (
-              <span className="max-w-[64px] truncate text-center text-xs text-game-text">
-                {nomination.nomineeLabel}
-              </span>
-            )}
-          </div>
-        )}
-
-        {players.map((player, i) => {
-          const deadAtBeat = player.deadAtBeat ?? Infinity
-          const isDead = currentBeatIndex >= deadAtBeat
-          const isNomineeThisBeat = nomination && nomination.nomineeIndex === i
-          const isDeadDisplay =
-            isDead && !isNomineeThisBeat
-          const angle = (i / players.length) * 2 * Math.PI - Math.PI / 2
-          const x = 50 + r * Math.cos(angle)
-          const y = 50 + r * Math.sin(angle)
-
-          const votedFor = nomination && nomination.votesFor.includes(i)
-          const passed = handHasPassedVoter(i)
-          const showHandAndGreen =
-            nomination && votedFor && nominationStep >= 1 && !passed
-          const showGolden =
-            nomination && votedFor && nominationStep >= 2 && passed
-          const showNomineeRed = nomination && nominationStep === 3 && isNomineeThisBeat
-          const handDelayMs =
-            nomination && votedFor && nomination.nominatorIndex >= 0
-              ? ((i * 97 + (i % 3) * 173 + (nomination.nominatorIndex + 1) * 31) % 520)
-              : 0
-
-          return (
-            <div
-              key={player.name}
-              className="absolute flex flex-col items-center transition-all duration-300"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-              aria-label={`${player.name}, ${isDeadDisplay ? 'dead' : 'alive'}`}
-            >
-              <span
-                className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 ${
-                  isDeadDisplay
-                    ? 'border-game-border bg-game-bg-elevated opacity-70'
-                    : 'border-game-good bg-game-bg'
-                } ${showGolden ? 'grimoire-voted-golden' : ''} ${
-                  showNomineeRed ? 'grimoire-nominee-red' : ''
-                }`}
-                aria-hidden
-              >
-                {showHandAndGreen && (
-                  <span
-                    className="grimoire-hand-appear absolute inset-0 flex items-center justify-center rounded-full bg-game-good/30 text-game-good"
-                    style={{ animationDelay: `${handDelayMs}ms` }}
-                  >
-                    <Hand className="h-4 w-4 shrink-0" strokeWidth={2} />
+      <div className="relative min-h-[350px] min-w-[300px] max-w-full shrink-0 overflow-hidden">
+        <div
+          className={`absolute left-1/2 top-1/2 z-0 w-[48%] min-w-[112px] max-w-[168px] -translate-x-1/2 -translate-y-1/2 pointer-events-none rounded-lg bg-cover bg-center p-2 shadow-lg transition-[background-image,border-color] duration-300 ${statsBoxStyle.textClass}`}
+          style={{
+            border: statsBoxStyle.border,
+            backgroundImage: statsBoxStyle.backgroundImage,
+          }}
+          aria-label="Game stats"
+        >
+          {slotCount < 5 ? (
+            <p className={`text-center text-[11px] font-medium ${statsBoxStyle.mutedClass}`}>Add more players!</p>
+          ) : (
+            <div className={`flex flex-col items-center justify-center gap-2 text-center ${statsBoxStyle.textClass}`}>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-xs font-bold">
+                <span className="flex items-center gap-1">
+                  {total}
+                  <FontAwesomeIcon icon={faUsers} className="text-[12px]" style={{ color: '#00a000' }} />
+                </span>
+                <span className="flex items-center gap-1">
+                  {alive}
+                  <FontAwesomeIcon icon={faHeartbeat} className="text-[12px]" style={{ color: '#c41e1e' }} />
+                </span>
+                <span className="flex items-center gap-1">
+                  {votes}
+                  <FontAwesomeIcon icon={faVoteYea} className="text-[12px]" style={{ color: '#374151' }} />
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-0.5 text-[11px] font-bold">
+                {SCRIPT_TEAMS.map((t) => (
+                  <span key={t.key} className="flex items-center gap-1">
+                    {scriptCounts[t.key]}
+                    <FontAwesomeIcon
+                      icon={scriptCounts[t.key] > 1 ? faUserFriends : faUser}
+                      style={{ color: t.color }}
+                      className="text-[11px]"
+                    />
                   </span>
-                )}
-              </span>
-              <span
-                className={`mt-1 max-w-[72px] truncate text-center text-xs ${
-                  isDeadDisplay ? 'text-game-text-muted' : 'text-game-text'
-                }`}
-                title={player.name}
-              >
-                {player.name}
-              </span>
+                ))}
+              </div>
             </div>
-          )
-        })}
+          )}
+        </div>
+
+        <ul
+          className="absolute inset-8 list-none p-0 m-0 h-[calc(100%-4rem)] w-[calc(100%-4rem)] z-10"
+          aria-label="Grimoire circle"
+        >
+          {Array.from({ length: slotCount }, (_, i) => {
+            const angleDeg = (360 / slotCount) * i
+            const player = players[i]
+            const nightIconUrl = player ? iconUrls[i] : null
+            const role = player ? getRoleById(player.role) : null
+            const name = role?.name ?? null
+            return (
+              <li
+                key={i}
+                className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 pointer-events-none [&:has(.grimoire-token:hover)]:z-10"
+              >
+                <div
+                  className="absolute left-1/2 top-1/2 h-full w-full pointer-events-none"
+                  style={{
+                    transform: `rotate(${angleDeg}deg) translateY(-45%) rotate(${-angleDeg}deg)`,
+                  }}
+                >
+                  <div
+                    className={`grimoire-token group absolute left-0 top-0 aspect-square w-[10vmin] shrink-0 rounded-full border-4 bg-cover bg-center shadow-[0_0_10px_rgba(0,0,0,0.4)] pointer-events-auto overflow-hidden ${isPreGame ? 'border-amber-500/95 shadow-amber-200/30' : isDay ? 'border-sky-400/90 shadow-sky-200/40' : 'border-amber-900/90'}`}
+                    style={{ backgroundImage: `url(${textureImg})` }}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    aria-label={player && name ? `${player.name}, ${name}` : undefined}
+                  >
+                    {isDay && (
+                      <span className={`absolute inset-0 rounded-full pointer-events-none ${isPreGame ? 'bg-amber-400/25' : 'bg-blue-300/30'}`} aria-hidden />
+                    )}
+                    {!isDay && nightIconUrl && (
+                      <span
+                        className="absolute inset-0 rounded-full bg-no-repeat bg-size-[90%] bg-position-[center_20%] pointer-events-none"
+                        style={{ backgroundImage: `url(${nightIconUrl})` }}
+                        aria-hidden
+                      />
+                    )}
+                    {!isDay && name && (
+                      <svg
+                        viewBox="0 0 150 150"
+                        className="absolute inset-0 h-full w-full overflow-visible"
+                        aria-hidden
+                      >
+                        <defs>
+                          <path
+                            id={`grimoire-curve-${i}`}
+                            d="M 13 75 C 13 160, 138 160, 138 75"
+                            fill="transparent"
+                          />
+                        </defs>
+                        <text
+                          className="fill-black stroke-white [paint-order:stroke] font-bold text-[1.8em] tracking-wide group-hover:fill-white group-hover:stroke-black transition-colors duration-150"
+                          style={{ strokeWidth: 3.5, fontFamily: '"Lora", Georgia, serif' }}
+                        >
+                          <textPath href={`#grimoire-curve-${i}`} startOffset="50%" textAnchor="middle">
+                            {name}
+                          </textPath>
+                        </text>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       </div>
+
+      {hoveredRole && (
+        <div
+          className="w-full max-w-[280px] rounded-lg border-2 border-black bg-black/90 p-3 text-left text-white shadow-lg"
+          role="tooltip"
+        >
+          <p className="font-semibold text-sm">{hoveredRole.name}</p>
+          {hoveredRole.ability && (
+            <p className="mt-1.5 text-xs leading-snug text-gray-200">
+              {hoveredRole.ability}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

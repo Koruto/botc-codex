@@ -113,7 +113,8 @@
             "label": "Setup",
             "body": "Bee is the Ojo, the starting Demon. Twob is the Lunatic. Koruto is the Amnesiac, Commando the Alchemist with a Wizard ability, Bumblebee the Wizard, and beep boop the Fisherman. Starlow runs the game as Storyteller. The grimoire is set; the first night approaches."
           }
-        ]
+        ],
+        "stats": { "alive": 6, "voteCount": 6 }
       },
       {
         "phaseIndex": 1,
@@ -132,7 +133,8 @@
             "label": "Character swap",
             "body": "Bee and twob swapped characters on Night 1 due to Bumblebee's wish."
           }
-        ]
+        ],
+        "stats": { "alive": 6, "voteCount": 6 }
       },
       {
         "phaseIndex": 2,
@@ -153,7 +155,8 @@
             "votesAgainst": ["Bee", "Bumblebee"],
             "executed": true
           }
-        ]
+        ],
+        "stats": { "alive": 5, "voteCount": 6 }
       },
       {
         "phaseIndex": 3,
@@ -168,7 +171,8 @@
             "label": "Alchemist Wizard wish",
             "body": "Commando, as Alchemist with the Wizard ability, wishes: \"Starlow becomes the evil Saint.\" Starlow, the Storyteller, is given the character of the Evil Saint and enters the game."
           }
-        ]
+        ],
+        "stats": { "alive": 4, "voteCount": 5 }
       },
       {
         "phaseIndex": 4,
@@ -199,7 +203,8 @@
             "votesAgainst": [],
             "executed": true
           }
-        ]
+        ],
+        "stats": { "alive": 4, "voteCount": 5 }
       },
       {
         "phaseIndex": 5,
@@ -214,7 +219,8 @@
             "label": "Demon kill",
             "body": "In the night, Commando is killed. Only two players are left alive. The game ends—Evil wins!"
           }
-        ]
+        ],
+        "stats": { "alive": 3, "voteCount": 4 }
       }
     ]
   }

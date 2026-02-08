@@ -1,3 +1,7 @@
 export { Layout } from './Layout'
 export { Grimoire } from './Grimoire'
-export type { GrimoirePlayer, GrimoireNomination } from './Grimoire'
+export { GameView } from './GameView'
+export { GameTimeline } from './GameTimeline'
+export { GameStory } from './GameStory'
+export { GrimoireSidebar } from './GrimoireSidebar'
+export type { GameViewNarrative, GameStoryPhase } from '../types/game'

@@ -1,25 +1,277 @@
 @import "tailwindcss";
 
-/* Game page: light scheme with darker, muted colors – as Tailwind theme */
+/* Papyrus – same as TownSquare token label */
+@font-face {
+  font-family: "Papyrus";
+  src: url("../assets/fonts/papyrus.eot");
+  src:
+    url("../assets/fonts/papyrus.eot?#iefix") format("embedded-opentype"),
+    url("../assets/fonts/papyrus.woff2") format("woff2"),
+    url("../assets/fonts/papyrus.woff") format("woff"),
+    url("../assets/fonts/papyrus.ttf") format("truetype"),
+    url("../assets/fonts/papyrus.svg#PapyrusW01") format("svg");
+  font-display: swap;
+}
+
+/* Game page: rich storyboard – warm day (matches night’s earth/amber), moody night */
 @theme {
-  --color-game-bg: #f5f2ee;
-  --color-game-bg-secondary: #ebe7e2;
-  --color-game-bg-elevated: #e2ddd6;
-  --color-game-bg-card: #d9d4cc;
-  --color-game-text: #1c1917;
-  --color-game-text-secondary: #44403c;
-  --color-game-text-muted: #78716c;
-  --color-game-accent: #92400e;
-  --color-game-accent-hover: #b45309;
-  --color-game-good: #0f766e;
+  /* Day: warm ivory/stone, good text contrast over image */
+  --color-game-bg: #f0eae2;
+  --color-game-bg-secondary: #e6ddd2;
+  --color-game-bg-elevated: #dcd0c2;
+  --color-game-bg-card: #d0c4b4;
+  --color-game-text: #161210;
+  --color-game-text-secondary: #342c24;
+  --color-game-text-muted: #52483c;
+  --color-game-accent: #b86828;
+  --color-game-accent-hover: #c87832;
+  --color-game-good: #0d9488;
   --color-game-good-win: #1d4ed8;
-  --color-game-danger: #b91c1c;
-  --color-game-evil: #7f1d1d;
-  --color-game-border: #d6d3d1;
-  --color-game-border-subtle: #e7e5e4;
+  --color-game-danger: #c41e1e;
+  --color-game-evil: #991b1b;
+  --color-game-border: #c4b4a0;
+  --color-game-border-subtle: #d4c4b0;
   --font-game-display: "Cinzel", serif;
   --font-game-body: "Lora", serif;
   --font-game-ui: "Inter", sans-serif;
+}
+
+/* Pre-Game phase uses default @theme (warm). Day phase below uses blue/twilight. */
+
+/* Day phase: blue/twilight look */
+.game-page-root[data-phase="day"] {
+  --color-game-bg: #eef4fa;
+  --color-game-bg-secondary: #e2eaf4;
+  --color-game-bg-elevated: #d4deec;
+  --color-game-bg-card: #c4d0e4;
+  --color-game-text: #1a1e28;
+  --color-game-text-secondary: #2a3242;
+  --color-game-text-muted: #4a5468;
+  --color-game-accent: #4a7ab8;
+  --color-game-accent-hover: #5a8ac8;
+  --color-game-border: #a8bcd4;
+  --color-game-border-subtle: #b8cce4;
+}
+
+/* Night: light text and warm accents on dark base */
+.game-page-root[data-day-night="night"] {
+  --color-game-bg: #3a332e;
+  --color-game-bg-secondary: #423a34;
+  --color-game-bg-elevated: #4a423b;
+  --color-game-bg-card: #524a42;
+  --color-game-text: #f2ebe3;
+  --color-game-text-secondary: #d8cfc4;
+  --color-game-text-muted: #a89d90;
+  --color-game-accent: #e8a84a;
+  --color-game-accent-hover: #f0b85c;
+  --color-game-border: #4a423b;
+  --color-game-border-subtle: #3d3630;
+}
+
+/* One clean transition: night layer crossfades over day; content colors ease with it */
+.game-page-root {
+  --game-transition-duration: 1.5s;
+  --game-transition-ease: cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+/* Content: theme colors ease with day/night so the whole scheme transitions together */
+.game-page-content,
+.game-page-content *:not(button):not(input):not(select) {
+  transition:
+    color var(--game-transition-duration) var(--game-transition-ease),
+    background-color var(--game-transition-duration) var(--game-transition-ease),
+    border-color var(--game-transition-duration) var(--game-transition-ease),
+    box-shadow var(--game-transition-duration) var(--game-transition-ease);
+}
+/* Timeline: same transition as content so line stays in sync with day/night (no jarring snap to white/black) */
+.game-page-content .game-timeline,
+.game-page-content .game-timeline * {
+  transition:
+    color var(--game-transition-duration) var(--game-transition-ease),
+    background-color var(--game-transition-duration) var(--game-transition-ease),
+    border-color var(--game-transition-duration) var(--game-transition-ease),
+    box-shadow var(--game-transition-duration) var(--game-transition-ease);
+}
+/* Timeline dot: no transition so it snaps to active/theme state */
+.game-page-content .game-timeline .game-timeline-dot {
+  transition: none;
+}
+
+/* —— Day phase layer: blue/twilight (visible when data-phase="day") —— */
+.game-page-day-layer {
+  inset: 0;
+}
+.game-page-day-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    #f4f8fc 0%,
+    #e8f0fa 25%,
+    #dce8f4 55%,
+    #d0e0f0 85%,
+    #c4d8ec 100%
+  );
+}
+.game-page-day-image {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  mix-blend-mode: soft-light;
+  opacity: 1;
+}
+.game-page-day-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(235, 245, 255, 0.55) 0%,
+    rgba(220, 238, 255, 0.3) 30%,
+    rgba(200, 228, 255, 0.14) 55%,
+    transparent 80%
+  );
+}
+.game-page-day-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 160% 120% at 50% -40%,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(240, 248, 255, 0.5) 25%,
+    rgba(220, 238, 255, 0.28) 50%,
+    rgba(200, 228, 255, 0.1) 70%,
+    transparent 85%
+  );
+}
+
+/* —— Night layer: one opacity transition so whole scheme fades in/out —— */
+.game-page-night-layer {
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--game-transition-duration)
+    var(--game-transition-ease);
+}
+.game-page-root[data-day-night="night"] .game-page-night-layer {
+  opacity: 1;
+}
+
+/* —— Pre-Game phase layer: warm/day look (visible when data-phase="pre-game") —— */
+.game-page-pregame-layer {
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--game-transition-duration)
+    var(--game-transition-ease);
+}
+.game-page-root[data-phase="pre-game"] .game-page-pregame-layer {
+  opacity: 1;
+}
+.game-page-pregame-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    #f5efe6 0%,
+    #ebe0d4 25%,
+    #e0d4c4 55%,
+    #d6c8b8 80%,
+    #ccbcac 100%
+  );
+}
+.game-page-pregame-cloud {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  mix-blend-mode: soft-light;
+  opacity: 0.6;
+}
+.game-page-pregame-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    rgba(248, 244, 238, 0.72) 0%,
+    rgba(242, 236, 228, 0.5) 35%,
+    rgba(232, 224, 212, 0.35) 70%,
+    rgba(220, 210, 198, 0.25) 100%
+  );
+}
+.game-page-pregame-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 140% 90% at 50% -30%,
+      rgba(255, 250, 242, 0.5) 0%,
+      rgba(250, 242, 230, 0.2) 40%,
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(240, 230, 218, 0.15) 0%,
+      rgba(230, 218, 200, 0.06) 50%,
+      transparent 75%
+    );
+}
+
+.game-page-night-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    #3d3630 0%,
+    #4a4038 25%,
+    #3c342e 60%,
+    #2e2824 100%
+  );
+}
+.game-page-night-cloud {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  mix-blend-mode: soft-light;
+  opacity: 0.5;
+}
+.game-page-night-veil {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  background: linear-gradient(
+    165deg,
+    rgba(58, 48, 42, 0.72) 0%,
+    rgba(48, 42, 38, 0.68) 45%,
+    rgba(42, 36, 32, 0.75) 100%
+  );
+}
+.game-page-night-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 100% 70% at 50% -10%,
+      rgba(120, 100, 85, 0.2) 0%,
+      transparent 50%
+    ),
+    linear-gradient(180deg, rgba(60, 50, 45, 0.15) 0%, transparent 45%);
+}
+
+/* Paper grain – sits above both, opacity eases with same timing */
+.game-page-paper-grain {
+  inset: 0;
+  opacity: 0.06;
+  transition: opacity var(--game-transition-duration)
+    var(--game-transition-ease);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+.game-page-root[data-day-night="night"] .game-page-paper-grain {
+  opacity: 0.08;
 }
 
 :root {
@@ -40,6 +292,49 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Game page: aside (Grimoire / sidebar) – mobile fixed bar, desktop sticky sidebar */
+.game-page-aside {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--color-game-bg);
+  font-family: var(--font-game-ui);
+  /* Mobile: fixed bar at bottom */
+  position: fixed;
+  bottom: 0;
+  left: 3.5rem; /* left-14 */
+  right: 0;
+  z-index: 10;
+  max-height: 220px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--color-game-border-subtle);
+  padding: 1rem 0;
+}
+@media (min-width: 640px) {
+  .game-page-aside {
+    position: sticky;
+    top: 0;
+    max-height: none;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 1.5rem;
+    left: auto;
+    right: auto;
+  }
+}
+@media (min-width: 768px) {
+  .game-page-aside {
+    max-height: calc(100vh - 3.5rem);
+    align-self: flex-start;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 
@@ -81,4 +376,19 @@
 /* Nominee: red outline when circle is done (they will be dead) */
 .grimoire-nominee-red {
   border-color: var(--color-game-danger) !important;
+}
+
+.grimoire-token {
+  cursor: pointer;
+  border-radius: 50%;
+  border: 3px solid #000;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  transform: translate(-50%, -50%);
+}
+.grimoire-token:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
 }

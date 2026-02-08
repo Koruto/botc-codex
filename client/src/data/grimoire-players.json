@@ -1,0 +1,10 @@
+{
+  "players": [
+    { "name": "Bee", "role": "ojo" },
+    { "name": "Koruto", "role": "amnesiac" },
+    { "name": "Commando", "role": "alchemist" },
+    { "name": "Bumblebee", "role": "wizard" },
+    { "name": "beep boop", "role": "fisherman" },
+    { "name": "twob", "role": "lunatic" }
+  ]
+}
