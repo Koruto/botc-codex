@@ -101,7 +101,7 @@
       "Day 1",
       "Night 2",
       "Day 2",
-      "Night 3"
+      "Grimoire Reveal"
     ],
     "beats": [
       {
@@ -164,7 +164,7 @@
         "subtitle": "The Ojo chooses; the Alchemist's wish reshapes the game.",
         "events": [
           {
-            "label": "Demon & kill",
+            "label": "Ojo kills",
             "body": "The Ojo (Bee) chooses the Lunatic. Bee dies in the night."
           },
           {
@@ -176,8 +176,8 @@
       },
       {
         "phaseIndex": 4,
-        "title": "Day 2: The Saint Revealed",
-        "subtitle": "The cost of the first wish comes due; the Atheist claim and a surprise nomination.",
+        "title": "Day 2: The Atheist Gambit",
+        "subtitle": "The cost of wishes comes due; the Storyteller falls.",
         "events": [
           {
             "label": "Revealed role",
@@ -208,19 +208,23 @@
       },
       {
         "phaseIndex": 5,
-        "title": "Night 3: The Grim",
-        "subtitle": "The cost of the Alchemist's wish; only two remain.",
+        "title": "Grimoire Reveal",
+        "subtitle": "The truth laid bare.",
         "events": [
           {
-            "label": "Cost of Commando's wish",
-            "body": "The cost of Commando's Wizard wish had been: \"If you nominate the Storyteller, they become drunk.\" By nominating Starlow (the Storyteller), Starlow had become drunk. In what would have been good win due to saint execution, but due to commando nominating instead, the saint becomes drunk."
+            "label": "Final grimoire",
+            "body": "The Storyteller reveals the final grimoire state, showing the true roles and the twist of the drunk Alchemist whose wish created a false Saint."
           },
           {
-            "label": "Demon kill",
-            "body": "In the night, Commando is killed. Only two players are left alive. The game ends—Evil wins!"
+            "label": "The twist revealed",
+            "body": "The cost of Commando's Wizard wish is revealed: 'If you nominate the Storyteller, you become drunk.' By nominating Starlow, Commando became drunk. Since Commando was drunk when making the wish, there was never a real Saint—the Atheist gambit fails."
+          },
+          {
+            "label": "Evil wins",
+            "body": "With the Storyteller executed in what the town believed was an Atheist game, but with no Saint to trigger the good win condition, the game ends. Evil wins!"
           }
         ],
-        "stats": { "alive": 3, "voteCount": 4 }
+        "stats": { "alive": 4, "voteCount": 5 }
       }
     ]
   }

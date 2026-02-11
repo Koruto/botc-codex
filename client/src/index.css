@@ -20,11 +20,11 @@
   --color-game-bg-secondary: #e6ddd2;
   --color-game-bg-elevated: #dcd0c2;
   --color-game-bg-card: #d0c4b4;
-  --color-game-text: #161210;
-  --color-game-text-secondary: #342c24;
-  --color-game-text-muted: #52483c;
-  --color-game-accent: #b86828;
-  --color-game-accent-hover: #c87832;
+  --color-game-text: #0d0a08;
+  --color-game-text-secondary: #2a1f15;
+  --color-game-text-muted: #443628;
+  --color-game-accent: #a05518;
+  --color-game-accent-hover: #b86828;
   --color-game-good: #0d9488;
   --color-game-good-win: #1d4ed8;
   --color-game-danger: #c41e1e;
@@ -44,34 +44,34 @@
   --color-game-bg-secondary: #e2eaf4;
   --color-game-bg-elevated: #d4deec;
   --color-game-bg-card: #c4d0e4;
-  --color-game-text: #1a1e28;
-  --color-game-text-secondary: #2a3242;
-  --color-game-text-muted: #4a5468;
-  --color-game-accent: #4a7ab8;
-  --color-game-accent-hover: #5a8ac8;
+  --color-game-text: #0f1419;
+  --color-game-text-secondary: #1a2332;
+  --color-game-text-muted: #374558;
+  --color-game-accent: #2c5a8f;
+  --color-game-accent-hover: #3a6aa0;
   --color-game-border: #a8bcd4;
   --color-game-border-subtle: #b8cce4;
 }
 
 /* Night: light text and warm accents on dark base */
 .game-page-root[data-day-night="night"] {
-  --color-game-bg: #3a332e;
-  --color-game-bg-secondary: #423a34;
-  --color-game-bg-elevated: #4a423b;
-  --color-game-bg-card: #524a42;
+  --color-game-bg: #423a35;
+  --color-game-bg-secondary: #4a423c;
+  --color-game-bg-elevated: #524a44;
+  --color-game-bg-card: #5a524b;
   --color-game-text: #f2ebe3;
   --color-game-text-secondary: #d8cfc4;
   --color-game-text-muted: #a89d90;
   --color-game-accent: #e8a84a;
   --color-game-accent-hover: #f0b85c;
-  --color-game-border: #4a423b;
-  --color-game-border-subtle: #3d3630;
+  --color-game-border: #524a44;
+  --color-game-border-subtle: #453d38;
 }
 
-/* One clean transition: night layer crossfades over day; content colors ease with it */
+/* One clean transition: smooth crossfade with gentle easing to avoid eye strain */
 .game-page-root {
-  --game-transition-duration: 1.5s;
-  --game-transition-ease: cubic-bezier(0.33, 0, 0.2, 1);
+  --game-transition-duration: 2s;
+  --game-transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Content: theme colors ease with day/night so the whole scheme transitions together */
@@ -92,14 +92,24 @@
     border-color var(--game-transition-duration) var(--game-transition-ease),
     box-shadow var(--game-transition-duration) var(--game-transition-ease);
 }
-/* Timeline dot: no transition so it snaps to active/theme state */
+/* Timeline dot: inherit theme color transitions from parent, but no transition for active state change */
 .game-page-content .game-timeline .game-timeline-dot {
-  transition: none;
+  transition:
+    background-color var(--game-transition-duration) var(--game-transition-ease),
+    border-color var(--game-transition-duration) var(--game-transition-ease),
+    box-shadow var(--game-transition-duration) var(--game-transition-ease);
 }
 
 /* —— Day phase layer: blue/twilight (visible when data-phase="day") —— */
 .game-page-day-layer {
   inset: 0;
+  opacity: 1;
+  transition: opacity var(--game-transition-duration)
+    var(--game-transition-ease);
+}
+.game-page-root[data-phase="pre-game"] .game-page-day-layer,
+.game-page-root[data-day-night="night"] .game-page-day-layer {
+  opacity: 0;
 }
 .game-page-day-base {
   position: absolute;
@@ -120,7 +130,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   mix-blend-mode: soft-light;
-  opacity: 1;
+  opacity: 0.8;
 }
 .game-page-day-veil {
   position: absolute;
@@ -187,7 +197,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   mix-blend-mode: soft-light;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 .game-page-pregame-veil {
   position: absolute;
@@ -223,10 +233,10 @@
   inset: 0;
   background: linear-gradient(
     165deg,
-    #3d3630 0%,
-    #4a4038 25%,
-    #3c342e 60%,
-    #2e2824 100%
+    #453e38 0%,
+    #524840 25%,
+    #443c36 60%,
+    #36302c 100%
   );
 }
 .game-page-night-cloud {
@@ -236,7 +246,7 @@
   background-repeat: no-repeat;
   background-size: cover;
   mix-blend-mode: soft-light;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 .game-page-night-veil {
   position: absolute;
@@ -244,9 +254,9 @@
   mix-blend-mode: multiply;
   background: linear-gradient(
     165deg,
-    rgba(58, 48, 42, 0.72) 0%,
-    rgba(48, 42, 38, 0.68) 45%,
-    rgba(42, 36, 32, 0.75) 100%
+    rgba(58, 48, 42, 0.65) 0%,
+    rgba(48, 42, 38, 0.6) 45%,
+    rgba(42, 36, 32, 0.68) 100%
   );
 }
 .game-page-night-overlay {
@@ -255,23 +265,23 @@
   background:
     radial-gradient(
       ellipse 100% 70% at 50% -10%,
-      rgba(120, 100, 85, 0.2) 0%,
+      rgba(120, 100, 85, 0.15) 0%,
       transparent 50%
     ),
-    linear-gradient(180deg, rgba(60, 50, 45, 0.15) 0%, transparent 45%);
+    linear-gradient(180deg, rgba(60, 50, 45, 0.12) 0%, transparent 45%);
 }
 
 /* Paper grain – sits above both, opacity eases with same timing */
 .game-page-paper-grain {
   inset: 0;
-  opacity: 0.06;
+  opacity: 0.05;
   transition: opacity var(--game-transition-duration)
     var(--game-transition-ease);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 .game-page-root[data-day-night="night"] .game-page-paper-grain {
-  opacity: 0.08;
+  opacity: 0.07;
 }
 
 :root {
@@ -287,54 +297,70 @@
 @keyframes game-fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+.animate-game-fade-in-up {
+  animation: game-fade-in-up 0.3s ease-out forwards;
+}
 
-/* Game page: aside (Grimoire / sidebar) – mobile fixed bar, desktop sticky sidebar */
+/* Game page: aside (Grimoire / sidebar) – mobile flex item, desktop side panel */
 .game-page-aside {
   display: flex;
   width: 100%;
   flex-direction: column;
   overflow: hidden;
-  background-color: var(--color-game-bg);
+  background-color: transparent; /* Keep transparent as requested */
   font-family: var(--font-game-ui);
-  /* Mobile: fixed bar at bottom */
-  position: fixed;
-  bottom: 0;
-  left: 3.5rem; /* left-14 */
-  right: 0;
-  z-index: 10;
-  max-height: 220px;
-  flex-direction: row;
+
+  /* Flexbox positioning (not fixed anymore) */
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+
   align-items: center;
   justify-content: center;
-  border-top: 1px solid var(--color-game-border-subtle);
-  padding: 1rem 0;
+
+  /* Remove top border as requested ("line above the grimoire") */
+  border-top: none;
+  /* Add padding for spacing ("natural difference") */
+  padding: 0.5rem 0.25rem 0.1rem 0.25rem;
 }
-@media (min-width: 640px) {
+
+@media (min-width: 768px) {
   .game-page-aside {
-    position: sticky;
-    top: 0;
-    max-height: none;
-    flex-direction: column;
+    /* Fixed positioning on desktop */
+    position: fixed;
+    right: 0;
+    top: 3.5rem; /* Below nav bar */
+    bottom: 0;
+    width: 400px;
+    height: auto;
+    /* On desktop, keep side border */
+    border-left: 1px solid var(--color-game-border-subtle);
+    border-top: none;
     align-items: stretch;
     justify-content: flex-start;
     padding: 1.5rem;
-    left: auto;
-    right: auto;
+    overflow-y: auto; /* Allow scroll if content is tall */
   }
 }
-@media (min-width: 768px) {
+
+@media (min-width: 1024px) {
   .game-page-aside {
-    max-height: calc(100vh - 3.5rem);
-    align-self: flex-start;
+    width: 480px;
     padding-left: 2rem;
     padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .game-page-aside {
+    width: 500px;
   }
 }
 
@@ -390,4 +416,17 @@
 .grimoire-token:hover {
   transform: scale(1.08);
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+}
+
+.no-scrollbar {
+  /* (Standard) Hides scrollbar for Firefox */
+  scrollbar-width: none;
+
+  /* Hides scrollbar for IE and older Edge */
+  -ms-overflow-style: none;
+}
+
+/* Hides scrollbar for Chrome, Safari, and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

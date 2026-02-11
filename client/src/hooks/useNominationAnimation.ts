@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 
-/** Delay before nomination clock starts (ms). */
-const NOMINATION_ROTATION_DELAY_MS = 1000
+/** Delay before nomination clock starts (ms). Wait for background transition (2s) + small buffer. */
+const NOMINATION_ROTATION_DELAY_MS = 2000
 /** Duration for the nomination clock hand to complete one full rotation (ms). */
 const NOMINATION_ROTATION_DURATION_MS = 2800
 /** Delay after rotation finishes before hiding hands and showing stats (ms). */

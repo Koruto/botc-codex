@@ -27,14 +27,16 @@ export function GameStory({ title, subtitle, meta, phases, registerPhaseRef }: G
         <section
           key={`${phase.title}-${i}`}
           ref={(el) => registerPhaseRef?.(i, el)}
-          className="mb-20"
+          className="mb-10 md:mb-20"
         >
-          <h2 className="font-game-display text-xl font-semibold text-game-text">
-            {phase.title}
-          </h2>
-          <p className="mt-1 text-sm text-game-text-muted">
-            {phase.subtitle}
-          </p>
+          <>
+            <h2 className="font-game-display text-xl font-semibold text-game-text">
+              {phase.title}
+            </h2>
+            <p className="mt-1 text-sm text-game-text-muted">
+              {phase.subtitle}
+            </p>
+          </>
           {phase.events.map((event) => (
             <div
               key={event.label}

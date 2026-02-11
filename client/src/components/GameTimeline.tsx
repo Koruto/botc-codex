@@ -18,7 +18,7 @@ export function GameTimeline({ labels, activeIndex, onBeatClick }: GameTimelineP
         />
         {labels.map((label, i) => (
           <button
-            key={label}
+            key={`${label}-${i}`}
             type="button"
             onClick={() => onBeatClick(i)}
             aria-label={`Jump to ${label}`}
@@ -32,9 +32,9 @@ export function GameTimeline({ labels, activeIndex, onBeatClick }: GameTimelineP
                 }`}
             />
             <span
-              className={`hidden font-game-ui text-xs sm:inline ${i === activeIndex
-                ? 'font-medium text-game-text'
-                : 'text-game-text-muted group-hover:font-medium group-hover:text-game-text'
+              className={`font-game-ui text-[10px] font-bold tracking-tighter sm:text-xs ${i === activeIndex
+                ? 'text-game-text'
+                : 'text-game-text-muted group-hover:text-game-text'
                 }`}
             >
               {label}

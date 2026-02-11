@@ -32,21 +32,21 @@ export function GrimoireTokenOverlays({
     <>
       {showNominationHands && votesForIndices.includes(index) && revealedHandIndices.has(index) && !isTokenPassed(index) && (
         <span className="absolute inset-0 flex items-center justify-center pointer-events-none z-10" aria-hidden>
-          <FontAwesomeIcon icon={faHand} className="text-[4vmin] text-white drop-shadow-lg" />
+          <FontAwesomeIcon icon={faHand} className="text-[1.6em] text-white drop-shadow-lg" />
         </span>
       )}
       {showNominationHands && !rotationDoneDisplay && isTokenPassed(index) && (
         <span className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 text-blue-900" aria-hidden>
           {votesForIndices.includes(index) ? (
-            <FontAwesomeIcon icon={faThumbsUp} className="text-[4vmin]" />
+            <FontAwesomeIcon icon={faThumbsUp} className="text-[1.6em]" />
           ) : (
-            <FontAwesomeIcon icon={faXmark} className="text-[5vmin]" />
+            <FontAwesomeIcon icon={faXmark} className="text-[2.2em]" />
           )}
         </span>
       )}
       {showNominationHands && rotationDoneDisplay && index === executedPlayerIndex && (
         <span className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 bg-black/40 rounded-full" aria-hidden>
-          <FontAwesomeIcon icon={faSkull} className="text-[5vmin] text-white drop-shadow-lg" />
+          <FontAwesomeIcon icon={faSkull} className="text-[1.8em] text-white drop-shadow-lg" />
         </span>
       )}
       {isDay && (
@@ -54,8 +54,11 @@ export function GrimoireTokenOverlays({
       )}
       {!isDay && nightIconUrl && (
         <span
-          className="absolute inset-0 rounded-full bg-no-repeat bg-size-[90%] bg-position-[center_20%] pointer-events-none"
-          style={{ backgroundImage: `url(${nightIconUrl})` }}
+          className="absolute inset-0 rounded-full bg-no-repeat bg-size-[90%] bg-position-[center_20%] pointer-events-none transition-opacity duration-2000"
+          style={{
+            backgroundImage: `url(${nightIconUrl})`,
+            opacity: isDay ? 0 : 1
+          }}
           aria-hidden
         />
       )}
@@ -73,7 +76,7 @@ export function GrimoireTokenOverlays({
             />
           </defs>
           <text
-            className="fill-black stroke-white [paint-order:stroke] font-bold text-[1.8em] tracking-wide group-hover:fill-white group-hover:stroke-black transition-colors duration-150"
+            className="fill-black stroke-white [paint-order:stroke] font-bold text-[1.4em] tracking-wide group-hover:fill-white group-hover:stroke-black transition-[fill,stroke,opacity] duration-2000"
             style={{ strokeWidth: 3.5, fontFamily: '"Lora", Georgia, serif' }}
           >
             <textPath href={`#grimoire-curve-${index}`} startOffset="50%" textAnchor="middle">

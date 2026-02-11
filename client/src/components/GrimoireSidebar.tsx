@@ -41,10 +41,9 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
       navigator.clipboard.writeText(JSON.stringify(townSquare, null, 2))
     }
   }
-
   return (
-    <aside className="sticky h-[calc(100vh-3.5rem)] top-0 self-start flex flex-col gap-4 overflow-y-auto p-4 shrink-0">
-      <div className="flex shrink-0 items-start justify-between gap-3">
+    <aside className="game-page-aside gap-4 p-4 shrink-0">
+      <div className="hidden md:flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-widest text-game-text-muted">
             Current phase
@@ -63,7 +62,6 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
           </button>
         )}
       </div>
-
       <Grimoire
         isDay={!isNight}
         isPreGame={isPreGame}

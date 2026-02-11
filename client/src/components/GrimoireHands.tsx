@@ -15,15 +15,15 @@ export function GrimoireHands({ show, rotationAngleDeg, nominatorAngleDeg }: Gri
 
   return (
     <div
-      className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-full"
+      className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-full"
       aria-hidden
     >
       {/* Big hand: rotates full circle from center when day/nomination is active */}
       <div
         className="grimoire-hand-appear absolute left-1/2 top-1/2 overflow-visible"
         style={{
-          width: '55%',
-          height: '55%',
+          width: '42%',
+          height: '42%',
           transformOrigin: '50% 100%',
           transform: `translate(-50%, -100%) rotate(${rotationAngleDeg}deg)`,
         }}
@@ -40,8 +40,8 @@ export function GrimoireHands({ show, rotationAngleDeg, nominatorAngleDeg }: Gri
         <div
           className="grimoire-hand-appear absolute left-1/2 top-1/2"
           style={{
-            width: '55%',
-            height: '45%',
+            width: '35%',
+            height: '35%',
             transformOrigin: '50% 100%',
             transform: `translate(-50%, -100%) rotate(${nominatorAngleDeg}deg)`,
             animationDelay: '0.1s',
