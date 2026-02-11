@@ -5,6 +5,8 @@
 export interface NarrativeEventBase {
   label: string
   body: string
+  /** Optional map of player name -> new role ID to update state at this event. */
+  roleUpdates?: Record<string, string>
 }
 
 export interface NarrativeEvent extends NarrativeEventBase {
@@ -49,7 +51,9 @@ export interface GameViewNarrative {
   subtitle: string
   meta: { played: string; edition: string; playerCount: number; storyteller?: string }
   timeline: { phaseLabels: string[]; beats: NarrativePhase[] }
-  townSquare?: object
+  townSquare?: {
+    players: Array<{ name: string; role: string }>
+  }
   players: Array<{ name: string; role: string; pronouns: string; deathAtBeat: number | null }>
 }
 

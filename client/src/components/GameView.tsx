@@ -143,6 +143,31 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     }
   }, [gameId])
 
+  const currentPlayers = useMemo(() => {
+    // Start with initial players from townSquare
+    const initialPlayers = narrative.townSquare?.players ?? []
+    // Deep copy to avoid mutating original
+    const players = initialPlayers.map(p => ({ ...p }))
+
+    // Apply updates from all phases up to current active phase
+    for (let i = 0; i <= activePhaseIndex; i++) {
+      const beat = narrative.timeline.beats[i]
+      if (!beat) continue
+
+      for (const event of beat.events) {
+        if (event.roleUpdates) {
+          for (const [playerName, newRole] of Object.entries(event.roleUpdates)) {
+            const playerIndex = players.findIndex(p => p.name === playerName)
+            if (playerIndex !== -1) {
+              players[playerIndex].role = newRole
+            }
+          }
+        }
+      }
+    }
+    return players
+  }, [narrative, activePhaseIndex])
+
   const grimoireSidebar = (
     <GrimoireSidebar
       currentPhaseLabel={currentPhaseLabel}
@@ -158,6 +183,7 @@ export function GameView({ narrative, gameId }: GameViewProps) {
       storytellerName={narrative.meta.storyteller}
       currentBeatIndex={activePhaseIndex}
       narrativePlayers={narrative.players}
+      players={currentPlayers}
     />
   )
 

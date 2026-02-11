@@ -131,6 +131,10 @@
           },
           {
             "label": "Character swap",
+            "roleUpdates": {
+              "Bee": "lunatic",
+              "twob": "ojo"
+            },
             "body": "Bee and twob swapped characters on Night 1 due to Bumblebee's wish. Bee is now the Lunatic and Twob is the Ojo."
           }
         ],

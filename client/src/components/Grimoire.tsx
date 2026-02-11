@@ -32,7 +32,7 @@ const rolesById = new Map<string, RoleInfo>(
   (rolesData as RoleInfo[]).map((r) => [r.id, r])
 )
 
-const players: GrimoirePlayer[] = (grimoireData as { players: GrimoirePlayer[] }).players
+const defaultPlayers: GrimoirePlayer[] = (grimoireData as { players: GrimoirePlayer[] }).players
 
 function getIconUrl(roleId: string): string {
   if (!roleId) return customIcon
@@ -67,11 +67,15 @@ interface GrimoireProps {
   /** Current beat index to determine death status */
   currentBeatIndex?: number
   /** Player list with death information */
+  /** Player list with death information */
   narrativePlayers?: Array<{ name: string; deathAtBeat: number | null }>
+  /** Current players state (names and roles). */
+  players?: GrimoirePlayer[]
 }
 
-export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentBeatIndex, narrativePlayers }: GrimoireProps) {
-  const total = totalPlayers ?? players.length
+export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentBeatIndex, narrativePlayers, players }: GrimoireProps) {
+  const currentPlayers = players ?? defaultPlayers
+  const total = totalPlayers ?? currentPlayers.length
   const alive = aliveCount ?? total
   const votes = voteCount ?? total
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -84,10 +88,10 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
   /** Script breakdown from game.json; index = playerCount - MIN_PLAYERS (5→0, 6→1, …). */
   const scriptCounts = useMemo((): GameScript => {
     const scripts = gameJson as GameScript[]
-    if (players.length < MIN_PLAYERS) return { townsfolk: 0, outsider: 0, minion: 1, demon: 1 }
-    const idx = players.length - MIN_PLAYERS
+    if (currentPlayers.length < MIN_PLAYERS) return { townsfolk: 0, outsider: 0, minion: 1, demon: 1 }
+    const idx = currentPlayers.length - MIN_PLAYERS
     return scripts[idx] ?? scripts[0]
-  }, [])
+  }, [currentPlayers])
 
   /* Pre-Game = warm (amber). Day = blue/twilight. Night = dark. */
   const statsBoxStyle = isPreGame
@@ -118,7 +122,7 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
     votesForIndices,
     executedPlayerIndex
   } = useGrimoireNominationData({
-    players,
+    players: currentPlayers,
     nomination,
     storytellerName
   })
@@ -313,7 +317,7 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
                     transition: 'border-color 2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 2s cubic-bezier(0.4, 0, 0.2, 1), background-color 2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease'
                   }}
                   onClick={() => handleTokenClick(i)}
-                  onMouseEnter={() => !isDay && setHoveredIndex(i)}
+                  onMouseEnter={() => (!isDay || isPreGame) && setHoveredIndex(i)}
                   onMouseLeave={() => setHoveredIndex(null)}
                   aria-label={player && name ? `${player.name}, ${name}` : undefined}
                 >
@@ -360,7 +364,7 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
       </div>
 
 
-      {!isDay && hoveredRole && (
+      {(!isDay || isPreGame) && hoveredRole && (
         <div
           className="hidden md:block w-full max-w-[280px] rounded-lg border-2 border-black bg-black/90 p-3 text-left text-white shadow-lg z-50 pointer-events-none"
           role="tooltip"

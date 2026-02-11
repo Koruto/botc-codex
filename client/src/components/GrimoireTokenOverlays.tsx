@@ -55,17 +55,17 @@ export function GrimoireTokenOverlays({
       {isDay && (
         <span className={`absolute inset-0 rounded-full pointer-events-none ${isPreGame ? 'bg-amber-400/25' : 'bg-blue-300/30'}`} aria-hidden />
       )}
-      {!isDay && nightIconUrl && (
+      {(!isDay || isPreGame) && nightIconUrl && (
         <span
           className="absolute inset-0 rounded-full bg-no-repeat bg-size-[90%] bg-position-[center_20%] pointer-events-none transition-opacity duration-2000"
           style={{
             backgroundImage: `url(${nightIconUrl})`,
-            opacity: isDay ? 0 : 1
+            opacity: isDay && !isPreGame ? 0 : 1
           }}
           aria-hidden
         />
       )}
-      {!isDay && name && (
+      {(!isDay || isPreGame) && name && (
         <svg
           viewBox="0 0 150 150"
           className="absolute inset-0 h-full w-full overflow-visible"
