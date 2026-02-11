@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHand, faXmark, faThumbsUp, faSkull } from '@fortawesome/free-solid-svg-icons'
+import shroudImg from '../../assets/shroud.png'
 
 export interface GrimoireTokenOverlaysProps {
   index: number
@@ -13,6 +14,7 @@ export interface GrimoireTokenOverlaysProps {
   isPreGame?: boolean
   nightIconUrl: string | null
   name: string | null
+  isDead: boolean
 }
 
 export function GrimoireTokenOverlays({
@@ -27,6 +29,7 @@ export function GrimoireTokenOverlays({
   isPreGame,
   nightIconUrl,
   name,
+  isDead,
 }: GrimoireTokenOverlaysProps) {
   return (
     <>
@@ -84,6 +87,26 @@ export function GrimoireTokenOverlays({
             </textPath>
           </text>
         </svg>
+      )}
+      {isDead && !isDay && (
+        <span
+          className="absolute left-1/2 -translate-x-1/2 -top-1 bg-no-repeat bg-contain pointer-events-none z-100001"
+          style={{
+            backgroundImage: `url(${shroudImg})`,
+            width: '40%',
+            height: '70%',
+          }}
+          aria-hidden
+        />
+      )}
+      {isDead && isDay && (
+        <span
+          className="absolute inset-0 rounded-full pointer-events-none z-5"
+          style={{
+            boxShadow: 'inset 0 0 0 11px rgba(0, 0, 0, 0.85), inset 0 0 0 8px transparent'
+          }}
+          aria-hidden
+        />
       )}
     </>
   )

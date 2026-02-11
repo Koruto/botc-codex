@@ -50,6 +50,7 @@ export interface GameViewNarrative {
   meta: { played: string; edition: string; playerCount: number; storyteller?: string }
   timeline: { phaseLabels: string[]; beats: NarrativePhase[] }
   townSquare?: object
+  players: Array<{ name: string; role: string; pronouns: string; deathAtBeat: number | null }>
 }
 
 /** Props for the story content (phase title, subtitle, events). */

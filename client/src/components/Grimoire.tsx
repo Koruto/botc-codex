@@ -64,9 +64,13 @@ interface GrimoireProps {
   nomination?: GrimoireNomination
   /** Name of the Storyteller (for ST token). Defaults to "Storyteller". */
   storytellerName?: string
+  /** Current beat index to determine death status */
+  currentBeatIndex?: number
+  /** Player list with death information */
+  narrativePlayers?: Array<{ name: string; deathAtBeat: number | null }>
 }
 
-export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName }: GrimoireProps) {
+export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentBeatIndex, narrativePlayers }: GrimoireProps) {
   const total = totalPlayers ?? players.length
   const alive = aliveCount ?? total
   const votes = voteCount ?? total
@@ -315,6 +319,13 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
                 >
                   {isStoryteller && <span className="drop-shadow-md">ST</span>}
                   <GrimoireTokenOverlays
+                    isDead={(() => {
+                      if (!narrativePlayers || currentBeatIndex === undefined || !player) return false
+                      const narrativePlayer = narrativePlayers.find(p => p.name === player.name)
+                      if (!narrativePlayer || narrativePlayer.deathAtBeat === null) return false
+                      // Death shows in next phase: if died at beat X, show dead starting at beat X+1
+                      return currentBeatIndex > narrativePlayer.deathAtBeat
+                    })()}
                     index={i}
                     showNominationHands={showNominationHandsDelayed}
                     votesForIndices={votesForIndices}

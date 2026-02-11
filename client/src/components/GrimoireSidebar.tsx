@@ -33,9 +33,13 @@ interface GrimoireSidebarProps {
   townSquare?: object
   /** Name of the Storyteller (for ST token). Defaults to "Storyteller". */
   storytellerName?: string
+  /** Current beat index for death indicator timing */
+  currentBeatIndex?: number
+  /** Player list with death information */
+  narrativePlayers?: Array<{ name: string; deathAtBeat: number | null }>
 }
 
-export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName }: GrimoireSidebarProps) {
+export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName, currentBeatIndex, narrativePlayers }: GrimoireSidebarProps) {
   const handleCopy = () => {
     if (townSquare) {
       navigator.clipboard.writeText(JSON.stringify(townSquare, null, 2))
@@ -70,6 +74,8 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
         voteCount={grimoireStats?.voteCount}
         nomination={nomination}
         storytellerName={storytellerName}
+        currentBeatIndex={currentBeatIndex}
+        narrativePlayers={narrativePlayers}
       />
     </aside>
   )

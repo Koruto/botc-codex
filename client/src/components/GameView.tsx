@@ -156,6 +156,8 @@ export function GameView({ narrative, gameId }: GameViewProps) {
       nomination={activeNomination ? { nominator: activeNomination.nominator, nominee: activeNomination.nominee, votesFor: activeNomination.votesFor, votesAgainst: activeNomination.votesAgainst, executed: activeNomination.executed } : undefined}
       townSquare={narrative.townSquare}
       storytellerName={narrative.meta.storyteller}
+      currentBeatIndex={activePhaseIndex}
+      narrativePlayers={narrative.players}
     />
   )
 
