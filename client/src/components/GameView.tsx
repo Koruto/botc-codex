@@ -203,7 +203,7 @@ export function GameView({ narrative, gameId }: GameViewProps) {
             </div>
           </nav>
 
-          <div className={`mt-14 flex flex-col ${isMobile ? 'flex-1 overflow-hidden' : 'flex-1'}`}>
+          <div className={`mt-14 flex flex-col ${isMobile ? 'flex-1 overflow-hidden min-h-0' : 'flex-1'}`}>
             <div
               ref={scrollContainerRef}
               onScroll={isMobile ? handleScroll : undefined}
