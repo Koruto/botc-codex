@@ -209,7 +209,7 @@ export function GameView({ narrative, gameId }: GameViewProps) {
               onScroll={isMobile ? handleScroll : undefined}
               className={`flex-1 ${isMobile ? 'overflow-y-auto scrollbar-hide' : ''}`}
             >
-              <div className={`flex flex-col ${isMobile ? 'min-h-full' : 'min-h-full'}`}>
+              <div className={`flex flex-col ${isMobile ? '' : 'min-h-full'}`}>
                 <GameStory
                   title={narrative.title}
                   subtitle={narrative.subtitle}

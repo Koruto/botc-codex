@@ -131,7 +131,7 @@
           },
           {
             "label": "Character swap",
-            "body": "Bee and twob swapped characters on Night 1 due to Bumblebee's wish."
+            "body": "Bee and twob swapped characters on Night 1 due to Bumblebee's wish. Bee is now the Lunatic and Twob is the Ojo."
           }
         ],
         "stats": { "alive": 6, "voteCount": 6 }
@@ -165,7 +165,7 @@
         "events": [
           {
             "label": "Ojo kills",
-            "body": "The Ojo (Bee) chooses the Lunatic. Bee dies in the night."
+            "body": "The Ojo (Twob) chooses the Lunatic. Bee dies in the night."
           },
           {
             "label": "Alchemist Wizard wish",
