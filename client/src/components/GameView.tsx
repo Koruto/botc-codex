@@ -1,6 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { GameViewNarrative, GameStoryPhase } from '../types/game'
+import type { GameViewNarrative, GameStoryPhase, NominationEvent, TimelineEvent } from '../types/game'
+
+function isNominationEvent(e: TimelineEvent): e is NominationEvent {
+  return 'type' in e && e.type === 'nomination'
+}
+
+function getNominationFromBeat(beat: { events?: TimelineEvent[] } | undefined): NominationEvent | null {
+  if (!beat?.events?.length) return null
+  const nominationEvents = beat.events.filter(isNominationEvent)
+  const last = nominationEvents[nominationEvents.length - 1]
+  return last ?? null
+}
 import { GameTimeline } from './GameTimeline'
 import { GameStory } from './GameStory'
 import { GrimoireSidebar } from './GrimoireSidebar'
@@ -62,8 +73,15 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     events: b.events.map((e) => ({ label: e.label, body: e.body })),
   }))
 
+  const currentBeat = narrative.timeline.beats[activePhaseIndex]
+  const activeNomination = useMemo(
+    () => getNominationFromBeat(currentBeat),
+    [currentBeat]
+  )
+
   const currentPhaseLabel = phaseLabels[activePhaseIndex] ?? ''
   const isPreGame = currentPhaseLabel === 'Pre-Game'
+  const preGameForGrimoire = isPreGame
   const isNight = currentPhaseLabel.startsWith('Night')
 
   const phase = isPreGame ? 'pre-game' : isNight ? 'night' : 'day'
@@ -141,17 +159,19 @@ export function GameView({ narrative, gameId }: GameViewProps) {
                 phases={phases}
                 registerPhaseRef={registerPhaseRef}
               />
-              <GrimoireSidebar
-                currentPhaseLabel={currentPhaseLabel}
-                isNight={isNight}
-                isPreGame={isPreGame}
-                grimoireStats={{
-                  totalPlayers: narrative.meta.playerCount,
-                  aliveCount: narrative.timeline.beats[activePhaseIndex]?.stats?.alive,
-                  voteCount: narrative.timeline.beats[activePhaseIndex]?.stats?.voteCount,
-                }}
-                townSquare={narrative.townSquare}
-              />
+                <GrimoireSidebar
+                  currentPhaseLabel={currentPhaseLabel}
+                  isNight={isNight}
+                  isPreGame={preGameForGrimoire}
+                  grimoireStats={{
+                    totalPlayers: narrative.meta.playerCount,
+                    aliveCount: narrative.timeline.beats[activePhaseIndex]?.stats?.alive,
+                    voteCount: narrative.timeline.beats[activePhaseIndex]?.stats?.voteCount,
+                  }}
+                  nomination={activeNomination ? { nominator: activeNomination.nominator, nominee: activeNomination.nominee, votesFor: activeNomination.votesFor, votesAgainst: activeNomination.votesAgainst, executed: activeNomination.executed } : undefined}
+                  townSquare={narrative.townSquare}
+                  storytellerName={narrative.meta.storyteller}
+                />
             </div>
           </div>
         </div>

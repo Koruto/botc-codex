@@ -386,9 +386,8 @@
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
-  transform: translate(-50%, -50%);
 }
 .grimoire-token:hover {
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: scale(1.08);
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
 }
