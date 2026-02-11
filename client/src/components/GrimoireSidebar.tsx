@@ -42,7 +42,7 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
     }
   }
   return (
-    <aside className="game-page-aside gap-4 p-4 shrink-0">
+    <aside className="game-page-aside gap-4 md:p-4 shrink-0">
       <div className="hidden md:flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-widest text-game-text-muted">
