@@ -1,0 +1,109 @@
+{
+  "bluffs": ["pacifist", "courtier", "innkeeper"],
+  "edition": {
+    "id": "bmr"
+  },
+  "roles": "",
+  "fabled": [],
+  "players": [
+    {
+      "name": "Twob",
+      "id": "",
+      "role": "lunatic",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "WinterBed",
+      "id": "",
+      "role": "exorcist",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": ""
+    },
+    {
+      "name": "Koruto",
+      "id": "",
+      "role": "tinker",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "CookedBread",
+      "id": "",
+      "role": "sailor",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": ""
+    },
+    {
+      "name": "Commando",
+      "id": "",
+      "role": "gambler",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "Maglev",
+      "id": "",
+      "role": "fool",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "Keira",
+      "id": "",
+      "role": "mastermind",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "Beep",
+      "id": "",
+      "role": "pukka",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "Pearl",
+      "id": "",
+      "role": "professor",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "AllenCaspe",
+      "id": "",
+      "role": "minstrel",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": true,
+      "pronouns": ""
+    },
+    {
+      "name": "Venox X",
+      "id": "",
+      "role": "godfather",
+      "reminders": [],
+      "isVoteless": false,
+      "isDead": false,
+      "pronouns": ""
+    }
+  ]
+}

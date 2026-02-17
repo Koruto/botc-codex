@@ -23,6 +23,12 @@ export function ServerPage() {
         <h2 className="mb-4 text-lg font-medium text-stone-200">Games</h2>
         <ul className="space-y-3">
           <li className="flex items-center justify-between rounded border border-stone-700 p-3">
+            <Link to="/game/the-beginning" className="text-amber-400 hover:underline">
+              The Beginning — 11 players — Feb 2025
+            </Link>
+            <span className="text-xs text-stone-500">Admin</span>
+          </li>
+          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
             <Link to="/game/wizard-game" className="text-amber-400 hover:underline">
               The Wizard's Gambit — 6 players — Feb 2025
             </Link>

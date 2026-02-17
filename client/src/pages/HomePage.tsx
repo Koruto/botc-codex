@@ -35,6 +35,11 @@ export function HomePage() {
         <h2 className="mb-4 text-lg font-medium text-stone-200">Recent games</h2>
         <ul className="space-y-2 text-stone-400">
           <li>
+            <Link to="/game/the-beginning" className="text-amber-400 hover:underline">
+              The Beginning — April 2023
+            </Link>
+          </li>
+          <li>
             <Link to="/game/wizard-game" className="text-amber-400 hover:underline">
               The Wizard's Gambit — Feb 2025
             </Link>

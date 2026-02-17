@@ -345,7 +345,7 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
                 </div>
 
                 {player && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 sm:mt-2 flex justify-center items-start w-0 overflow-visible z-20 pointer-events-none">
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 ${total < 10 && 'mt-1'} ${total < 10 && 'sm:mt-2'} flex justify-center items-start w-0 overflow-visible z-20 pointer-events-none`}>
                     <span
                       className={`text-[min(3.5vw,13px)] font-bold leading-none whitespace-nowrap px-1 py-0.5 rounded ${isPreGame || isDay
                         ? 'text-slate-900 drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]'
@@ -369,8 +369,8 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
           className="hidden md:block w-full max-w-[280px] rounded-lg border-2 border-black bg-black/90 p-3 text-left text-white shadow-lg z-50 pointer-events-none"
           role="tooltip"
         >
-          <p 
-            className="font-semibold text-sm" 
+          <p
+            className="font-semibold text-sm"
             style={{ color: SCRIPT_TEAMS.find(t => t.key === hoveredRole.team)?.color || '#e8a84a' }}
           >
             {hoveredRole.name}
