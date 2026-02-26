@@ -1,4 +1,4 @@
-import type { GameStoryPhase } from '../types/game'
+import type { GameStoryPhase } from '../types/old_game'
 
 interface GameStoryProps {
   title: string

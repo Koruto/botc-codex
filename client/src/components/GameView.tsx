@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { GameViewNarrative, GameStoryPhase, NominationEvent, TimelineEvent } from '../types/game'
+import type { GameViewNarrative, GameStoryPhase, NominationEvent, TimelineEvent } from '../types/old_game'
 
 function isNominationEvent(e: TimelineEvent): e is NominationEvent {
   return 'type' in e && e.type === 'nomination'

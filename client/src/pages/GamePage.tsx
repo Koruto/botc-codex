@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { GameView } from '../components'
-import type { GameViewNarrative } from '../types/game'
+import type { GameViewNarrative } from '../types/old_game'
 import wizardNarrative from '../data/wizard-game-narrative.json'
 import theBeginningNarrative from '../data/the-beginning-narrative.json'
 
