@@ -1,21 +1,24 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { GameView } from '../components'
-import type { GameViewNarrative } from '../types/old_game'
-import wizardNarrative from '../data/wizard-game-narrative.json'
-import theBeginningNarrative from '../data/the-beginning-narrative.json'
+import type { Game } from '@/types'
+import { deriveGame } from '../utils/deriveGame'
+import wizardTeensy from '../data/wizard-teensy.json'
+import g3 from '../data/g3.json'
 
-const narratives: Record<string, GameViewNarrative> = {
-  'wizard-game': wizardNarrative as GameViewNarrative,
-  'the-beginning': theBeginningNarrative as GameViewNarrative,
+const gameData: Record<string, Game> = {
+  'wizard-game': wizardTeensy as Game,
+  'the-beginning': g3 as Game,
 }
+
+const defaultGame = wizardTeensy as Game
 
 export function GamePage() {
   const { gameId } = useParams()
-  const narrative = useMemo((): GameViewNarrative => {
-    if (gameId && narratives[gameId]) return narratives[gameId]
-    return wizardNarrative as GameViewNarrative
+  const game = useMemo(() => {
+    const g = (gameId && gameData[gameId]) ? gameData[gameId] : defaultGame
+    return deriveGame(g)
   }, [gameId])
 
-  return <GameView narrative={narrative} gameId={gameId} />
+  return <GameView game={game} gameId={gameId} />
 }

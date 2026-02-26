@@ -19,7 +19,5 @@ export type RoleInfo = {
   otherNightReminder: string
   reminders: string[]       // reminder tokens this role uses
   setup: boolean            // affects setup phase
-  icon?: string             // we added this, optional
+  icon?: string
 }
-
-export const STORYTELLER_ID = "__storyteller__"

@@ -33,15 +33,17 @@ interface GrimoireSidebarProps {
   townSquare?: object
   /** Name of the Storyteller (for ST token). Defaults to "Storyteller". */
   storytellerName?: string
-  /** Current beat index for death indicator timing */
-  currentBeatIndex?: number
+  /** Current phase index for death indicator timing */
+  currentPhaseIndex?: number
   /** Player list with death information */
-  narrativePlayers?: Array<{ name: string; deathAtBeat: number | null }>
+  narrativePlayers?: Array<{ name: string; deathAtPhase: number | null }>
   /** Players for the Grimoire tokens. */
-  players: Array<{ name: string; role: string }>
+  players: Array<{ id?: string; name: string; role: string }>
+  /** Player IDs who have used their ghost vote (for current phase snapshot). */
+  ghostVotesUsedIds?: string[]
 }
 
-export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName, currentBeatIndex, narrativePlayers, players }: GrimoireSidebarProps) {
+export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds }: GrimoireSidebarProps) {
   const handleCopy = () => {
     if (townSquare) {
       navigator.clipboard.writeText(JSON.stringify(townSquare, null, 2))
@@ -76,9 +78,10 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
         voteCount={grimoireStats?.voteCount}
         nomination={nomination}
         storytellerName={storytellerName}
-        currentBeatIndex={currentBeatIndex}
+        currentPhaseIndex={currentPhaseIndex}
         narrativePlayers={narrativePlayers}
         players={players}
+        ghostVotesUsedIds={ghostVotesUsedIds}
       />
     </aside>
   )

@@ -64,16 +64,17 @@ interface GrimoireProps {
   nomination?: GrimoireNomination
   /** Name of the Storyteller (for ST token). Defaults to "Storyteller". */
   storytellerName?: string
-  /** Current beat index to determine death status */
-  currentBeatIndex?: number
+  /** Current phase index to determine death status */
+  currentPhaseIndex?: number
   /** Player list with death information */
-  /** Player list with death information */
-  narrativePlayers?: Array<{ name: string; deathAtBeat: number | null }>
-  /** Current players state (names and roles). */
-  players?: GrimoirePlayer[]
+  narrativePlayers?: Array<{ name: string; deathAtPhase: number | null }>
+  /** Current players state (names and roles); id required when using ghostVotesUsedIds. */
+  players?: Array<GrimoirePlayer & { id?: string }>
+  /** Player IDs who have used their ghost vote (dead + ghost used = fully black token). */
+  ghostVotesUsedIds?: string[]
 }
 
-export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentBeatIndex, narrativePlayers, players }: GrimoireProps) {
+export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds = [] }: GrimoireProps) {
   const currentPlayers = players ?? defaultPlayers
   const total = totalPlayers ?? currentPlayers.length
   const alive = aliveCount ?? total
@@ -324,12 +325,13 @@ export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliv
                   {isStoryteller && <span className="drop-shadow-md">ST</span>}
                   <GrimoireTokenOverlays
                     isDead={(() => {
-                      if (!narrativePlayers || currentBeatIndex === undefined || !player) return false
+                      if (!narrativePlayers || currentPhaseIndex === undefined || !player) return false
                       const narrativePlayer = narrativePlayers.find(p => p.name === player.name)
-                      if (!narrativePlayer || narrativePlayer.deathAtBeat === null) return false
-                      // Death shows in next phase: if died at beat X, show dead starting at beat X+1
-                      return currentBeatIndex > narrativePlayer.deathAtBeat
+                      if (!narrativePlayer || narrativePlayer.deathAtPhase === null) return false
+                      // Snapshot is state at end of phase; deathAtPhase = phase they died in — show dead when viewing that phase
+                      return currentPhaseIndex >= narrativePlayer.deathAtPhase
                     })()}
+                    ghostVoteUsed={'id' in player && typeof (player as { id?: string }).id === 'string' ? ghostVotesUsedIds.includes((player as { id: string }).id) : false}
                     index={i}
                     showNominationHands={showNominationHandsDelayed}
                     votesForIndices={votesForIndices}

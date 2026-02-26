@@ -1,69 +1,113 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { GameViewNarrative, GameStoryPhase, NominationEvent, TimelineEvent } from '../types/old_game'
-
-function isNominationEvent(e: TimelineEvent): e is NominationEvent {
-  return 'type' in e && e.type === 'nomination'
-}
-
-function getNominationFromBeat(beat: { events?: TimelineEvent[] } | undefined): NominationEvent | null {
-  if (!beat?.events?.length) return null
-  const nominationEvents = beat.events.filter(isNominationEvent)
-  const last = nominationEvents[nominationEvents.length - 1]
-  return last ?? null
-}
+import type { DerivedGame, ExecutionEvent, NarrativeEvent, NarrativePhase, NominationEvent } from '@/types'
+import { PhaseType } from '@/types'
+import { DAY_BG_IMAGE, NIGHT_BG_IMAGE, PREGAME_BG_IMAGE, STORYTELLER_ID } from '@/utils/constants'
+import { phaseLabel } from '@/utils/phaseUtils'
 import { GameTimeline } from './GameTimeline'
 import { GameStory } from './GameStory'
 import { GrimoireSidebar } from './GrimoireSidebar'
-import cloud7 from '../../assets/cloud-7.jpg'
-import cloud2 from '../../assets/cloud-2.jpg'
-import day2 from '../../assets/day-2.jpg'
-
-const DAY_BG_IMAGE = day2
-const PREGAME_BG_IMAGE = cloud7
-const NIGHT_BG_IMAGE = cloud2
 
 interface GameViewProps {
-  narrative: GameViewNarrative
+  game: DerivedGame
   gameId?: string
 }
 
-export function GameView({ narrative, gameId }: GameViewProps) {
+export function GameView({ game, gameId }: GameViewProps) {
   const [activePhaseIndex, setActivePhaseIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const phaseRefs = useRef<(HTMLElement | null)[]>([])
 
   const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
     window.addEventListener('resize', handleResize)
     handleResize()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  useEffect(() => {
+    document.title = gameId ? `Game ${gameId} — BotC Codex` : 'BotC Codex'
+    return () => { document.title = 'BotC Codex' }
+  }, [gameId])
+
+  const nameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const player of game.players) map.set(player.id, player.name)
+    map.set(STORYTELLER_ID, game.meta.storyteller)
+    return map
+  }, [game.players, game.meta.storyteller])
+
   const phaseLabels = useMemo(
-    () => narrative.timeline.beats.map((b) => narrative.timeline.phaseLabels[b.phaseIndex]),
-    [narrative.timeline.beats, narrative.timeline.phaseLabels]
+    () => game.phases.map((phase, i) => phaseLabel(phase, i)),
+    [game.phases]
   )
 
-  const shorthandLabels = useMemo(() => {
-    const counts: Record<string, number> = { Night: 0, Day: 0 }
-    return narrative.timeline.beats.map((b) => {
-      const label = narrative.timeline.phaseLabels[b.phaseIndex]
-      if (label === 'Pre-Game') return 'PG'
-      if (label.startsWith('Night')) {
-        counts.Night++
-        return `N${counts.Night}`
-      }
-      if (label.startsWith('Day')) {
-        counts.Day++
-        return `D${counts.Day}`
-      }
-      return label.substring(0, 2).toUpperCase()
+  const storyPhases = useMemo((): NarrativePhase[] => {
+    return game.phases.map((phase, phaseIndex) => {
+      const title = phase.title ?? phaseLabels[phaseIndex] ?? ''
+      const subtitle = phase.subtitle ?? ''
+      const events = phase.events.filter((e): e is NarrativeEvent => e.type === 'narrative')
+      return { type: phase.type, phaseNumber: phase.phaseNumber, title, subtitle, events }
     })
-  }, [narrative.timeline.beats, narrative.timeline.phaseLabels])
+  }, [game.phases, phaseLabels])
+
+  const deathAtPhase = useMemo(() => {
+    const map = new Map<string, number>()
+    game.phases.forEach((phase, phaseIndex) => {
+      for (const id of phase.snapshot.deadPlayerIds) {
+        if (!map.has(id)) map.set(id, phaseIndex)
+      }
+    })
+    return map
+  }, [game.phases])
+
+  const narrativePlayers = useMemo(
+    () => game.players.map((player) => ({ name: player.name, deathAtPhase: deathAtPhase.get(player.id) ?? null })),
+    [game.players, deathAtPhase]
+  )
+
+  const currentPlayers = useMemo(() => {
+    const players = game.players.map((player) => ({ id: player.id, name: player.name, role: player.roleId }))
+    for (let i = 0; i <= activePhaseIndex; i++) {
+      const phase = game.phases[i]
+      if (!phase) continue
+      for (const event of phase.events) {
+        if (event.type === 'role_change') {
+          const idx = game.players.findIndex((player) => player.id === event.playerId)
+          if (idx !== -1) players[idx].role = event.newRoleId
+        }
+      }
+    }
+    return players
+  }, [game, activePhaseIndex])
+
+  const currentPhase = game.phases[activePhaseIndex]
+  const phaseType = currentPhase?.type ?? PhaseType.PREGAME
+  const isDay = phaseType === PhaseType.DAY
+  const isPreGame = phaseType === PhaseType.PREGAME
+  const isNight = phaseType === PhaseType.NIGHT || phaseType === PhaseType.GRIMOIRE_REVEAL
+  const currentPhaseLabel = phaseLabels[activePhaseIndex] ?? ''
+  const dayNight = isDay ? 'day' : isPreGame ? 'pre-game' : 'night'
+
+  const snapshot = currentPhase?.snapshot
+  const voteCount = snapshot?.voteCount
+
+  const activeNomination = useMemo(() => {
+    if (!currentPhase?.events?.length) return null
+    const events = currentPhase.events
+    const lastNom = [...events].reverse().find((e): e is NominationEvent => e.type === 'nomination')
+    if (!lastNom) return null
+    const nomIndex = events.indexOf(lastNom)
+    const execution = events.slice(nomIndex + 1).find((e): e is ExecutionEvent => e.type === 'execution' && e.playerId === lastNom.nomineeId)
+    return {
+      nominator: nameById.get(lastNom.nominatorId) ?? lastNom.nominatorId,
+      nominee: nameById.get(lastNom.nomineeId) ?? lastNom.nomineeId,
+      votesFor: (lastNom.votesFor ?? []).map((id) => nameById.get(id) ?? id),
+      votesAgainst: (lastNom.votesAgainst ?? []).map((id) => nameById.get(id) ?? id),
+      executed: execution != null ? !execution.prevented : lastNom.passed,
+    }
+  }, [currentPhase, nameById])
 
   const handleScroll = useCallback(() => {
     let center = 0
@@ -74,7 +118,6 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     } else {
       center = window.scrollY + window.innerHeight / 2
     }
-
     for (let i = 0; i < phaseRefs.current.length; i++) {
       const el = phaseRefs.current[i]
       if (!el) continue
@@ -90,7 +133,7 @@ export function GameView({ narrative, gameId }: GameViewProps) {
   useEffect(() => {
     if (!isMobile) {
       window.addEventListener('scroll', handleScroll, { passive: true })
-      handleScroll() // Initial check
+      handleScroll()
       return () => window.removeEventListener('scroll', handleScroll)
     }
   }, [isMobile, handleScroll])
@@ -99,7 +142,6 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     (index: number) => {
       const el = phaseRefs.current[index]
       if (!el) return
-
       if (isMobile) {
         const container = scrollContainerRef.current
         if (!container) return
@@ -117,72 +159,29 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     phaseRefs.current[index] = el
   }, [])
 
-  const metaString = `${narrative.meta.played} · ${narrative.meta.edition} · ${narrative.meta.playerCount} players${narrative.meta.storyteller ? ` · ST: ${narrative.meta.storyteller}` : ''}`
+  const metaString = `${game.meta.playedOn} · ${game.meta.edition} · ${game.meta.playerCount} players · ST: ${game.meta.storyteller}`
 
-  const phases: GameStoryPhase[] = narrative.timeline.beats.map((b) => ({
-    title: b.title,
-    subtitle: b.subtitle,
-    events: b.events.map((e) => ({ label: e.label, body: e.body })),
-  }))
-
-  const currentBeat = narrative.timeline.beats[activePhaseIndex]
-  const activeNomination = useMemo(() => getNominationFromBeat(currentBeat), [currentBeat])
-
-  const currentPhaseLabel = phaseLabels[activePhaseIndex] ?? ''
-  const isPreGame = currentPhaseLabel === 'Pre-Game'
-  const preGameForGrimoire = isPreGame
-  const isNight = currentPhaseLabel.startsWith('Night') || currentPhaseLabel === 'Grimoire Reveal'
-
-  const phase = isPreGame ? 'pre-game' : isNight ? 'night' : 'day'
-  const dayNight = isNight ? 'night' : isPreGame ? 'pre-game' : 'day'
-
-  useEffect(() => {
-    document.title = gameId ? `Game ${gameId} — BotC Codex` : 'BotC Codex'
-    return () => {
-      document.title = 'BotC Codex'
-    }
-  }, [gameId])
-
-  const currentPlayers = useMemo(() => {
-    // Start with initial players from townSquare
-    const initialPlayers = narrative.townSquare?.players ?? []
-    // Deep copy to avoid mutating original
-    const players = initialPlayers.map(p => ({ ...p }))
-
-    // Apply updates from all phases up to current active phase
-    for (let i = 0; i <= activePhaseIndex; i++) {
-      const beat = narrative.timeline.beats[i]
-      if (!beat) continue
-
-      for (const event of beat.events) {
-        if (event.roleUpdates) {
-          for (const [playerName, newRole] of Object.entries(event.roleUpdates)) {
-            const playerIndex = players.findIndex(p => p.name === playerName)
-            if (playerIndex !== -1) {
-              players[playerIndex].role = newRole
-            }
-          }
-        }
-      }
-    }
-    return players
-  }, [narrative, activePhaseIndex])
+  const townSquare = useMemo(
+    () => ({ players: game.players.map((player) => ({ name: player.name, role: player.roleId })) }),
+    [game.players]
+  )
 
   const grimoireSidebar = (
     <GrimoireSidebar
       currentPhaseLabel={currentPhaseLabel}
       isNight={isNight}
-      isPreGame={preGameForGrimoire}
+      isPreGame={isPreGame}
       grimoireStats={{
-        totalPlayers: narrative.meta.playerCount,
-        aliveCount: narrative.timeline.beats[activePhaseIndex]?.stats?.alive,
-        voteCount: narrative.timeline.beats[activePhaseIndex]?.stats?.voteCount,
+        totalPlayers: game.meta.playerCount,
+        aliveCount: snapshot?.aliveCount,
+        voteCount,
       }}
-      nomination={activeNomination ? { nominator: activeNomination.nominator, nominee: activeNomination.nominee, votesFor: activeNomination.votesFor, votesAgainst: activeNomination.votesAgainst, executed: activeNomination.executed } : undefined}
-      townSquare={narrative.townSquare}
-      storytellerName={narrative.meta.storyteller}
-      currentBeatIndex={activePhaseIndex}
-      narrativePlayers={narrative.players}
+      ghostVotesUsedIds={snapshot?.ghostVotesUsed ?? []}
+      nomination={activeNomination ?? undefined}
+      townSquare={townSquare}
+      storytellerName={game.meta.storyteller}
+      currentPhaseIndex={activePhaseIndex}
+      narrativePlayers={narrativePlayers}
       players={currentPlayers}
     />
   )
@@ -191,7 +190,7 @@ export function GameView({ narrative, gameId }: GameViewProps) {
     <div
       className={`game-page-root font-game-body text-game-text ${isMobile ? 'flex h-screen overflow-hidden' : 'min-h-screen'}`}
       data-day-night={dayNight}
-      data-phase={phase}
+      data-phase={phaseType === PhaseType.PREGAME ? 'pre-game' : phaseType}
     >
       <div className="game-page-day-layer pointer-events-none fixed inset-0 z-0" aria-hidden>
         <div className="game-page-day-base" />
@@ -214,14 +213,11 @@ export function GameView({ narrative, gameId }: GameViewProps) {
       <div className="game-page-paper-grain pointer-events-none fixed inset-0 z-2" aria-hidden />
 
       <div className={`game-page-content relative z-10 w-full ${isMobile ? 'flex h-full flex-col' : 'min-h-screen flex-col md:block'}`}>
-        <GameTimeline labels={isMobile ? shorthandLabels : phaseLabels} activeIndex={activePhaseIndex} onBeatClick={scrollToPhase} />
+        <GameTimeline phaseLabels={phaseLabels} isMobile={isMobile} activeIndex={activePhaseIndex} onPhaseClick={scrollToPhase} />
 
         <div className={`flex flex-col pl-14 sm:pl-[140px] ${isMobile ? 'h-full overflow-hidden' : 'min-h-screen md:pr-[420px] lg:pr-[480px] xl:pr-[550px] 2xl:pr-[600px]'}`}>
           <nav className="fixed left-14 right-0 top-0 z-999 flex h-14 items-center border-b border-game-border-subtle bg-transparent px-6 sm:left-[140px] backdrop-blur-md">
-            <Link
-              to="/"
-              className="cursor-pointer font-game-display text-sm tracking-wide text-game-accent no-underline hover:opacity-90 hover:underline drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]"
-            >
+            <Link to="/" className="cursor-pointer font-game-display text-sm tracking-wide text-game-accent no-underline hover:opacity-90 hover:underline drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)]">
               BotC Codex
             </Link>
             <div className="ml-auto flex items-center gap-4">
@@ -239,10 +235,10 @@ export function GameView({ narrative, gameId }: GameViewProps) {
             >
               <div className={`flex flex-col ${isMobile ? '' : 'min-h-full'}`}>
                 <GameStory
-                  title={narrative.title}
-                  subtitle={narrative.subtitle}
+                  title={game.title}
+                  subtitle={game.subtitle ?? ''}
                   meta={metaString}
-                  phases={phases}
+                  phases={storyPhases}
                   registerPhaseRef={registerPhaseRef}
                 />
               </div>

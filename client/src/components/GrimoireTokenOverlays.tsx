@@ -15,6 +15,7 @@ export interface GrimoireTokenOverlaysProps {
   nightIconUrl: string | null
   name: string | null
   isDead: boolean
+  ghostVoteUsed?: boolean
 }
 
 export function GrimoireTokenOverlays({
@@ -30,6 +31,7 @@ export function GrimoireTokenOverlays({
   nightIconUrl,
   name,
   isDead,
+  ghostVoteUsed = false,
 }: GrimoireTokenOverlaysProps) {
   return (
     <>
@@ -103,7 +105,9 @@ export function GrimoireTokenOverlays({
         <span
           className="absolute inset-0 rounded-full pointer-events-none z-5"
           style={{
-            boxShadow: 'inset 0 0 0 11px rgba(0, 0, 0, 0.85), inset 0 0 0 8px transparent'
+            boxShadow: ghostVoteUsed
+              ? 'inset 0 0 0 999px rgba(0, 0, 0, 0.85)'
+              : 'inset 0 0 0 11px rgba(0, 0, 0, 0.85), inset 0 0 0 8px transparent'
           }}
           aria-hidden
         />

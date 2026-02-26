@@ -1,10 +1,10 @@
-import type { GameStoryPhase } from '../types/old_game'
+import type { NarrativePhase } from '@/types'
 
 interface GameStoryProps {
   title: string
   subtitle: string
   meta: string
-  phases: GameStoryPhase[]
+  phases: NarrativePhase[]
   registerPhaseRef?: (index: number, el: HTMLElement | null) => void
 }
 
@@ -37,9 +37,9 @@ export function GameStory({ title, subtitle, meta, phases, registerPhaseRef }: G
               {phase.subtitle}
             </p>
           </>
-          {phase.events.map((event) => (
+          {phase.events.map((event, eventIdx) => (
             <div
-              key={event.label}
+              key={`${phase.title}-${eventIdx}-${event.label}`}
               className="border-l-2 border-game-accent/40 pl-5 py-3 my-4"
             >
               <div className="font-game-ui text-[11px] font-medium uppercase tracking-widest text-game-text-muted mb-1">

@@ -1,0 +1,409 @@
+{
+  "schemaVersion": "1.0.0",
+  "gameId": "the-beginning",
+  "title": "The Beginning",
+  "subtitle": "Eleven in the dark, a slip in the shadows, and the last evil standing.",
+  "meta": {
+    "playedOn": "February 2025",
+    "edition": "BMR",
+    "playerCount": 11,
+    "storyteller": "Ele"
+  },
+  "winner": "good",
+  "players": [
+    {
+      "id": "twob",
+      "name": "Twob",
+      "roleId": "lunatic",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "winterbed",
+      "name": "WinterBed",
+      "roleId": "exorcist",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "koruto",
+      "name": "Koruto",
+      "roleId": "tinker",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "cookedbread",
+      "name": "CookedBread",
+      "roleId": "sailor",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "commando",
+      "name": "Commando",
+      "roleId": "gambler",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "maglev",
+      "name": "Maglev",
+      "roleId": "fool",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "keira",
+      "name": "Keira",
+      "roleId": "mastermind",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "beep",
+      "name": "Beep",
+      "roleId": "pukka",
+      "pronouns": "",
+      "isTraveller": false,
+      "bluffs": ["pacifist", "courtier", "innkeeper"]
+    },
+    {
+      "id": "pearl",
+      "name": "Pearl",
+      "roleId": "professor",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "allencaspe",
+      "name": "AllenCaspe",
+      "roleId": "minstrel",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "venox",
+      "name": "Venox X",
+      "roleId": "godfather",
+      "pronouns": "",
+      "isTraveller": false
+    }
+  ],
+  "phases": [
+    {
+      "type": "pregame",
+      "title": "Pre-Game: The Grimoire Is Set",
+      "subtitle": "Eleven players and Storyteller Ele gather under a bad moon.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Setup",
+          "body": "Ele runs the game as Storyteller. Eleven players take their seats—Twob, WinterBed, Koruto, CookedBread, Commando, Maglev, Keira, Beep, Pearl, AllenCaspe, and Venox X. The grimoire is set; the first night approaches."
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 1,
+      "title": "Night 1: The Pukka Poisons",
+      "subtitle": "No deaths yet—but the demon chooses a host.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Pukka poison",
+          "body": "The first night, the Pukka poisons Maglev. No one dies yet; the poison will claim its host when the Pukka chooses someone new."
+        },
+        {
+          "type": "ability",
+          "playerId": "beep",
+          "roleId": "pukka",
+          "targets": ["maglev"],
+          "isPublic": false,
+          "result": "Maglev is poisoned. No one dies yet; the poison will claim its host when the Pukka chooses someone new."
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 1,
+      "title": "Day 1: The Storyteller Nomination",
+      "subtitle": "The town doesn't have the votes.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Nomination (fails)",
+          "body": "Maglev nominates ST(Ele) for fun and gets only three votes for execution, the nomination fails; Ele remains."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "maglev",
+          "nomineeId": "__storyteller__",
+          "votesFor": ["koruto", "maglev", "twob"],
+          "votesAgainst": [],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 2,
+      "title": "Night 2: First Blood",
+      "subtitle": "The Pukka chooses Allen; the previous host and the Gambler fall.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Night kills",
+          "body": "Beep, the Pukka, chooses Allen as the new host. The previous host—Maglev—dies from the poison. Commando, the Gambler, gambled wrongly and thus dies."
+        },
+        {
+          "type": "ability",
+          "playerId": "beep",
+          "roleId": "pukka",
+          "targets": ["allencaspe"],
+          "isPublic": false,
+          "result": "AllenCaspe is the new poison host."
+        },
+        {
+          "type": "death",
+          "playerId": "maglev",
+          "cause": "ability",
+          "sourcePlayerId": "beep",
+          "sourceRoleId": "pukka",
+          "reason": "Previous poison host; Pukka chose a new target"
+        },
+        {
+          "type": "death",
+          "playerId": "commando",
+          "cause": "ability",
+          "sourceRoleId": "gambler",
+          "reason": "Gambled wrongly"
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 2,
+      "title": "Day 2: Twob on the Block",
+      "subtitle": "Twob claimed the same role as Commando and is found suspicious.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Suspicion",
+          "body": "Twob claimed the same role as Commando, who is dead and much more trusted. The town finds Twob suspicious and nominates them; Twob is marked dead."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "pearl",
+          "nomineeId": "twob",
+          "votesFor": [
+            "pearl",
+            "twob",
+            "beep",
+            "koruto",
+            "cookedbread",
+            "winterbed",
+            "maglev"
+          ],
+          "votesAgainst": [],
+          "passed": true
+        },
+        {
+          "type": "execution",
+          "playerId": "twob"
+        },
+        {
+          "type": "death",
+          "playerId": "twob",
+          "cause": "execution"
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 3,
+      "title": "Night 3: Allen and Pearl",
+      "subtitle": "The Pukka chooses Bread; the Godfather acts.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Night kills",
+          "body": "Beep chooses CookedBread as the next target; with that, the previous host—Allen—dies. Twob the Lunatic was killed during the day, so the Godfather gets to act: they kill Pearl."
+        },
+        {
+          "type": "ability",
+          "playerId": "beep",
+          "roleId": "pukka",
+          "targets": ["cookedbread"],
+          "isPublic": false,
+          "result": "CookedBread is the new poison host."
+        },
+        {
+          "type": "death",
+          "playerId": "allencaspe",
+          "cause": "ability",
+          "sourcePlayerId": "beep",
+          "sourceRoleId": "pukka",
+          "reason": "Previous poison host; Pukka chose a new target"
+        },
+        {
+          "type": "death",
+          "playerId": "pearl",
+          "cause": "night_kill",
+          "sourcePlayerId": "venox",
+          "sourceRoleId": "godfather",
+          "reason": "Godfather acted as an outsider (Lunatic) was executed during the day"
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 3,
+      "title": "Day 3: A Slip in the Shadows",
+      "subtitle": "A private room, a mistake, and a secret kept.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "The slip",
+          "body": "In a private room with Beep and Pearl, Venox assumes Pearl is evil too and slips. Pearl understands. Beep swears Pearl to secrecy; Pearl agrees not to out it. Only those three know."
+        },
+        {
+          "type": "narrative",
+          "label": "Nomination (fails)",
+          "body": "Beep tries to throw shade, but the others do not trust it. With that, the nomination does not go through."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "beep",
+          "nomineeId": "koruto",
+          "votesFor": ["beep"],
+          "votesAgainst": [],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 4,
+      "title": "Night 4: The Tinker Falls",
+      "subtitle": "Koruto was the Tinker—they can die anytime. The ST chooses it tonight because the Exorcist chose Beep.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Tinker death",
+          "body": "Koruto was the Tinker: they can die at any time, and the Storyteller chooses when to show it. Tonight the Exorcist chose Beep, so the Storyteller kills Koruto the Tinker so there's still some death. The town wakes to find Koruto dead."
+        },
+        {
+          "type": "ability",
+          "playerId": "winterbed",
+          "roleId": "exorcist",
+          "targets": ["beep"],
+          "isPublic": false,
+          "result": "Exorcist chose Beep; demon is blocked tonight."
+        },
+        {
+          "type": "death",
+          "playerId": "koruto",
+          "cause": "ability",
+          "sourceRoleId": "tinker",
+          "reason": "Tinker can die at any time; Storyteller chose tonight since the demon was blocked by the Exorcist"
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 4,
+      "title": "Day 4: Beep on the Block",
+      "subtitle": "Beep is up for execution and tries to throw the town off.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Nomination (passes)",
+          "body": "The nomination passes; Beep is up for execution. Beep tries to nominate Venox to throw people off, but no one votes. Beep stays on the block and is executed."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "cookedbread",
+          "nomineeId": "beep",
+          "votesFor": ["winterbed", "pearl", "twob", "cookedbread"],
+          "votesAgainst": [],
+          "passed": true
+        },
+        {
+          "type": "execution",
+          "playerId": "beep"
+        },
+        {
+          "type": "death",
+          "playerId": "beep",
+          "cause": "execution"
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 5,
+      "title": "Night 5: No One Dies",
+      "subtitle": "The demon is gone—but the Mastermind keeps the game alive.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Mastermind",
+          "body": "No one dies tonight; the demon is already dead. The Mastermind keeps the game going — if the town executes a good player tomorrow, evil can still win."
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 5,
+      "title": "Day 5: The Final Vote",
+      "subtitle": "The town bets on Keira—and wins.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Nomination (passes)",
+          "body": "The town believes Keira is the final evil. Keira is up for execution and is killed. Good wins at last—all evils are gone."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "cookedbread",
+          "nomineeId": "keira",
+          "votesFor": ["winterbed", "cookedbread", "allencaspe", "koruto"],
+          "votesAgainst": [],
+          "passed": true
+        },
+        {
+          "type": "execution",
+          "playerId": "keira"
+        },
+        {
+          "type": "death",
+          "playerId": "keira",
+          "cause": "execution"
+        }
+      ]
+    },
+    {
+      "type": "grimoire_reveal",
+      "title": "Grimoire Reveal",
+      "subtitle": "The truth laid bare.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Final grimoire",
+          "body": "The Storyteller reveals the final grimoire state, showing the true roles."
+        },
+        {
+          "type": "narrative",
+          "label": "Evil team",
+          "body": "Beep the Pukka, Keira the Mastermind, and Venox the Godfather."
+        },
+        {
+          "type": "narrative",
+          "label": "Good wins",
+          "body": "The good roles held the line. The Beginning ends with the first good win."
+        }
+      ]
+    }
+  ]
+}

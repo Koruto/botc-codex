@@ -12,6 +12,7 @@ export type GameEvent =
 
 export type NarrativeEvent = {
   type: "narrative"
+  label: string
   body: string
 }
 
@@ -75,7 +76,7 @@ export type TravellerLeaveEvent = {
 export type RoleChangeEvent = {
   type: "role_change"
   playerId: string
-  oldRoleId: string
+  oldRoleId: string   // optional; may be omitted in source data
   newRoleId: string
-  reason?: string    // e.g. "Pit-Hag changed role"
+  reason?: string      // e.g. "Pit-Hag changed role"
 }

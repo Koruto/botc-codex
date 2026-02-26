@@ -1,17 +1,22 @@
+import { toShorthand } from '@/utils/phaseUtils'
+
 interface GameTimelineProps {
-  labels: string[]
+  phaseLabels: string[]
+  isMobile: boolean
   activeIndex: number
-  onBeatClick: (index: number) => void
+  onPhaseClick: (index: number) => void
 }
 
-export function GameTimeline({ labels, activeIndex, onBeatClick }: GameTimelineProps) {
+export function GameTimeline({ phaseLabels, isMobile, activeIndex, onPhaseClick }: GameTimelineProps) {
+  const labels = isMobile ? toShorthand(phaseLabels) : phaseLabels
+
   return (
     <aside
       className="game-timeline fixed left-0 top-0 z-1000 flex h-screen w-14 flex-col border-r border-game-border-subtle bg-transparent sm:w-[140px]"
       aria-label="Timeline"
     >
       <div className="relative flex h-full flex-col justify-between py-8">
-        {/* Single line behind the dots; dots use opaque fill so the line doesn’t show through */}
+        {/* Single line behind the dots; dots use opaque fill so the line doesn't show through */}
         <div
           className="absolute left-[12.5px] top-8 bottom-8 w-px bg-game-border sm:left-[20.5px]"
           aria-hidden
@@ -20,8 +25,8 @@ export function GameTimeline({ labels, activeIndex, onBeatClick }: GameTimelineP
           <button
             key={`${label}-${i}`}
             type="button"
-            onClick={() => onBeatClick(i)}
-            aria-label={`Jump to ${label}`}
+            onClick={() => onPhaseClick(i)}
+            aria-label={`Jump to ${phaseLabels[i]}`}
             aria-current={i === activeIndex ? 'true' : undefined}
             className="group relative z-10 flex cursor-pointer items-center gap-3 rounded-md px-2 py-1 text-left sm:px-4"
           >

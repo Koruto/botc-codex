@@ -1,0 +1,279 @@
+{
+  "schemaVersion": "1.0.0",
+  "gameId": "wizard-game",
+  "title": "The Wizard's Gambit",
+  "subtitle": "A tale of wishes, the Amnesiac's cost, and the Evil Saint.",
+  "meta": {
+    "playedOn": "February 2025",
+    "edition": "Custom",
+    "playerCount": 6,
+    "storyteller": "Starlow"
+  },
+  "winner": "evil",
+  "players": [
+    {
+      "id": "bee",
+      "name": "Bee",
+      "roleId": "ojo",
+      "pronouns": "they/them",
+      "isTraveller": false
+    },
+    {
+      "id": "koruto",
+      "name": "Koruto",
+      "roleId": "amnesiac",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "commando",
+      "name": "Commando",
+      "roleId": "alchemist",
+      "pronouns": "",
+      "isTraveller": false,
+      "bluffs": ["alchemist"]
+    },
+    {
+      "id": "bumblebee",
+      "name": "Bumblebee",
+      "roleId": "wizard",
+      "pronouns": "",
+      "isTraveller": false
+    },
+    {
+      "id": "beepboop",
+      "name": "beep boop",
+      "roleId": "fisherman",
+      "pronouns": "He/Him",
+      "isTraveller": false
+    },
+    {
+      "id": "twob",
+      "name": "twob",
+      "roleId": "lunatic",
+      "pronouns": "",
+      "isTraveller": false
+    }
+  ],
+  "phases": [
+    {
+      "type": "pregame",
+      "title": "Pre-Game: The Grimoire Is Set",
+      "subtitle": "Six players and the Storyteller gather.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Setup",
+          "body": "Bee is the Ojo, the starting Demon. Twob is the Lunatic. Koruto is the Amnesiac, Commando the Alchemist with a Wizard ability, Bumblebee the Wizard, and beep boop the Fisherman. Starlow runs the game as Storyteller. The grimoire is set; the first night approaches."
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 1,
+      "title": "Night 1: Wishes and the Cost",
+      "subtitle": "The Wizard wishes; the Amnesiac chooses the price.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Wizard wish",
+          "body": "Bumblebee, the Wizard, wishes: \"Each night, a different good player might swap alignments & characters with the Demon.\""
+        },
+        {
+          "type": "narrative",
+          "label": "Amnesiac cost",
+          "body": "Koruto is prompted to use their ability and does so. When asked to choose the cost of the Wizard's wish, Koruto says: \"Every day, someone different and unique role is revealed by the Story Teller which is actually true.\""
+        },
+        {
+          "type": "narrative",
+          "label": "Role change",
+          "body": "Bee and twob swapped characters on Night 1 due to Bumblebee's wish. Bee is now the Lunatic and Twob is the Ojo."
+        },
+        {
+          "type": "ability",
+          "playerId": "bumblebee",
+          "roleId": "wizard",
+          "isPublic": false,
+          "result": "Wish granted: each night, a different good player might swap alignments and characters with the Demon."
+        },
+        {
+          "type": "ability",
+          "playerId": "koruto",
+          "roleId": "amnesiac",
+          "isPublic": false,
+          "result": "Cost of the Wizard wish: every day, the Storyteller reveals a different unique role that is actually true."
+        },
+        {
+          "type": "role_change",
+          "playerId": "bee",
+          "oldRoleId": "ojo",
+          "newRoleId": "lunatic",
+          "reason": "Swapped characters with twob due to Wizard wish"
+        },
+        {
+          "type": "role_change",
+          "playerId": "twob",
+          "oldRoleId": "lunatic",
+          "newRoleId": "ojo",
+          "reason": "Swapped characters with Bee due to Wizard wish"
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 1,
+      "title": "Day 1: Revelation and Execution",
+      "subtitle": "The Amnesiac is revealed; the town votes.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Revelation",
+          "body": "Day breaks. The Storyteller announces that Koruto is the Amnesiac. A nomination is made against Koruto."
+        },
+        {
+          "type": "narrative",
+          "label": "Nomination & Execution",
+          "body": "Twob nominates Bumblebee. The town votes. Bumblebee is executed."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "twob",
+          "nomineeId": "bumblebee",
+          "votesFor": ["koruto", "commando", "beepboop", "twob"],
+          "votesAgainst": ["bee", "bumblebee"],
+          "passed": true
+        },
+        {
+          "type": "execution",
+          "playerId": "bumblebee"
+        },
+        {
+          "type": "death",
+          "playerId": "bumblebee",
+          "cause": "execution"
+        }
+      ]
+    },
+    {
+      "type": "night",
+      "phaseNumber": 2,
+      "title": "Night 2: The Evil Saint Rises",
+      "subtitle": "The Ojo chooses; the Alchemist's wish reshapes the game.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Ojo kills",
+          "body": "The Ojo (Twob) chooses the Lunatic. Bee dies in the night."
+        },
+        {
+          "type": "narrative",
+          "label": "Alchemist Wizard wish",
+          "body": "Commando, as Alchemist with the Wizard ability, wishes: \"Starlow becomes the evil Saint.\" Starlow, the Storyteller, is given the character of the Evil Saint and enters the game."
+        },
+        {
+          "type": "ability",
+          "playerId": "twob",
+          "roleId": "ojo",
+          "targets": ["bee"],
+          "isPublic": false,
+          "result": "Ojo chose the Lunatic. Bee dies."
+        },
+        {
+          "type": "death",
+          "playerId": "bee",
+          "cause": "night_kill",
+          "sourcePlayerId": "twob",
+          "sourceRoleId": "ojo"
+        },
+        {
+          "type": "ability",
+          "playerId": "commando",
+          "roleId": "alchemist",
+          "isPublic": false,
+          "result": "Wish: Starlow becomes the Evil Saint and enters the game as a player."
+        },
+        {
+          "type": "traveller_join",
+          "playerId": "__storyteller__"
+        }
+      ]
+    },
+    {
+      "type": "day",
+      "phaseNumber": 2,
+      "title": "Day 2: The Atheist Gambit",
+      "subtitle": "The cost of wishes comes due; the Storyteller falls.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Revealed role",
+          "body": "Under the cost of Koruto's wish, the Storyteller reveals today's true role: Starlow is the Saint."
+        },
+        {
+          "type": "narrative",
+          "label": "Fisherman consult",
+          "body": "Beep asks for a consult on his Fisherman ability. He receives: \"Keep claiming Atheist, and really try to sell that you are indeed the Atheist.\""
+        },
+        {
+          "type": "ability",
+          "playerId": "beepboop",
+          "roleId": "fisherman",
+          "isPublic": false,
+          "result": "Keep claiming Atheist, and really try to sell that you are indeed the Atheist."
+        },
+        {
+          "type": "narrative",
+          "label": "Atheist claim",
+          "body": "Beep boop keeps claiming it's an Atheist game and sells the claim hard."
+        },
+
+        {
+          "type": "narrative",
+          "label": "Nomination & Execution",
+          "body": "Commando agrees and in hurry nominates Starlow. The town votes. Starlow is executed and marked dead as the Saint."
+        },
+        {
+          "type": "nomination",
+          "nominatorId": "commando",
+          "nomineeId": "__storyteller__",
+          "votesFor": ["koruto", "commando", "beepboop", "twob"],
+          "votesAgainst": [],
+          "passed": true
+        },
+        {
+          "type": "execution",
+          "playerId": "__storyteller__",
+          "reason": "Executed as the Saint in what the town believed was an Atheist game"
+        },
+        {
+          "type": "death",
+          "playerId": "__storyteller__",
+          "cause": "execution",
+          "reason": "Saint executed — but the wish was made while Commando was drunk, so no real Saint existed"
+        }
+      ]
+    },
+    {
+      "type": "grimoire_reveal",
+      "title": "Grimoire Reveal",
+      "subtitle": "The truth laid bare.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Final grimoire",
+          "body": "The Storyteller reveals the final grimoire state, showing the true roles and the twist of the drunk Alchemist whose wish created a false Saint."
+        },
+        {
+          "type": "narrative",
+          "label": "The twist revealed",
+          "body": "The cost of Commando's Wizard wish is revealed: 'If you nominate the Storyteller, you become drunk.' By nominating Starlow, Commando became drunk. Since Commando was drunk when making the wish, there was never a real Saint—the Atheist gambit fails."
+        },
+        {
+          "type": "narrative",
+          "label": "Evil wins",
+          "body": "With the Storyteller executed in what the town believed was an Atheist game, but with no Saint to trigger the good win condition, the game ends. Evil wins!"
+        }
+      ]
+    }
+  ]
+}
