@@ -40,6 +40,7 @@ from app.services.grimoire_pipeline import (
     parsed_tokens_to_town_square,
 )
 from app.services.match_tokens import match_tokens as run_match_tokens
+from app.services.token_processor import TokenProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -140,12 +141,17 @@ async def process_grimoire_image(file: UploadFile = File(..., alias="file")):
     try:
         source_path = Path(temp_source) / f"grimoire{suffix}"
         source_path.write_bytes(content)
+
+        process_token_processor = TokenProcessor(
+            token_processor.token_detector,
+            Path(temp_detected),
+        )
         result = extract_and_match(
             Path(temp_source),
             Path(temp_detected),
             image_processor,
             circle_detector,
-            token_processor,
+            process_token_processor,
             player_name_extractor,
             orb_matcher,
         )

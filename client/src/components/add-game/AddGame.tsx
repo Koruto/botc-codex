@@ -324,6 +324,7 @@ export function AddGame() {
           <EventsPanel
             key={formResetToken}
             players={game?.players ?? []}
+            rolesList={rolesList}
             defaultPhases={committedPhases}
             saving={saving}
             saveStatus={saveStatus}

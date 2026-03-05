@@ -1,6 +1,7 @@
 import { useForm, useFieldArray } from 'react-hook-form'
 import type { GameEvent, GamePhase, Player } from '@/types'
 import type { DerivedGame } from '@/types'
+import type { RoleOption } from '@/types'
 import { defaultPregamePhase, emptyPhase } from '@/utils/townSquareToGame'
 
 const EVENT_TYPES = [
@@ -17,7 +18,8 @@ type PhasesFormValues = {
 }
 
 export type EventsPanelProps = {
-  players: Player[]
+  players?: Player[]
+  rolesList?: RoleOption[]
   defaultPhases?: GamePhase[]
   saving: boolean
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
@@ -51,8 +53,18 @@ function createDefaultEvent(eventType: string, players: Player[]): GameEvent {
 const inputClass =
   'rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20'
 
+/** Format role id (e.g. washerwoman, pit_hag) as display name (Washerwoman, Pit Hag). */
+function formatRoleIdForDisplay(roleId: string): string {
+  if (!roleId.trim()) return ''
+  return roleId
+    .trim()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 export function EventsPanel({
-  players,
+  players = [],
+  rolesList = [],
   defaultPhases,
   saving,
   saveStatus,
@@ -180,32 +192,48 @@ export function EventsPanel({
                     </div>
                   )}
 
-                  {evt.type === 'ability' && (
-                    <div className="mt-2 grid gap-2">
-                      <select
-                        value={evt.playerId}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { playerId: e.target.value })}
-                        className={inputClass}
-                      >
-                        {players.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={evt.roleId}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { roleId: e.target.value })}
-                        placeholder="Role id"
-                        className={`w-full ${inputClass}`}
-                      />
-                      <textarea
-                        value={evt.result ?? ''}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { result: e.target.value })}
-                        placeholder="Result"
-                        className={`min-h-[50px] w-full ${inputClass}`}
-                      />
-                    </div>
-                  )}
+                  {evt.type === 'ability' && (() => {
+                    const abilityPlayer = players.find((p) => p.id === evt.playerId)
+                    const roleId = abilityPlayer?.roleId ?? evt.roleId
+                    const roleName =
+                      ((rolesList ?? []).find((r) => r.id === roleId)?.name ??
+                        (roleId ? formatRoleIdForDisplay(roleId) : '')) || '—'
+                    return (
+                      <div className="mt-2 grid gap-2">
+                        <select
+                          value={evt.playerId}
+                          onChange={(e) => {
+                            const newPlayerId = e.target.value
+                            const newPlayer = players.find((p) => p.id === newPlayerId)
+                            updateEvent(phaseIndex, eventIndex, {
+                              playerId: newPlayerId,
+                              roleId: newPlayer?.roleId ?? '',
+                            })
+                          }}
+                          className={inputClass}
+                        >
+                          {players.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-muted-foreground">Role (from step 1)</span>
+                          <div
+                            className="min-h-9 rounded border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground"
+                            aria-readonly
+                          >
+                            {roleName}
+                          </div>
+                        </div>
+                        <textarea
+                          value={evt.result ?? ''}
+                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { result: e.target.value })}
+                          placeholder="Result"
+                          className={`min-h-[50px] w-full ${inputClass}`}
+                        />
+                      </div>
+                    )
+                  })()}
 
                   {evt.type === 'execution' && (
                     <div className="mt-2">
@@ -222,46 +250,35 @@ export function EventsPanel({
                   )}
 
                   {evt.type === 'nomination' && (
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      <select
-                        value={evt.nominatorId}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { nominatorId: e.target.value })}
-                        className={inputClass}
-                      >
-                        <option value="">Nominator…</option>
-                        {players.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                      <select
-                        value={evt.nomineeId}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { nomineeId: e.target.value })}
-                        className={inputClass}
-                      >
-                        <option value="">Nominee…</option>
-                        {players.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                      <label className="col-span-full flex items-center gap-2 text-sm text-muted-foreground">
-                        <input
-                          type="checkbox"
-                          checked={evt.passed}
-                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { passed: e.target.checked })}
-                          className="rounded border-border"
-                        />
-                        Passed
-                      </label>
-                    </div>
-                  )}
-
-                  {evt.type === 'private_room' && (
-                    <div className="mt-2 grid gap-2">
-                      <div>
-                        <span className="mb-1 block text-xs text-muted-foreground">Players in room</span>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    <div className="mt-2 grid gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={evt.nominatorId}
+                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { nominatorId: e.target.value })}
+                          className={inputClass}
+                        >
+                          <option value="">Select player…</option>
+                          {players.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                        <span className="text-sm text-muted-foreground">nominates</span>
+                        <select
+                          value={evt.nomineeId}
+                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { nomineeId: e.target.value })}
+                          className={inputClass}
+                        >
+                          <option value="">this player…</option>
+                          {players.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">Who voted for (to execute)</span>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1">
                           {players.map((p) => {
-                            const checked = evt.players.includes(p.id)
+                            const voted = evt.votesFor.includes(p.id)
                             return (
                               <label
                                 key={p.id}
@@ -269,12 +286,12 @@ export function EventsPanel({
                               >
                                 <input
                                   type="checkbox"
-                                  checked={checked}
+                                  checked={voted}
                                   onChange={() => {
-                                    const next = checked
-                                      ? evt.players.filter((id) => id !== p.id)
-                                      : [...evt.players, p.id]
-                                    updateEvent(phaseIndex, eventIndex, { players: next })
+                                    const next = voted
+                                      ? evt.votesFor.filter((id) => id !== p.id)
+                                      : [...evt.votesFor, p.id]
+                                    updateEvent(phaseIndex, eventIndex, { votesFor: next })
                                   }}
                                   className="rounded border-border"
                                 />
@@ -284,15 +301,89 @@ export function EventsPanel({
                           })}
                         </div>
                       </div>
-                      <textarea
-                        value={evt.highlights}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { highlights: e.target.value })}
-                        placeholder="Highlights of what was discussed"
-                        className={`min-h-[60px] w-full ${inputClass}`}
-                        rows={2}
-                      />
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">Outcome</span>
+                        <label className="flex items-center gap-2 text-sm text-foreground">
+                          <input
+                            type="checkbox"
+                            checked={evt.passed}
+                            onChange={(e) => updateEvent(phaseIndex, eventIndex, { passed: e.target.checked })}
+                            className="rounded border-border"
+                          />
+                          Vote passed (nominee executed)
+                        </label>
+                      </div>
                     </div>
                   )}
+
+                  {evt.type === 'private_room' && (() => {
+                    const creatorId = evt.players[0] ?? ''
+                    const participantIds = evt.players
+                    const setCreator = (newCreatorId: string) => {
+                      if (!newCreatorId) {
+                        updateEvent(phaseIndex, eventIndex, { players: evt.players.filter((id) => id !== creatorId) })
+                        return
+                      }
+                      const rest = evt.players.filter((id) => id !== newCreatorId)
+                      updateEvent(phaseIndex, eventIndex, { players: [newCreatorId, ...rest] })
+                    }
+                    const toggleParticipant = (playerId: string) => {
+                      const inRoom = evt.players.includes(playerId)
+                      const next = inRoom
+                        ? evt.players.filter((id) => id !== playerId)
+                        : [...evt.players, playerId]
+                      updateEvent(phaseIndex, eventIndex, { players: next })
+                    }
+                    return (
+                      <div className="mt-2 grid gap-3">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-muted-foreground">Created by</span>
+                          <select
+                            value={creatorId}
+                            onChange={(e) => setCreator(e.target.value)}
+                            className={inputClass}
+                          >
+                            <option value="">Select who created the room…</option>
+                            {players.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-muted-foreground">Who was in the room</span>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            {players.map((p) => {
+                              const checked = participantIds.includes(p.id)
+                              const isCreator = p.id === creatorId
+                              return (
+                                <label
+                                  key={p.id}
+                                  className={`flex items-center gap-1.5 text-sm text-foreground ${isCreator ? 'cursor-default' : 'cursor-pointer'}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={isCreator}
+                                    onChange={() => !isCreator && toggleParticipant(p.id)}
+                                    className="rounded border-border disabled:opacity-70"
+                                  />
+                                  {p.name}
+                                  {isCreator && <span className="text-xs text-muted-foreground">(creator)</span>}
+                                </label>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        <textarea
+                          value={evt.highlights}
+                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { highlights: e.target.value })}
+                          placeholder="Highlights of what was discussed"
+                          className={`min-h-[60px] w-full ${inputClass}`}
+                          rows={2}
+                        />
+                      </div>
+                    )
+                  })()}
 
                   <button
                     type="button"
@@ -311,7 +402,7 @@ export function EventsPanel({
                   key={value}
                   type="button"
                   onClick={() => addEvent(phaseIndex, value)}
-                  className="rounded border border-stone-600 px-2 py-1 text-xs text-stone-300 hover:bg-stone-700"
+                  className="rounded border-2 border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
                   + {label}
                 </button>
@@ -356,7 +447,10 @@ export function EventsPanel({
         {derivedGame && (
           <button
             type="button"
-            onClick={onShowPreview}
+            onClick={handleSubmit(async (data) => {
+              await onSaveDraft(data.phases)
+              onShowPreview()
+            })}
             className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/10"
           >
             Preview full page
