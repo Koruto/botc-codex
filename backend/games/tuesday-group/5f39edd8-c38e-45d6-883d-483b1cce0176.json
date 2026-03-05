@@ -1,0 +1,93 @@
+{
+  "gameId": "5f39edd8-c38e-45d6-883d-483b1cce0176",
+  "serverId": "tuesday-group",
+  "status": "draft",
+  "updatedAt": "2026-02-28T15:15:10.361470+00:00",
+  "name": null,
+  "townSquare": {
+    "bluffs": [
+      "artist",
+      "savant",
+      "atheist"
+    ],
+    "edition": {
+      "id": "custom"
+    },
+    "roles": "",
+    "fabled": [
+      {
+        "id": "hellslibrarian"
+      }
+    ],
+    "players": [
+      {
+        "name": "Twob",
+        "id": "",
+        "role": "lunatic",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "WinterBed",
+        "id": "",
+        "role": "exorcist",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Koruto",
+        "id": "",
+        "role": "tinker",
+        "reminders": [],
+        "isVoteless": true,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "Pearl",
+        "id": "",
+        "role": "po",
+        "reminders": [],
+        "isVoteless": true,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "AllenCaspe",
+        "id": "",
+        "role": "po",
+        "reminders": [],
+        "isVoteless": true,
+        "isDead": true,
+        "pronouns": ""
+      },
+      {
+        "name": "Venox X",
+        "id": "",
+        "role": "godfather",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "a",
+        "id": "",
+        "role": "{}",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      }
+    ]
+  },
+  "meta": null,
+  "phases": null,
+  "title": null,
+  "subtitle": null,
+  "winner": null
+}

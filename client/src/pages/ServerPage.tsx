@@ -1,7 +1,23 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { api } from '@/api/client'
+import type { GameDocument } from '@/api/client'
 
 export function ServerPage() {
   const { serverId } = useParams()
+  const [games, setGames] = useState<GameDocument[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!serverId) return
+    api.listGames(serverId)
+      .then(setGames)
+      .catch(() => setGames([]))
+      .finally(() => setLoading(false))
+  }, [serverId])
+
+  const displayName = (doc: GameDocument) =>
+    doc.name || doc.title || 'Untitled'
 
   return (
     <div>
@@ -21,32 +37,28 @@ export function ServerPage() {
       </div>
       <section className="rounded-lg border border-stone-700 bg-stone-900/50 p-6">
         <h2 className="mb-4 text-lg font-medium text-stone-200">Games</h2>
-        <ul className="space-y-3">
-          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/the-beginning" className="text-amber-400 hover:underline">
-              The Beginning — 11 players — Feb 2025
-            </Link>
-            <span className="text-xs text-stone-500">Admin</span>
-          </li>
-          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/wizard-game" className="text-amber-400 hover:underline">
-              The Wizard's Gambit — 6 players — Feb 2025
-            </Link>
-            <span className="text-xs text-stone-500">Admin</span>
-          </li>
-          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/trouble-brewing-feb-2025" className="text-amber-400 hover:underline">
-              Trouble Brewing — 7 players — 1 Feb 2025
-            </Link>
-            <span className="text-xs text-stone-500">Viewer</span>
-          </li>
-          <li className="flex items-center justify-between rounded border border-stone-700 p-3">
-            <Link to="/game/bad-moon-rising-jan-2025" className="text-amber-400 hover:underline">
-              Bad Moon Rising — 9 players — 28 Jan 2025
-            </Link>
-            <span className="text-xs text-stone-500">Viewer</span>
-          </li>
-        </ul>
+        {loading ? (
+          <p className="text-stone-500">Loading…</p>
+        ) : games.length === 0 ? (
+          <p className="text-stone-500">No games yet. Add a game to get started.</p>
+        ) : (
+          <ul className="space-y-3">
+            {games.map((doc) => (
+              <li key={doc.gameId} className="flex items-center justify-between rounded border border-stone-700 p-3">
+                <Link to={`/game/${doc.gameId}`} className="text-amber-400 hover:underline">
+                  {displayName(doc)}
+                  {doc.meta?.playerCount ? ` — ${doc.meta.playerCount} players` : ''}
+                  {doc.meta?.playedOn ? ` — ${doc.meta.playedOn}` : ''}
+                </Link>
+                {doc.status === 'draft' ? (
+                  <span className="rounded bg-amber-900/60 px-2 py-0.5 text-xs font-medium text-amber-300">
+                    Preview
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )

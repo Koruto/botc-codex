@@ -4,6 +4,7 @@ export type GameEvent =
   | ExecutionEvent
   | DeathEvent
   | AbilityEvent
+  | PrivateRoomEvent
   | GhostVoteEvent
   | GhostVoteRestoredEvent
   | TravellerJoinEvent
@@ -49,6 +50,12 @@ export type AbilityEvent = {
   targets?: string[]          // player IDs
   isPublic: boolean
   result?: string
+}
+
+export type PrivateRoomEvent = {
+  type: "private_room"
+  players: string[]           // player IDs in the room
+  highlights: string          // brief description of what was discussed
 }
 
 export type GhostVoteEvent = {

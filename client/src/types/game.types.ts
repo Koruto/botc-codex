@@ -1,4 +1,40 @@
-import type { GameEvent, NarrativeEvent, Player } from "@/types";
+import type { GameEvent, NarrativeEvent, Player } from "@/types"
+import type { TownSquareGameState } from "./townSquare.types"
+
+// ----- API document & request bodies (match backend schemas.py JSON) -----
+
+/** Stored game document from API. Matches backend GameDocument. */
+export type GameDocument = {
+  gameId: string
+  serverId: string
+  status: string
+  updatedAt: string
+  name?: string | null
+  townSquare?: TownSquareGameState | null
+  meta?: GameMeta | null
+  phases?: GamePhase[] | null
+  title?: string | null
+  subtitle?: string | null
+  winner?: string | null
+}
+
+/** Request body for POST /api/servers/{id}/games. Matches backend GameCreateBody. */
+export type GameCreateBody = {
+  name?: string | null
+  townSquare?: TownSquareGameState | null
+  meta?: GameMeta | null
+  phases?: GamePhase[] | null
+  title?: string | null
+  subtitle?: string | null
+}
+
+/** Request body for PATCH /api/servers/{id}/games/{id}. Matches backend GameUpdateBody. */
+export type GameUpdateBody = Partial<GameCreateBody> & {
+  winner?: string | null
+  status?: string | null
+}
+
+// ----- Game (derived view) -----
 
 export type Game = {
   schemaVersion: string
@@ -24,12 +60,14 @@ export type GameMeta = {
   coStorytellers?: string[]   // just names, no special role
 }
 
-export enum PhaseType {
-  PREGAME = 'pregame',
-  DAY = 'day',
-  NIGHT = 'night',
-  GRIMOIRE_REVEAL = 'grimoire_reveal',
-}
+export const PhaseType = {
+  PREGAME: 'pregame',
+  DAY: 'day',
+  NIGHT: 'night',
+  GRIMOIRE_REVEAL: 'grimoire_reveal',
+} as const
+
+export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType]
 
 export type GamePhase = {
   type: PhaseType

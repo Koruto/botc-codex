@@ -7,6 +7,8 @@ export type Player = {
   bluffs?: string[]           // roleIds, only on demon players, max 3
 }
 
+export type RoleOption = { id: string; name: string }
+
 export type RoleTeam = 'townsfolk' | 'outsider' | 'minion' | 'demon' | 'traveller' | 'fabled'
 
 export type RoleInfo = {

@@ -1,0 +1,125 @@
+{
+  "gameId": "0b4557f8-0af9-4b62-aae1-b6f8f8edf21e",
+  "serverId": "tuesday-group",
+  "status": "draft",
+  "updatedAt": "2026-02-27T08:22:13.358597+00:00",
+  "townSquare": {
+    "bluffs": [],
+    "edition": {
+      "id": "bmr"
+    },
+    "roles": "",
+    "fabled": [],
+    "players": [
+      {
+        "name": "Twob",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "WinterBed",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Koruto",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Bread",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Commando",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Maglev",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Keira",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Beep",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Pearl",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "AllenCaspe",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Venox X",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      }
+    ]
+  },
+  "meta": {
+    "playedOn": "",
+    "edition": "bmr",
+    "playerCount": 11,
+    "storyteller": ""
+  },
+  "phases": null,
+  "title": null,
+  "subtitle": null,
+  "winner": null
+}

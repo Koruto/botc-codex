@@ -1,0 +1,140 @@
+{
+  "gameId": "48f29058-8242-4c2a-a2e2-b4bf61dcc217",
+  "serverId": "tuesday-group",
+  "status": "draft",
+  "updatedAt": "2026-03-04T15:07:57.946337+00:00",
+  "name": null,
+  "townSquare": {
+    "bluffs": [],
+    "edition": {
+      "id": "bmr"
+    },
+    "roles": "",
+    "fabled": [],
+    "players": [
+      {
+        "name": "Twob",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "WinterBed",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Koruto",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Bread",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Commando",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Maglev",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Keira",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Beep",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Pearl",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "AllenCaspe",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Venox X",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      }
+    ]
+  },
+  "meta": {
+    "playedOn": "121",
+    "edition": "bmr",
+    "playerCount": 11,
+    "storyteller": "1212",
+    "coStorytellers": null
+  },
+  "phases": [
+    {
+      "type": "pregame",
+      "title": "Pre-Game",
+      "subtitle": "The grimoire is set.",
+      "events": [
+        {
+          "type": "narrative",
+          "label": "Setup",
+          "body": "Players take their seats. The first night approaches."
+        }
+      ]
+    }
+  ],
+  "title": "1212",
+  "subtitle": null,
+  "winner": null
+}

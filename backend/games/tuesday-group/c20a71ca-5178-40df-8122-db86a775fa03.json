@@ -1,0 +1,121 @@
+{
+  "gameId": "c20a71ca-5178-40df-8122-db86a775fa03",
+  "serverId": "tuesday-group",
+  "status": "draft",
+  "updatedAt": "2026-02-28T14:29:43.958654+00:00",
+  "name": null,
+  "townSquare": {
+    "bluffs": [],
+    "edition": {
+      "id": "bmr"
+    },
+    "roles": "",
+    "fabled": [],
+    "players": [
+      {
+        "name": "Twob",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "WinterBed",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Koruto",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Bread",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Commando",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Maglev",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Keira",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Beep",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Pearl",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "AllenCaspe",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      },
+      {
+        "name": "Venox X",
+        "id": "",
+        "role": "",
+        "reminders": [],
+        "isVoteless": false,
+        "isDead": false,
+        "pronouns": ""
+      }
+    ]
+  },
+  "meta": null,
+  "phases": null,
+  "title": null,
+  "subtitle": null,
+  "winner": null
+}
