@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Papyrus – same as TownSquare token label */
 @font-face {
   font-family: "Papyrus";
@@ -288,8 +292,9 @@
   opacity: 0.07;
 }
 
+/* App shell + landing (all non–game-view pages): warm cream/red light, dark warm dark. */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -297,24 +302,25 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #f8f4ee;
+  --background-alt: #f1ebe2;
+  --foreground: #1c1410;
+  --card: #ffffff;
+  --card-foreground: #1c1410;
+  --popover: #ffffff;
+  --popover-foreground: #1c1410;
+  --primary: #9b1d20;
+  --primary-foreground: #ffffff;
+  --secondary: #f1ebe2;
+  --secondary-foreground: #1c1410;
+  --muted: #faf6f1;
+  --muted-foreground: #6e6058;
+  --accent: #faf6f1;
+  --accent-foreground: #1c1410;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e4dbd0;
+  --input: #e4dbd0;
+  --ring: #9b1d20;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -476,6 +482,7 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -506,27 +513,29 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-app-display: "Fraunces", serif;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #160a09;
+  --background-alt: #1c0d0b;
+  --foreground: #f5ede8;
+  --card: #2a1514;
+  --card-foreground: #f5ede8;
+  --popover: #2a1514;
+  --popover-foreground: #f5ede8;
+  --primary: #c4302e;
+  --primary-foreground: #ffffff;
+  --secondary: #1c0d0b;
+  --secondary-foreground: #f5ede8;
+  --muted: #321a19;
+  --muted-foreground: #a88880;
+  --accent: #321a19;
+  --accent-foreground: #f5ede8;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: rgba(200, 100, 80, 0.15);
+  --input: rgba(200, 100, 80, 0.2);
+  --ring: #c4302e;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);

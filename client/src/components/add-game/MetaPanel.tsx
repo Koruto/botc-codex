@@ -39,7 +39,7 @@ export type MetaPanelProps = {
 }
 
 const inputClass =
-  'w-full rounded border border-stone-600 bg-stone-800 px-3 py-2 text-stone-100 placeholder-stone-500 focus:border-amber-500 focus:outline-none'
+  'w-full rounded border border-input bg-background px-3 py-2 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
 
 function FormField({
   label,
@@ -54,9 +54,9 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm text-stone-400">{label}</label>
+      <label className="mb-1 block text-sm text-muted-foreground">{label}</label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-stone-500">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   )
@@ -98,8 +98,8 @@ export function MetaPanel({
 
   return (
     <form onSubmit={handleSubmit(onSaveAndNext)}>
-      <section className="rounded-lg border border-stone-700 bg-stone-900/50 p-6">
-        <h2 className="mb-4 text-lg font-medium text-stone-200">Meta</h2>
+      <section className="rounded-lg border border-border bg-card p-6">
+        <h2 className="mb-4 text-lg font-medium text-foreground">Meta</h2>
 
         <FormField
           label="Game name"
@@ -183,7 +183,7 @@ export function MetaPanel({
           <button
             type="button"
             onClick={onBack}
-            className="rounded border border-stone-600 px-4 py-2 text-sm text-stone-300 hover:bg-stone-800"
+            className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
           >
             Back
           </button>
@@ -191,14 +191,14 @@ export function MetaPanel({
             type="button"
             onClick={handleSubmit(onSave)}
             disabled={saving}
-            className="rounded border border-amber-600 px-4 py-2 text-sm text-amber-400 hover:bg-amber-600/20 disabled:opacity-50"
+            className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/20 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-stone-900 hover:bg-amber-500 disabled:opacity-50"
+            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save & continue'}
           </button>
@@ -206,7 +206,7 @@ export function MetaPanel({
             <button
               type="button"
               onClick={onShowPreview}
-              className="rounded border border-amber-500 px-4 py-2 text-sm text-amber-400 hover:bg-amber-500/10"
+              className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/10"
             >
               Preview full page
             </button>

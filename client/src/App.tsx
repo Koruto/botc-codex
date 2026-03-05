@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Layout } from './components/Layout'
+import { LandingPage } from './pages/LandingPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { ServerPage } from './pages/ServerPage'
@@ -14,12 +15,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/game/:gameId" element={<GamePage />} />
-        <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="server/:serverId" element={<ServerPage />} />
-          <Route path="server/:serverId/add-game" element={<AddGamePage />} />
-          <Route path="profile" element={<ProfilePage />} />
+        <Route path="/">
+          <Route index element={<LandingPage />} />
+          <Route path="*" element={<Layout />}>
+            <Route path="dashboard" element={<HomePage />} />
+            <Route path="login" element={<LoginPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="server/:serverId" element={<ServerPage />} />
+            <Route path="server/:serverId/add-game" element={<AddGamePage />} />
+          </Route>
         </Route>
       </Routes>
       <Analytics />

@@ -49,7 +49,7 @@ function createDefaultEvent(eventType: string, players: Player[]): GameEvent {
 }
 
 const inputClass =
-  'rounded border border-stone-600 bg-stone-800 px-2 py-1 text-sm text-stone-100 focus:border-amber-500 focus:outline-none'
+  'rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20'
 
 export function EventsPanel({
   players,
@@ -105,16 +105,16 @@ export function EventsPanel({
   const handleSaveGame = handleSubmit((data) => onSaveGame(data.phases))
 
   return (
-    <section className="rounded-lg border border-stone-700 bg-stone-900/50 p-6">
-      <h2 className="mb-4 text-lg font-medium text-stone-200">Events</h2>
-      <p className="mb-4 text-sm text-stone-400">
+    <section className="rounded-lg border border-border bg-card p-6">
+      <h2 className="mb-4 text-lg font-medium text-foreground">Events</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
         Add phases and events. Narrative and death events drive the story and grimoire state.
       </p>
 
       {phaseFields.map((field, phaseIndex) => {
         const phase = phases[phaseIndex]
         return (
-          <div key={field.id} className="mb-6 rounded border border-stone-600 bg-stone-800/50 p-4">
+          <div key={field.id} className="mb-6 rounded border border-border bg-muted/50 p-4">
             <div className="mb-2 flex items-center gap-2">
               <input
                 {...register(`phases.${phaseIndex}.title`)}
@@ -123,15 +123,15 @@ export function EventsPanel({
               />
               <input
                 {...register(`phases.${phaseIndex}.subtitle`)}
-                className={`flex-1 text-stone-400 ${inputClass}`}
+                className={`flex-1 text-muted-foreground ${inputClass}`}
                 placeholder="Subtitle"
               />
             </div>
 
             <ul className="space-y-2">
               {phase?.events.map((evt, eventIndex) => (
-                <li key={eventIndex} className="rounded border border-stone-700 bg-stone-900 p-3">
-                  <span className="text-xs font-medium uppercase text-amber-500">{evt.type}</span>
+                <li key={eventIndex} className="rounded border border-border bg-card p-3">
+                  <span className="text-xs font-medium uppercase text-primary">{evt.type}</span>
 
                   {evt.type === 'narrative' && (
                     <div className="mt-2 grid gap-2">
@@ -243,12 +243,12 @@ export function EventsPanel({
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
-                      <label className="col-span-full flex items-center gap-2 text-sm text-stone-400">
+                      <label className="col-span-full flex items-center gap-2 text-sm text-muted-foreground">
                         <input
                           type="checkbox"
                           checked={evt.passed}
                           onChange={(e) => updateEvent(phaseIndex, eventIndex, { passed: e.target.checked })}
-                          className="rounded border-stone-600"
+                          className="rounded border-border"
                         />
                         Passed
                       </label>
@@ -258,14 +258,14 @@ export function EventsPanel({
                   {evt.type === 'private_room' && (
                     <div className="mt-2 grid gap-2">
                       <div>
-                        <span className="mb-1 block text-xs text-stone-500">Players in room</span>
+                        <span className="mb-1 block text-xs text-muted-foreground">Players in room</span>
                         <div className="flex flex-wrap gap-x-4 gap-y-1">
                           {players.map((p) => {
                             const checked = evt.players.includes(p.id)
                             return (
                               <label
                                 key={p.id}
-                                className="flex cursor-pointer items-center gap-1.5 text-sm text-stone-300"
+                                className="flex cursor-pointer items-center gap-1.5 text-sm text-foreground"
                               >
                                 <input
                                   type="checkbox"
@@ -276,7 +276,7 @@ export function EventsPanel({
                                       : [...evt.players, p.id]
                                     updateEvent(phaseIndex, eventIndex, { players: next })
                                   }}
-                                  className="rounded border-stone-600"
+                                  className="rounded border-border"
                                 />
                                 {p.name}
                               </label>
@@ -324,7 +324,7 @@ export function EventsPanel({
       <button
         type="button"
         onClick={addPhase}
-        className="mb-6 rounded border border-dashed border-stone-500 px-4 py-2 text-sm text-stone-400 hover:border-amber-500 hover:text-amber-400"
+        className="mb-6 rounded border border-dashed border-border px-4 py-2 text-sm text-muted-foreground hover:border-primary hover:text-primary"
       >
         + Add phase
       </button>
@@ -333,7 +333,7 @@ export function EventsPanel({
         <button
           type="button"
           onClick={onBack}
-          className="rounded border border-stone-600 px-4 py-2 text-sm text-stone-300 hover:bg-stone-800"
+          className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
         >
           Back
         </button>
@@ -341,7 +341,7 @@ export function EventsPanel({
           type="button"
           onClick={handleSaveDraft}
           disabled={saving}
-          className="rounded border border-amber-600 px-4 py-2 text-sm text-amber-400 hover:bg-amber-600/20 disabled:opacity-50"
+          className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/20 disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save draft'}
         </button>
@@ -349,7 +349,7 @@ export function EventsPanel({
           type="button"
           onClick={handleSaveGame}
           disabled={saving}
-          className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-stone-900 hover:bg-amber-500 disabled:opacity-50"
+          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
           Save game
         </button>
@@ -357,7 +357,7 @@ export function EventsPanel({
           <button
             type="button"
             onClick={onShowPreview}
-            className="rounded border border-amber-500 px-4 py-2 text-sm text-amber-400 hover:bg-amber-500/10"
+            className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/10"
           >
             Preview full page
           </button>

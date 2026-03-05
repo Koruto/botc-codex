@@ -111,15 +111,15 @@ export function ImportPanel({
   const hasImported = townSquare !== null
 
   return (
-    <section className="rounded-lg border border-stone-700 bg-stone-900/50 p-6">
-      <h2 className="mb-4 text-lg font-medium text-stone-200">Import grimoire</h2>
+    <section className="rounded-lg border border-border bg-card p-6">
+      <h2 className="mb-4 text-lg font-medium text-foreground">Import grimoire</h2>
 
       {/* Upload */}
       <div className="mb-6">
-        <p className="mb-2 text-sm text-stone-400">Upload grimoire image</p>
+        <p className="mb-2 text-sm text-muted-foreground">Upload grimoire image</p>
         <div
-          className={`flex flex-col items-center justify-center rounded border-2 border-dashed py-10 text-stone-500 transition-colors ${
-            loading ? 'border-amber-500/50 bg-stone-800/50' : 'border-stone-600 hover:border-amber-500 hover:bg-stone-800/30'
+          className={`flex flex-col items-center justify-center rounded border-2 border-dashed py-10 text-muted-foreground transition-colors ${
+            loading ? 'border-primary/50 bg-muted/50' : 'border-input hover:border-primary hover:bg-muted/30'
           }`}
           onDrop={(e) => {
             e.preventDefault()
@@ -158,7 +158,7 @@ export function ImportPanel({
 
       {/* Paste JSON */}
       <div className="mb-6">
-        <p className="mb-2 text-sm text-stone-400">
+        <p className="mb-2 text-sm text-muted-foreground">
           Or paste Town Square JSON (from Clocktower Online → Game State → Copy JSON)
         </p>
         <textarea
@@ -168,7 +168,7 @@ export function ImportPanel({
             setPasteError(null)
           }}
           placeholder='{ "players": [...], "edition": { "id": "bmr" }, ... }'
-          className="h-32 w-full rounded border border-stone-600 bg-stone-800 px-3 py-2 font-mono text-sm text-stone-100 placeholder-stone-500"
+          className="h-32 w-full rounded border border-input bg-background px-3 py-2 font-mono text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           rows={6}
         />
         {pasteError && <p className="mt-1 text-sm text-red-400">{pasteError}</p>}
@@ -177,7 +177,7 @@ export function ImportPanel({
             type="button"
             onClick={handlePasteSubmit}
             disabled={loading}
-            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-stone-900 hover:bg-amber-500 disabled:opacity-50"
+            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? 'Processing…' : 'Use pasted JSON'}
           </button>
@@ -186,7 +186,7 @@ export function ImportPanel({
               type="button"
               onClick={handleReplaceWithPaste}
               disabled={loading}
-              className="rounded border border-stone-600 px-4 py-2 text-sm text-stone-300 hover:bg-stone-800 disabled:opacity-50"
+              className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50"
             >
               Replace with pasted JSON
             </button>
@@ -196,15 +196,15 @@ export function ImportPanel({
 
       {/* After import: editable game state + grimoire preview */}
       {hasImported && derivedGame && townSquare && (
-        <div className="mt-8 border-t border-stone-700 pt-6">
-          <h3 className="mb-3 text-md font-medium text-stone-200">Game state</h3>
-          <p className="mb-3 text-sm text-stone-400">
+        <div className="mt-8 border-t border-border pt-6">
+          <h3 className="mb-3 text-md font-medium text-foreground">Game state</h3>
+          <p className="mb-3 text-sm text-muted-foreground">
             Edit player names and roles below. Roles are stored by id; changes update the grimoire preview in real time.
           </p>
-          <div className="mb-4 overflow-x-auto rounded-lg border border-stone-700 bg-stone-800/50">
+          <div className="mb-4 overflow-x-auto rounded-lg border border-border bg-muted/50">
             <table className="w-full min-w-[320px] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-stone-600 text-left text-stone-400">
+                <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="px-3 py-2 font-medium">#</th>
                   <th className="px-3 py-2 font-medium">Player name</th>
                   <th className="px-3 py-2 font-medium">Role</th>
@@ -213,22 +213,22 @@ export function ImportPanel({
               </thead>
               <tbody>
                 {townSquare.players.map((player, i) => (
-                  <tr key={player.id || i} className="border-b border-stone-700/80 last:border-0">
-                    <td className="px-3 py-1.5 text-stone-500">{i + 1}</td>
+                  <tr key={player.id || i} className="border-b border-border last:border-0">
+                    <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-1.5">
                       <input
                         type="text"
                         value={player.name}
                         onChange={(e) => updatePlayer(i, { name: e.target.value })}
                         placeholder="Name"
-                        className="w-full rounded border border-stone-600 bg-stone-800 px-2 py-1 text-stone-100 placeholder-stone-500 focus:border-amber-500 focus:outline-none"
+                        className="w-full rounded border border-input bg-background px-2 py-1 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-1.5">
                       <select
                         value={player.role}
                         onChange={(e) => updatePlayer(i, { role: e.target.value })}
-                        className="w-full min-w-[140px] rounded border border-stone-600 bg-stone-800 px-2 py-1 text-stone-100 focus:border-amber-500 focus:outline-none"
+                        className="w-full min-w-[140px] rounded border border-input bg-background px-2 py-1 text-foreground focus:border-primary focus:outline-none"
                       >
                         {!rolesList.some((r) => r.id === player.role) && player.role && (
                           <option value={player.role}>{player.role} (unknown)</option>
@@ -253,22 +253,22 @@ export function ImportPanel({
                 ))}
               </tbody>
             </table>
-            <div className="border-t border-stone-700 px-3 py-2">
+            <div className="border-t border-border px-3 py-2">
               <button
                 type="button"
                 onClick={addPlayer}
-                className="rounded border border-dashed border-stone-500 px-3 py-1 text-xs text-stone-400 hover:border-amber-500 hover:text-amber-400"
+                className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
               >
                 + Add player
               </button>
             </div>
           </div>
 
-          <h3 className="mb-3 text-md font-medium text-stone-200">Grimoire preview</h3>
-          <p className="mb-3 text-sm text-stone-400">
+          <h3 className="mb-3 text-md font-medium text-foreground">Grimoire preview</h3>
+          <p className="mb-3 text-sm text-muted-foreground">
             You can also paste new JSON above and click &quot;Replace with pasted JSON&quot; to overwrite.
           </p>
-          <div className="flex justify-center rounded-lg border border-stone-700 bg-stone-900 p-4">
+          <div className="flex justify-center rounded-lg border border-border bg-card p-4">
             <div className="w-full max-w-[min(360px,85vw)]">
               <Grimoire
                 isPreGame
@@ -290,7 +290,7 @@ export function ImportPanel({
               type="button"
               onClick={onNext}
               disabled={loading}
-              className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-stone-900 hover:bg-amber-500 disabled:opacity-50"
+              className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               Continue to Meta
             </button>

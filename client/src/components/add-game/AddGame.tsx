@@ -228,13 +228,13 @@ export function AddGame() {
           <button
             type="button"
             onClick={() => setShowPreview(false)}
-            className="rounded bg-stone-800/95 px-4 py-2 text-sm font-medium text-stone-100 shadow-lg ring-1 ring-stone-600 hover:bg-stone-700 backdrop-blur-sm"
+            className="rounded bg-card px-4 py-2 text-sm font-medium text-foreground shadow-lg ring-1 ring-border hover:bg-muted backdrop-blur-sm"
           >
             ← Back to editing
           </button>
           <Link
             to={`/server/${serverId}`}
-            className="rounded border border-stone-600 bg-stone-800/95 px-4 py-2 text-sm text-stone-300 hover:bg-stone-700 backdrop-blur-sm"
+            className="rounded border border-border bg-card px-4 py-2 text-sm text-foreground hover:bg-muted backdrop-blur-sm"
           >
             Back to server
           </Link>
@@ -244,31 +244,31 @@ export function AddGame() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="mb-6">
-          <Link to={`/server/${serverId}`} className="text-sm text-amber-400 hover:underline">
+          <Link to={`/server/${serverId}`} className="text-sm text-primary hover:underline">
             ← Back to server
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-amber-500">Add game</h1>
-          <p className="text-stone-400">
+          <h1 className="mt-2 text-2xl font-bold text-primary">Add game</h1>
+          <p className="text-muted-foreground">
             Step {step + 1}: {STEPS[step]} — Upload a grimoire image or paste Town Square JSON, then add meta and
             events.
           </p>
           {draftOffer && (
-            <div className="mt-3 flex items-center gap-3 rounded border border-amber-600/50 bg-amber-950/30 px-3 py-2 text-sm">
-              <span className="text-amber-200">You have an existing draft.</span>
+            <div className="mt-3 flex items-center gap-3 rounded border border-primary/50 bg-primary/10 px-3 py-2 text-sm">
+              <span className="text-primary">You have an existing draft.</span>
               <button
                 type="button"
                 onClick={resumeDraft}
-                className="rounded bg-amber-600 px-3 py-1 font-medium text-stone-900 hover:bg-amber-500"
+                className="rounded bg-primary px-3 py-1 font-medium text-primary-foreground hover:bg-primary/90"
               >
                 Resume draft
               </button>
               <button
                 type="button"
                 onClick={() => setDraftOffer(null)}
-                className="text-stone-400 hover:text-stone-200"
+                className="text-muted-foreground hover:text-foreground"
               >
                 Dismiss
               </button>
@@ -283,7 +283,7 @@ export function AddGame() {
               key={label}
               type="button"
               onClick={() => setStep(i as StepIndex)}
-              className={`rounded px-3 py-1.5 text-sm font-medium ${step === i ? 'bg-amber-600 text-stone-900' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'
+              className={`rounded px-3 py-1.5 text-sm font-medium ${step === i ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
             >
               {i + 1}. {label}
