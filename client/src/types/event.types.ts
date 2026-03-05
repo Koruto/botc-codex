@@ -27,11 +27,13 @@ export type NominationEvent = {
   tiebreak?: boolean
 }
 
+
 export type ExecutionEvent = {
   type: "execution"
   playerId: string
   prevented?: boolean
-  reason?: string             // e.g. "Mayor bounced"
+  reason?: string             // when prevented, e.g. "Mayor bounced"
+  chainedToIndex?: number
 }
 
 export type DeathEvent = {
@@ -41,6 +43,7 @@ export type DeathEvent = {
   sourcePlayerId?: string     // who caused it
   sourceRoleId?: string       // which role caused it
   reason?: string             // freeform note
+  chainedToIndex?: number
 }
 
 export type AbilityEvent = {

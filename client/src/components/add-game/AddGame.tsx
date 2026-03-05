@@ -3,7 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '@/api/client'
 import type { GamePhase, GameUpdateBody } from '@/types'
 import type { TownSquareGameState } from '@/types/townSquare.types'
-import { defaultPregamePhase, townSquareToGame } from '@/utils/townSquareToGame'
+import { defaultPregamePhase, emptyGrimoireRevealPhase, townSquareToGame } from '@/utils/townSquareToGame'
+import { PhaseType } from '@/types'
 import { deriveGame } from '@/utils/deriveGame'
 import { getRolesList } from '@/utils/roles'
 import { GameView } from '@/components/GameView'
@@ -36,7 +37,10 @@ export function AddGame() {
     playerCount: 0,
     storyteller: '',
   })
-  const [committedPhases, setCommittedPhases] = useState<GamePhase[]>([defaultPregamePhase()])
+  const [committedPhases, setCommittedPhases] = useState<GamePhase[]>([
+    defaultPregamePhase(),
+    emptyGrimoireRevealPhase(),
+  ])
 
   // Key to force-remount panels when draft is resumed
   const [formResetToken, setFormResetToken] = useState(0)
@@ -114,7 +118,13 @@ export function AddGame() {
     setDraftId(doc.gameId)
     if (doc.townSquare) setTownSquare(doc.townSquare)
     if (doc.phases && Array.isArray(doc.phases) && doc.phases.length > 0) {
-      setCommittedPhases(doc.phases)
+      const phases = doc.phases as GamePhase[]
+      const last = phases[phases.length - 1]
+      setCommittedPhases(
+        last?.type === PhaseType.GRIMOIRE_REVEAL
+          ? phases
+          : [...phases, emptyGrimoireRevealPhase()],
+      )
     }
     setMetaFormValues({
       gameName: doc.name ?? '',
@@ -283,8 +293,11 @@ export function AddGame() {
               key={label}
               type="button"
               onClick={() => setStep(i as StepIndex)}
-              className={`rounded px-3 py-1.5 text-sm font-medium ${step === i ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
+              className={`rounded border px-3 py-1.5 text-sm font-medium transition-colors ${
+                step === i
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground hover:bg-muted/60'
+              }`}
             >
               {i + 1}. {label}
             </button>

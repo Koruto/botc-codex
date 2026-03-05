@@ -1,8 +1,10 @@
 import { useForm, useFieldArray } from 'react-hook-form'
-import type { GameEvent, GamePhase, Player } from '@/types'
+import type { ExecutionEvent, GameEvent, GamePhase, Player } from '@/types'
+import { PhaseType } from '@/types'
 import type { DerivedGame } from '@/types'
 import type { RoleOption } from '@/types'
-import { defaultPregamePhase, emptyPhase } from '@/utils/townSquareToGame'
+import { defaultPregamePhase, emptyPhase, emptyGrimoireRevealPhase } from '@/utils/townSquareToGame'
+import { phaseLabel } from '@/utils/phaseUtils'
 
 const EVENT_TYPES = [
   { value: 'narrative', label: 'Narrative' },
@@ -42,7 +44,7 @@ function createDefaultEvent(eventType: string, players: Player[]): GameEvent {
     case 'nomination':
       return { type: 'nomination', nominatorId: '', nomineeId: '', votesFor: [], votesAgainst: [], passed: false }
     case 'execution':
-      return { type: 'execution', playerId: firstPlayerId }
+      return { type: 'execution', playerId: firstPlayerId, prevented: false } as ExecutionEvent
     case 'private_room':
       return { type: 'private_room', players: [], highlights: '' }
     default:
@@ -62,6 +64,16 @@ function formatRoleIdForDisplay(roleId: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+
+function formatEventTypeDisplay(type: string): string {
+  if (!type) return ''
+  return type
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+
+
 export function EventsPanel({
   players = [],
   rolesList = [],
@@ -75,10 +87,12 @@ export function EventsPanel({
   onShowPreview,
 }: EventsPanelProps) {
   const { control, register, watch, setValue, handleSubmit } = useForm<PhasesFormValues>({
-    defaultValues: { phases: defaultPhases ?? [defaultPregamePhase()] },
+    defaultValues: {
+      phases: defaultPhases ?? [defaultPregamePhase(), emptyGrimoireRevealPhase()],
+    },
   })
 
-  const { fields: phaseFields, append: appendPhase } = useFieldArray({
+  const { fields: phaseFields, append: appendPhase, insert: insertPhase } = useFieldArray({
     control,
     name: 'phases',
   })
@@ -86,10 +100,19 @@ export function EventsPanel({
   const phases = watch('phases')
 
   const addPhase = () => {
-    const n = phaseFields.length
-    const nextNum = Math.ceil(n / 2)
-    const nextType = n % 2 === 1 ? 'night' : 'day'
-    appendPhase(emptyPhase(nextType, nextNum))
+    const last = phases[phases.length - 1]
+    const isLastGrimoireReveal = last?.type === PhaseType.GRIMOIRE_REVEAL
+    const countNightDay = phases.filter(
+      (p) => p.type === PhaseType.NIGHT || p.type === PhaseType.DAY,
+    ).length
+    const nextNum = Math.ceil((countNightDay + 1) / 2)
+    const nextType = (countNightDay + 1) % 2 === 1 ? 'night' : 'day'
+    const newPhase = emptyPhase(nextType, nextNum)
+    if (isLastGrimoireReveal) {
+      insertPhase(phases.length - 1, newPhase)
+    } else {
+      appendPhase(newPhase)
+    }
   }
 
   const addEvent = (phaseIndex: number, eventType: string) => {
@@ -107,10 +130,21 @@ export function EventsPanel({
 
   const removeEvent = (phaseIndex: number, eventIndex: number) => {
     const currentEvents = phases[phaseIndex]?.events ?? []
-    setValue(
-      `phases.${phaseIndex}.events`,
-      currentEvents.filter((_, j) => j !== eventIndex),
-    )
+    const removed = new Set<number>([eventIndex])
+    currentEvents.forEach((e, i) => {
+      const chain = (e as GameEvent & { chainedToIndex?: number }).chainedToIndex
+      if (chain !== undefined && chain === eventIndex) removed.add(i)
+    })
+    const removedArr = [...removed].sort((a, b) => a - b)
+    const newEvents = currentEvents
+      .filter((_, i) => !removed.has(i))
+      .map((e) => {
+        const chain = (e as GameEvent & { chainedToIndex?: number }).chainedToIndex
+        if (chain == null) return e
+        const newChain = chain - removedArr.filter((r) => r < chain).length
+        return { ...e, chainedToIndex: newChain } as GameEvent
+      })
+    setValue(`phases.${phaseIndex}.events`, newEvents)
   }
 
   const handleSaveDraft = handleSubmit((data) => onSaveDraft(data.phases))
@@ -126,24 +160,35 @@ export function EventsPanel({
       {phaseFields.map((field, phaseIndex) => {
         const phase = phases[phaseIndex]
         return (
-          <div key={field.id} className="mb-6 rounded border border-border bg-muted/50 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <input
-                {...register(`phases.${phaseIndex}.title`)}
-                className={`flex-1 font-medium ${inputClass}`}
-                placeholder="Phase title"
-              />
+          <div
+            key={field.id}
+            className="mb-6 rounded-lg border-l-4 border-l-primary/60 border border-border bg-card p-5 shadow-sm"
+          >
+            <div className="mb-4 flex flex-col gap-2">
+              <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-primary w-fit">
+                {phaseLabel(phase, phaseIndex)}
+              </span>
               <input
                 {...register(`phases.${phaseIndex}.subtitle`)}
-                className={`flex-1 text-muted-foreground ${inputClass}`}
+                type="text"
+                className={`max-w-2xl text-sm text-muted-foreground placeholder:text-muted-foreground/70 ${inputClass}`}
                 placeholder="Subtitle"
               />
             </div>
 
             <ul className="space-y-2">
-              {phase?.events.map((evt, eventIndex) => (
-                <li key={eventIndex} className="rounded border border-border bg-card p-3">
-                  <span className="text-xs font-medium uppercase text-primary">{evt.type}</span>
+              {phase?.events.map((evt, eventIndex) => {
+                const isChained = 'chainedToIndex' in evt && evt.chainedToIndex !== undefined
+                return (
+                <li
+                  key={eventIndex}
+                  className={
+                    isChained
+                      ? 'rounded border border-border bg-muted/70 p-3 text-muted-foreground'
+                      : 'rounded border border-border bg-muted/40 p-3'
+                  }
+                >
+                  <span className="text-xs font-medium text-primary">{formatEventTypeDisplay(evt.type)}</span>
 
                   {evt.type === 'narrative' && (
                     <div className="mt-2 grid gap-2">
@@ -169,7 +214,12 @@ export function EventsPanel({
                       <select
                         value={evt.playerId}
                         onChange={(e) => updateEvent(phaseIndex, eventIndex, { playerId: e.target.value })}
-                        className={inputClass}
+                        disabled={'chainedToIndex' in evt && evt.chainedToIndex !== undefined}
+                        className={
+                          'chainedToIndex' in evt && evt.chainedToIndex !== undefined
+                            ? `${inputClass} cursor-not-allowed opacity-70 bg-muted/60`
+                            : inputClass
+                        }
                       >
                         {players.map((p) => (
                           <option key={p.id} value={p.id}>{p.name}</option>
@@ -182,7 +232,12 @@ export function EventsPanel({
                             cause: e.target.value as 'night_kill' | 'ability' | 'execution' | 'other',
                           })
                         }
-                        className={inputClass}
+                        disabled={'chainedToIndex' in evt && evt.chainedToIndex !== undefined}
+                        className={
+                          'chainedToIndex' in evt && evt.chainedToIndex !== undefined
+                            ? `${inputClass} cursor-not-allowed opacity-70 bg-muted/60`
+                            : inputClass
+                        }
                       >
                         <option value="night_kill">Night kill</option>
                         <option value="ability">Ability</option>
@@ -236,16 +291,93 @@ export function EventsPanel({
                   })()}
 
                   {evt.type === 'execution' && (
-                    <div className="mt-2">
-                      <select
-                        value={evt.playerId}
-                        onChange={(e) => updateEvent(phaseIndex, eventIndex, { playerId: e.target.value })}
-                        className={inputClass}
-                      >
-                        {players.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
+                    <div className="mt-2 grid gap-2">
+                      <div className="flex flex-wrap items-end gap-4 justify-between">
+                        <div>
+                          <span className="text-xs text-muted-foreground block mb-1">Executed</span>
+                          <select
+                            value={evt.playerId}
+                            onChange={(e) => {
+                              const playerId = e.target.value
+                              updateEvent(phaseIndex, eventIndex, { playerId })
+                              const currentEvents = phases[phaseIndex]?.events ?? []
+                              const next = currentEvents[eventIndex + 1]
+                              if (
+                                next?.type === 'death' &&
+                                (next as GameEvent & { chainedToIndex?: number }).chainedToIndex === eventIndex
+                              ) {
+                                updateEvent(phaseIndex, eventIndex + 1, { playerId } as Partial<GameEvent>)
+                              }
+                            }}
+                            className={inputClass}
+                          >
+                            {players.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-foreground pb-1">
+                          <input
+                            type="checkbox"
+                            checked={evt.prevented ?? false}
+                            onChange={(e) => {
+                              const prevented = e.target.checked
+                              const currentEvents = phases[phaseIndex]?.events ?? []
+                              const next = currentEvents[eventIndex + 1]
+                              const nextIsChainedDeath =
+                                next?.type === 'death' &&
+                                (next as GameEvent & { chainedToIndex?: number }).chainedToIndex === eventIndex
+                              if (prevented && nextIsChainedDeath) {
+                                const removed = eventIndex + 1
+                                let newEvents = currentEvents
+                                  .filter((_, i) => i !== removed)
+                                  .map((e) => {
+                                    const chain = (e as GameEvent & { chainedToIndex?: number }).chainedToIndex
+                                    if (chain != null && chain > removed)
+                                      return { ...e, chainedToIndex: chain - 1 } as GameEvent
+                                    return e
+                                  })
+                                newEvents = newEvents.map((ev, i) =>
+                                  i === eventIndex && ev.type === 'execution'
+                                    ? { ...ev, prevented: true, reason: undefined }
+                                    : ev,
+                                )
+                                setValue(`phases.${phaseIndex}.events`, newEvents)
+                              } else if (!prevented && evt.playerId && !nextIsChainedDeath) {
+                                const death: GameEvent = {
+                                  type: 'death',
+                                  playerId: evt.playerId,
+                                  cause: 'execution',
+                                  chainedToIndex: eventIndex,
+                                }
+                                const newEvents = [
+                                  ...currentEvents.slice(0, eventIndex),
+                                  { ...currentEvents[eventIndex], prevented: false, reason: undefined },
+                                  death,
+                                  ...currentEvents.slice(eventIndex + 1),
+                                ]
+                                setValue(`phases.${phaseIndex}.events`, newEvents)
+                              } else {
+                                updateEvent(phaseIndex, eventIndex, {
+                                  prevented,
+                                  ...(prevented ? {} : { reason: undefined }),
+                                })
+                              }
+                            }}
+                            className="rounded border-border"
+                          />
+                          Prevented
+                        </label>
+                      </div>
+                      {(evt.prevented ?? false) && (
+                        <input
+                          type="text"
+                          value={evt.reason ?? ''}
+                          onChange={(e) => updateEvent(phaseIndex, eventIndex, { reason: e.target.value })}
+                          placeholder="Reason (e.g. Mayor bounced)"
+                          className={inputClass}
+                        />
+                      )}
                     </div>
                   )}
 
@@ -307,7 +439,63 @@ export function EventsPanel({
                           <input
                             type="checkbox"
                             checked={evt.passed}
-                            onChange={(e) => updateEvent(phaseIndex, eventIndex, { passed: e.target.checked })}
+                            onChange={(e) => {
+                              const passed = e.target.checked
+                              const currentEvents = phases[phaseIndex]?.events ?? []
+                              const nextEvt = currentEvents[eventIndex + 1]
+                              const nextIsChainedExecution =
+                                nextEvt?.type === 'execution' &&
+                                (nextEvt as ExecutionEvent).chainedToIndex === eventIndex
+                              if (passed && evt.nomineeId) {
+                                const execution: GameEvent = {
+                                  type: 'execution',
+                                  playerId: evt.nomineeId,
+                                  prevented: false,
+                                  chainedToIndex: eventIndex,
+                                } as ExecutionEvent
+                                if (nextIsChainedExecution) {
+                                  updateEvent(phaseIndex, eventIndex + 1, {
+                                    playerId: evt.nomineeId,
+                                    prevented: false,
+                                    chainedToIndex: eventIndex,
+                                  })
+                                  updateEvent(phaseIndex, eventIndex, { passed: true })
+                                } else {
+                                  const death: GameEvent = {
+                                    type: 'death',
+                                    playerId: evt.nomineeId,
+                                    cause: 'execution',
+                                    chainedToIndex: eventIndex + 1,
+                                  }
+                                  const newEvents = [
+                                    ...currentEvents.slice(0, eventIndex),
+                                    { ...currentEvents[eventIndex], passed: true },
+                                    execution,
+                                    death,
+                                    ...currentEvents.slice(eventIndex + 1),
+                                  ]
+                                  setValue(`phases.${phaseIndex}.events`, newEvents)
+                                }
+                              } else {
+                                if (!passed && nextIsChainedExecution) {
+                                  const removed = eventIndex + 1
+                                  const newEvents = currentEvents
+                                    .filter((_, i) => i !== removed)
+                                    .map((e) => {
+                                      const chain = (e as GameEvent & { chainedToIndex?: number }).chainedToIndex
+                                      if (chain != null && chain > removed)
+                                        return { ...e, chainedToIndex: chain - 1 } as GameEvent
+                                      return e
+                                    })
+                                  const withNomination = newEvents.map((e, i) =>
+                                    i === eventIndex && e.type === 'nomination' ? { ...e, passed: false } : e,
+                                  )
+                                  setValue(`phases.${phaseIndex}.events`, withNomination)
+                                } else {
+                                  updateEvent(phaseIndex, eventIndex, { passed: false })
+                                }
+                              }
+                            }}
                             className="rounded border-border"
                           />
                           Vote passed (nominee executed)
@@ -393,16 +581,17 @@ export function EventsPanel({
                     Remove event
                   </button>
                 </li>
-              ))}
+              );
+              })}
             </ul>
 
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {EVENT_TYPES.map(({ value, label }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => addEvent(phaseIndex, value)}
-                  className="rounded border-2 border-primary bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className='rounded border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted/60 hover:border-primary/60 focus:outline-none'
                 >
                   + {label}
                 </button>

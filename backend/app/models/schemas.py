@@ -104,6 +104,7 @@ class DeathEvent(BaseModel):
     sourcePlayerId: Optional[str] = None
     sourceRoleId: Optional[str] = None
     reason: Optional[str] = None
+    chainedToIndex: Optional[int] = None
 
 
 class AbilityEvent(BaseModel):
@@ -130,6 +131,7 @@ class ExecutionEvent(BaseModel):
     playerId: str = ""
     prevented: Optional[bool] = None
     reason: Optional[str] = None
+    chainedToIndex: Optional[int] = None
 
 
 class PrivateRoomEvent(BaseModel):

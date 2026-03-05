@@ -70,6 +70,15 @@ export function emptyPhase(type: 'day' | 'night', phaseNumber: number): GamePhas
   }
 }
 
+export function emptyGrimoireRevealPhase(): GamePhase {
+  return {
+    type: PhaseType.GRIMOIRE_REVEAL,
+    title: 'Grimoire Reveal',
+    subtitle: '',
+    events: [],
+  }
+}
+
 /**
  * Build a minimal Game from Town Square + optional meta/phases for preview and persistence.
  */

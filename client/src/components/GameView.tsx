@@ -99,13 +99,17 @@ export function GameView({ game, gameId }: GameViewProps) {
     const lastNom = [...events].reverse().find((e): e is NominationEvent => e.type === 'nomination')
     if (!lastNom) return null
     const nomIndex = events.indexOf(lastNom)
-    const execution = events.slice(nomIndex + 1).find((e): e is ExecutionEvent => e.type === 'execution' && e.playerId === lastNom.nomineeId)
+    const chainedExecution = events.find(
+      (e): e is ExecutionEvent =>
+        e.type === 'execution' && e.chainedToIndex === nomIndex,
+    )
+    const executed = chainedExecution ? !chainedExecution.prevented : lastNom.passed
     return {
       nominator: nameById.get(lastNom.nominatorId) ?? lastNom.nominatorId,
       nominee: nameById.get(lastNom.nomineeId) ?? lastNom.nomineeId,
       votesFor: (lastNom.votesFor ?? []).map((id) => nameById.get(id) ?? id),
       votesAgainst: (lastNom.votesAgainst ?? []).map((id) => nameById.get(id) ?? id),
-      executed: execution != null ? !execution.prevented : lastNom.passed,
+      executed,
     }
   }, [currentPhase, nameById])
 
