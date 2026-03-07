@@ -1,8 +1,9 @@
 """
-Users router: explore, my games, public user pages.
+Users router: explore, my games, my servers, public user pages.
 
   GET /api/explore               — random sample of public games (no auth)
   GET /api/me/games              — all games owned by the caller (auth required)
+  GET /api/me/servers            — all servers the caller is a member of (auth required)
   GET /api/users/{username}/games — a user's public games (no auth required)
 """
 
@@ -10,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from app.auth import get_current_user
-from app.db import get_games_collection, get_users_collection
-from app.models.schemas import GameDocument, UserDocument
+from app.db import get_games_collection, get_memberships_collection, get_servers_collection, get_users_collection
+from app.models.schemas import GameDocument, ServerDocument, UserDocument
 
 router = APIRouter(prefix="/api", tags=["users"])
 
@@ -37,6 +38,50 @@ async def explore(
     async for raw in collection.aggregate(pipeline):
         items.append(GameDocument(**raw).model_dump(mode="json"))
     return {"items": items}
+
+
+# ---------------------------------------------------------------------------
+# My servers
+# ---------------------------------------------------------------------------
+
+@router.get("/me/servers")
+async def my_servers(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: dict = Depends(get_current_user),
+    servers: AsyncIOMotorCollection = Depends(get_servers_collection),
+    memberships: AsyncIOMotorCollection = Depends(get_memberships_collection),
+):
+    """
+    Return all servers the authenticated user is a member of,
+    sorted by joinedAt descending. Paginated.
+    """
+    user_id = current_user["userId"]
+    all_memberships = await memberships.find({"userId": user_id}).sort("joinedAt", -1).to_list(length=None)
+    total = len(all_memberships)
+
+    paged = all_memberships[skip : skip + limit]
+    server_ids = [m["serverId"] for m in paged]
+
+    server_docs: dict[str, ServerDocument] = {}
+    async for raw in servers.find({"serverId": {"$in": server_ids}}):
+        doc = ServerDocument(**raw)
+        server_docs[doc.serverId] = doc
+
+    membership_joined: dict[str, str] = {m["serverId"]: m["joinedAt"] for m in paged}
+
+    items = []
+    for sid in server_ids:
+        doc = server_docs.get(sid)
+        if doc:
+            items.append({
+                **doc.model_dump(mode="json"),
+                "isCreator": doc.createdBy == user_id,
+                "isMember": True,
+                "joinedAt": membership_joined[sid],
+            })
+
+    return {"total": total, "skip": skip, "limit": limit, "items": items}
 
 
 # ---------------------------------------------------------------------------

@@ -8,8 +8,11 @@ import type { TownSquareGameState } from "./townSquare.types"
 export type GameDocument = {
   gameId: string
   serverId: string
-  status: string
+  createdBy: string
+  createdAt: string
   updatedAt: string
+  updatedBy?: string | null
+  visibility: 'private' | 'public'
   name?: string | null
   townSquare?: TownSquareGameState | null
   meta?: GameMeta | null
@@ -27,12 +30,12 @@ export type GameCreateBody = {
   phases?: GamePhase[] | null
   title?: string | null
   subtitle?: string | null
+  visibility?: 'private' | 'public'
 }
 
 /** Request body for PATCH /api/servers/{id}/games/{id}. Matches backend GameUpdateBody. */
 export type GameUpdateBody = Partial<GameCreateBody> & {
   winner?: string | null
-  status?: string | null
 }
 
 // ----- Game (derived view) -----

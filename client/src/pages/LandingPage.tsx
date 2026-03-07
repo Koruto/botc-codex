@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/Button'
 import { cn } from '@/lib/utils'
 
 const FAQ_ITEMS = [
@@ -77,7 +77,7 @@ export function LandingPage() {
               />
             </div>
           </button>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="secondary" size="sm" asChild>
             <Link to="/login">Sign in</Link>
           </Button>
           <Button size="sm" asChild>
@@ -104,7 +104,7 @@ export function LandingPage() {
             <Button size="lg" asChild>
               <Link to="/login">Log your first game</Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="secondary" size="lg" asChild>
               <a href="#features">See how it works</a>
             </Button>
           </div>
@@ -253,7 +253,7 @@ export function LandingPage() {
           <Button size="lg" asChild>
             <Link to="/login">Create free account</Link>
           </Button>
-          <Button variant="outline" size="lg" asChild>
+          <Button variant="secondary" size="lg" asChild>
             <a href="#features">See how it works</a>
           </Button>
         </div>

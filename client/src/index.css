@@ -321,6 +321,18 @@ html {
   --border: #e4dbd0;
   --input: #e4dbd0;
   --ring: #9b1d20;
+  /* ── named semantic tokens ──────────────────────────────────────────── */
+  --primary-hover: #b52428;
+  --warm-border: #d0c4b4;
+  --placeholder: #b0a090;
+  --badge-good-color: #2d6a3f;
+  --badge-evil-color: #8b1a1a;
+  --voted-golden-bg: #fef3c7;
+  /* ── shadow tokens (referenced in CSS classes below) ─────────────────*/
+  --shadow-btn-primary-sm: 0 1px 4px rgba(155, 29, 32, 0.25);
+  --shadow-btn-primary-md: 0 2px 8px rgba(155, 29, 32, 0.3);
+  --shadow-primary-focus: 0 0 0 3px rgba(155, 29, 32, 0.08);
+  --shadow-app-card: 0 1px 3px rgba(28, 20, 16, 0.06), 0 1px 2px rgba(28, 20, 16, 0.04);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -439,7 +451,7 @@ html {
 
 /* Voters: golden fill only, keep default border (no red border) */
 .grimoire-voted-golden {
-  background-color: #fef3c7 !important;
+  background-color: var(--voted-golden-bg) !important;
 }
 /* Nominee: red outline when circle is done (they will be dead) */
 .grimoire-nominee-red {
@@ -514,6 +526,16 @@ html {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-app-display: "Fraunces", serif;
+  /* ── color utilities ──────────────────────────────────────────────────*/
+  --color-primary-hover: var(--primary-hover);
+  --color-warm-border: var(--warm-border);
+  --color-placeholder: var(--placeholder);
+  --color-badge-good: var(--badge-good-color);
+  --color-badge-evil: var(--badge-evil-color);
+  /* ── shadow utilities (values inlined so no circular refs) ───────────*/
+  --shadow-primary-sm: 0 1px 4px rgba(155, 29, 32, 0.25);
+  --shadow-primary-md: 0 2px 8px rgba(155, 29, 32, 0.3);
+  --shadow-card: 0 1px 3px rgba(28, 20, 16, 0.06), 0 1px 2px rgba(28, 20, 16, 0.04);
 }
 
 .dark {
@@ -536,6 +558,7 @@ html {
   --border: rgba(200, 100, 80, 0.15);
   --input: rgba(200, 100, 80, 0.2);
   --ring: #c4302e;
+  --primary-hover: #d44240;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -558,4 +581,120 @@ html {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ── APP SHELL — reusable UI classes ──────────────────────────────────── */
+
+/* Card — kept here because the double-layer shadow is verbose as an arbitrary value */
+.app-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-app-card);
+  overflow: hidden;
+}
+
+/* Page title — kept here for the CSS-variable font-family + clamp combo */
+.app-page-title {
+  font-family: var(--font-app-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.1;
+}
+
+/* Input — kept for pseudo-selector focus ring + placeholder colour */
+.app-input {
+  padding: 0.625rem 0.875rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.app-input::placeholder {
+  color: var(--placeholder);
+}
+
+.app-input:focus {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary-focus);
+}
+
+/* Game outcome / visibility badges — colour variants reused across pages */
+.game-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+}
+
+.game-badge-good {
+  background: rgba(45, 106, 63, 0.1);
+  color: var(--badge-good-color);
+}
+
+.game-badge-evil {
+  background: rgba(139, 26, 26, 0.1);
+  color: var(--badge-evil-color);
+}
+
+.game-badge-private {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+/* Server row — hover background + last-child border removal used on multiple pages */
+.server-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.server-row:last-child {
+  border-bottom: none;
+}
+
+.server-row:hover {
+  background: var(--muted);
+}
+
+/* Game row — grid layout + child-selector hover used on multiple pages */
+.game-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.game-row:last-child {
+  border-bottom: none;
+}
+
+.game-row:hover {
+  background: var(--muted);
+}
+
+/* Child selector: name colour on row hover — requires CSS, not achievable with Tailwind group here */
+.game-row .game-row-name {
+  transition: color 0.15s;
+}
+
+.game-row:hover .game-row-name {
+  color: var(--primary);
 }
