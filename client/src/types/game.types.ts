@@ -1,4 +1,5 @@
 import type { GameEvent, NarrativeEvent, Player } from "@/types"
+import type { CustomScript, RoleInfo } from "./grimoire.types"
 import type { TownSquareGameState } from "./townSquare.types"
 
 // ----- API document & request bodies (match backend schemas.py JSON) -----
@@ -52,12 +53,16 @@ export type DerivedGame = Omit<Game, 'phases'> & {
   phases: DerivedGamePhase[]
 }
 
+export type EditionId = 'bmr' | 'snv' | 'tb' | 'custom'
+
 export type GameMeta = {
   playedOn: string              // display string, e.g. "February 2025"
-  edition: string           // e.g. "bmr"
+  edition: EditionId            // "bmr" | "snv" | "luf" | "custom"
   playerCount: number
   storyteller: string
-  coStorytellers?: string[]   // just names, no special role
+  coStorytellers?: string[]      // just names, no special role
+  script?: CustomScript
+  customRoles?: RoleInfo[]
 }
 
 export const PhaseType = {

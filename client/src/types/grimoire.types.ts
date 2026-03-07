@@ -23,3 +23,14 @@ export type RoleInfo = {
   setup: boolean            // affects setup phase
   icon?: string
 }
+
+export type ScriptMeta = {
+  id: string
+  name: string
+  author: string
+}
+
+export type CustomScript = {
+  meta: ScriptMeta
+  roles: string[]
+}
