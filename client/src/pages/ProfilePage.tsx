@@ -1,26 +1,34 @@
 import { useAuth } from '@/context/AuthContext'
+import { StatItem } from '@/components/ui/StatItem'
 
 export function ProfilePage() {
   const { user } = useAuth()
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-2 text-2xl font-bold text-primary">Profile</h1>
-      <p className="mb-6 text-muted-foreground">Your account details.</p>
 
-      <section className="rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-4 text-lg font-medium text-foreground">Account</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Username</label>
-            <p className="rounded border border-border bg-muted/30 px-3 py-2 text-sm text-foreground">
-              {user?.username}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">Username cannot be changed.</p>
+      {/* Page header */}
+      <div className="mb-8">
+        <h1 className="app-page-title">{user?.username ?? 'Profile'}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Your account and stats.</p>
+      </div>
+
+      {/* Account card */}
+      <div className="app-card mb-5">
+        <div className="px-6 py-5 border-b border-border">
+          <span className="text-sm font-semibold text-foreground">Account</span>
+        </div>
+        <div className="divide-y divide-border">
+          <div className="flex items-start justify-between px-6 py-4">
+            <span className="text-sm text-muted-foreground w-32 shrink-0">Username</span>
+            <div className="text-right">
+              <p className="text-sm font-medium text-primary">{user?.username}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Username cannot be changed.</p>
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block text-sm text-muted-foreground">Member since</label>
-            <p className="text-sm text-foreground">
+          <div className="flex items-center justify-between px-6 py-4">
+            <span className="text-sm text-muted-foreground w-32 shrink-0">Member since</span>
+            <span className="text-sm text-foreground">
               {user?.createdAt
                 ? new Date(user.createdAt).toLocaleDateString(undefined, {
                     year: 'numeric',
@@ -28,35 +36,49 @@ export function ProfilePage() {
                     day: 'numeric',
                   })
                 : '—'}
-            </p>
+            </span>
+          </div>
+          <div className="flex items-start justify-between px-6 py-4">
+            <span className="text-sm text-muted-foreground w-32 shrink-0">Public page</span>
+            <div className="text-right">
+              <a href={`/user/${user?.username}`} className="text-sm text-primary hover:underline">
+                /user/{user?.username}
+              </a>
+              <p className="mt-0.5 text-xs text-muted-foreground">Your public games are visible here.</p>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <section className="mt-6 rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-2 text-lg font-medium text-foreground">Email</h2>
-        <p className="text-sm text-muted-foreground">
-          Adding an email address lets you reset your password if you're ever locked out. No email
-          required for your account to work.
-        </p>
-        <p className="mt-3 text-xs text-muted-foreground italic">
-          Email management coming soon.
-        </p>
-      </section>
+      {/* Email card */}
+      <div className="app-card mb-5">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+          <span className="text-sm font-semibold text-foreground">Email</span>
+          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Coming soon
+          </span>
+        </div>
+        <div className="px-6 py-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Adding an email lets you reset your password if you're locked out.
+            Not required for your account to work.
+          </p>
+        </div>
+      </div>
 
-      <section className="mt-6 rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-2 text-lg font-medium text-foreground">Public page</h2>
-        <p className="text-sm text-muted-foreground">
-          Your public games are visible at{' '}
-          <a
-            href={`/user/${user?.username}`}
-            className="text-primary hover:underline"
-          >
-            /user/{user?.username}
-          </a>
-          .
-        </p>
-      </section>
+      {/* Stats card */}
+      <div className="app-card">
+        <div className="px-6 py-5 border-b border-border">
+          <span className="text-sm font-semibold text-foreground">Your stats</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 px-6 py-5">
+          <StatItem value="—" label="Games logged" faint />
+          <StatItem value="—" label="Servers" faint />
+          <StatItem value="—" label="Good wins" faint />
+          <StatItem value="—" label="Evil wins" faint />
+        </div>
+      </div>
+
     </div>
   )
 }
