@@ -6,7 +6,7 @@ import { Dialog as DialogPrimitive } from 'radix-ui'
 import { X, CheckCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/Button'
-import { api } from '@/api/client'
+import { createFeedback } from '@/api/feedback'
 
 const schema = z.object({
   type: z.enum(['bug', 'feature', 'general']),
@@ -56,7 +56,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const onSubmit = async (data: FormData) => {
     setServerError(null)
     try {
-      await api.submitFeedback(data)
+      await createFeedback(data)
       setSubmitted(true)
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')

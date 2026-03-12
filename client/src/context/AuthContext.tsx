@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { api } from '@/api/client'
+import { getMe, login as apiLogin, logout as apiLogout, signup as apiSignup } from '@/api/auth'
 import type { UserPublicResponse } from '@/types/api.types'
 
 type AuthContextValue = {
@@ -17,25 +17,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    api
-      .getMe()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setIsLoading(false))
+    const load = async () => {
+      try {
+        const u = await getMe()
+        setUser(u)
+      } catch {
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
   }, [])
 
   const login = useCallback(async (username: string, password: string) => {
-    const u = await api.login(username, password)
+    const u = await apiLogin(username, password)
     setUser(u)
   }, [])
 
   const signup = useCallback(async (username: string, password: string) => {
-    const u = await api.signup(username, password)
+    const u = await apiSignup(username, password)
     setUser(u)
   }, [])
 
   const logout = useCallback(async () => {
-    await api.logout().catch(() => {})
+    try {
+      await apiLogout()
+    } catch {
+      // ignore logout errors
+    }
     setUser(null)
   }, [])
 

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { api } from '@/api/client'
+import { createServer, getServers } from '@/api/servers'
+import { createGame, getServerGame, getGames, updateGame } from '@/api/games'
+import { parseGrimoireJson, processGrimoire } from '@/api/grimoire'
 import type { EditionId, GamePhase, GameUpdateBody } from '@/types'
 import type { TownSquareGameState } from '@/types/townSquare.types'
 import type { MyServerItem } from '@/types/api.types'
@@ -62,41 +64,48 @@ export function AddGame() {
   // Load user's servers when coming from dashboard (no URL serverId)
   useEffect(() => {
     if (urlServerId) return
-    api
-      .myServers()
-      .then((res) => {
+    const load = async () => {
+      try {
+        const res = await getServers()
         setMyServers(res.items)
         if (res.items.length === 1) setSelectedServerId(res.items[0].serverId)
-      })
-      .catch(() => {})
-      .finally(() => setServersLoading(false))
+      } catch {
+        // ignore
+      } finally {
+        setServersLoading(false)
+      }
+    }
+    load()
   }, [urlServerId])
 
   // Check for existing draft only when coming from a specific server
   useEffect(() => {
     if (!urlServerId) return
-    api
-      .listGames(urlServerId, 0, 1)
-      .then((res) => {
+    const load = async () => {
+      try {
+        const res = await getGames(urlServerId, 0, 1)
         const latest = res.items[0]
         if (latest && !draftId) setDraftOffer({ gameId: latest.gameId, updatedAt: latest.updatedAt })
-      })
-      .catch(() => {})
+      } catch {
+        // ignore
+      }
+    }
+    load()
   }, [urlServerId, draftId])
 
   const game = townSquare
     ? townSquareToGame(townSquare, {
-        gameId: draftId ?? 'draft',
-        title: metaFormValues.title || 'Preview',
-        subtitle: metaFormValues.subtitle || undefined,
-        meta: {
-          playedOn: metaFormValues.playedOn,
-          edition: metaFormValues.edition as EditionId,
-          playerCount: metaFormValues.playerCount,
-          storyteller: metaFormValues.storyteller,
-        },
-        phases: committedPhases.length > 0 ? committedPhases : undefined,
-      })
+      gameId: draftId ?? 'draft',
+      title: metaFormValues.title || 'Preview',
+      subtitle: metaFormValues.subtitle || undefined,
+      meta: {
+        playedOn: metaFormValues.playedOn,
+        edition: metaFormValues.edition as EditionId,
+        playerCount: metaFormValues.playerCount,
+        storyteller: metaFormValues.storyteller,
+      },
+      phases: committedPhases.length > 0 ? committedPhases : undefined,
+    })
     : null
   const derivedGame = game ? deriveGame(game) : null
 
@@ -116,7 +125,7 @@ export function AddGame() {
     setCreatingServer(true)
     setCreateServerError(null)
     try {
-      const server = await api.createServer(name)
+      const server = await createServer(name)
       const item: MyServerItem = { ...server, isCreator: true, isMember: true, joinedAt: server.createdAt }
       setMyServers((prev) => [...prev, item])
       setSelectedServerId(server.serverId)
@@ -136,9 +145,9 @@ export function AddGame() {
       setSaveStatus('saving')
       try {
         if (draftId) {
-          await api.updateGame(selectedServerId, draftId, payload)
+          await updateGame(selectedServerId, draftId, payload)
         } else {
-          const created = await api.createGame(selectedServerId, payload)
+          const created = await createGame(selectedServerId, payload)
           setDraftId(created.gameId)
         }
         setSaveStatus('saved')
@@ -153,7 +162,7 @@ export function AddGame() {
 
   const resumeDraft = useCallback(async () => {
     if (!urlServerId || !draftOffer) return
-    const doc = await api.getGame(urlServerId, draftOffer.gameId)
+    const doc = await getServerGame(urlServerId, draftOffer.gameId)
     setDraftId(doc.gameId)
     if (doc.townSquare) setTownSquare(doc.townSquare)
     if (doc.phases && Array.isArray(doc.phases) && doc.phases.length > 0) {
@@ -179,7 +188,7 @@ export function AddGame() {
   const handleFileUpload = async (file: File) => {
     setLoadingImport(true)
     try {
-      const res = await api.processGrimoire(file)
+      const res = await processGrimoire(file)
       setTownSquare(res.townSquare)
       await saveDraft({ townSquare: res.townSquare })
     } finally {
@@ -190,7 +199,7 @@ export function AddGame() {
   const handlePasteSubmit = async (json: string) => {
     setLoadingImport(true)
     try {
-      const res = await api.fromJson(JSON.parse(json) as Record<string, unknown>)
+      const res = await parseGrimoireJson(JSON.parse(json) as Record<string, unknown>)
       setTownSquare(res.townSquare)
       if (res.meta) setMetaFormValues((prev) => ({ ...prev, ...res.meta }))
       await saveDraft({ townSquare: res.townSquare })
@@ -203,10 +212,10 @@ export function AddGame() {
     if (!selectedServerId || !draftId) return
     setLoadingImport(true)
     try {
-      const res = await api.fromJson(JSON.parse(json) as Record<string, unknown>)
+      const res = await parseGrimoireJson(JSON.parse(json) as Record<string, unknown>)
       setTownSquare(res.townSquare)
       if (res.meta) setMetaFormValues((prev) => ({ ...prev, ...res.meta }))
-      await api.updateGame(selectedServerId, draftId, { townSquare: res.townSquare })
+      await updateGame(selectedServerId, draftId, { townSquare: res.townSquare })
       setSaveStatus('saved')
     } finally {
       setLoadingImport(false)
@@ -251,11 +260,11 @@ export function AddGame() {
     setNoServerError(false)
     try {
       if (draftId) {
-        await api.updateGame(selectedServerId, draftId, { phases })
+        await updateGame(selectedServerId, draftId, { phases })
         navigate(`/game/${draftId}`)
       } else {
         // No draft saved yet (e.g. user skipped import) — create fresh
-        const created = await api.createGame(selectedServerId, {
+        const created = await createGame(selectedServerId, {
           ...saveMetaPayload(metaFormValues),
           townSquare: townSquare ?? undefined,
           phases,
@@ -339,9 +348,8 @@ export function AddGame() {
         {/* Server picker — shown when not coming from a specific server URL */}
         {!urlServerId && (
           <div
-            className={`mb-6 rounded-lg border p-4 ${
-              noServerError ? 'border-destructive bg-destructive/5' : 'border-border bg-card'
-            }`}
+            className={`mb-6 rounded-lg border p-4 ${noServerError ? 'border-destructive bg-destructive/5' : 'border-border bg-card'
+              }`}
           >
             <p className="mb-3 text-sm font-medium text-foreground">
               Save to server{' '}
@@ -415,11 +423,10 @@ export function AddGame() {
               key={label}
               type="button"
               onClick={() => setStep(i as StepIndex)}
-              className={`rounded border px-3 py-1.5 text-sm font-medium transition-colors ${
-                step === i
-                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground hover:bg-muted/60'
-              }`}
+              className={`rounded border px-3 py-1.5 text-sm font-medium transition-colors ${step === i
+                ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground hover:bg-muted/60'
+                }`}
             >
               {i + 1}. {label}
             </button>

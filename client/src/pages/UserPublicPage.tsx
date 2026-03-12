@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api } from '@/api/client'
-import type { GameDocument, UserPublicGamesResponse } from '@/types'
+import { getUserGames } from '@/api/explore'
+import type { GameDocument } from '@/types'
 
 const PAGE_SIZE = 20
 
@@ -17,16 +17,20 @@ export function UserPublicPage() {
 
   useEffect(() => {
     if (!username) return
-    setLoading(true)
-    api
-      .userPublicGames(username, skip, PAGE_SIZE)
-      .then((res: UserPublicGamesResponse) => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const res = await getUserGames(username, skip, PAGE_SIZE)
         setResolvedUsername(res.username)
         setGames(res.items)
         setTotal(res.total)
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : 'User not found'))
-      .finally(() => setLoading(false))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'User not found')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [username, skip])
 
   const gameDisplayName = (doc: GameDocument) => doc.name || doc.title || 'Untitled'

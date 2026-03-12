@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { api } from '@/api/client'
-import type { MyServerItem, PaginatedGamesResponse } from '@/types/api.types'
+import { getServers, createServer } from '@/api/servers'
+import { getMyGames } from '@/api/explore'
+import type { MyServerItem } from '@/types/api.types'
 import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
@@ -25,17 +26,30 @@ export function HomePage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    api
-      .myServers()
-      .then((res) => setServers(res.items))
-      .catch(() => setServers([]))
-      .finally(() => setServersLoading(false))
+    const loadServers = async () => {
+      try {
+        const res = await getServers()
+        setServers(res.items)
+      } catch {
+        setServers([])
+      } finally {
+        setServersLoading(false)
+      }
+    }
 
-    api
-      .myGames(0, 5)
-      .then((res: PaginatedGamesResponse) => setRecentGames(res.items))
-      .catch(() => setRecentGames([]))
-      .finally(() => setGamesLoading(false))
+    const loadGames = async () => {
+      try {
+        const res = await getMyGames(0, 5)
+        setRecentGames(res.items)
+      } catch {
+        setRecentGames([])
+      } finally {
+        setGamesLoading(false)
+      }
+    }
+
+    loadServers()
+    loadGames()
   }, [])
 
   useEffect(() => {
@@ -49,7 +63,7 @@ export function HomePage() {
     setCreateError(null)
     setCreateLoading(true)
     try {
-      const server = await api.createServer(name)
+      const server = await createServer(name)
       setServers((prev) => [{ ...server, isCreator: true, isMember: true, joinedAt: server.createdAt }, ...prev])
       setNewServerName('')
       setCreating(false)

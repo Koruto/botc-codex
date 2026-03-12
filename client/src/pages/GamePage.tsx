@@ -5,7 +5,8 @@ import type { DerivedGame, Game, GameDocument } from '@/types'
 import type { MyServerItem } from '@/types/api.types'
 import { deriveGame } from '../utils/deriveGame'
 import { townSquareToGame } from '../utils/townSquareToGame'
-import { api } from '@/api/client'
+import { getGame, copyGame } from '@/api/games'
+import { getServers } from '@/api/servers'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
 import wizardTeensy from '../data/wizard-teensy.json'
@@ -38,11 +39,11 @@ export function GamePage() {
 
   useEffect(() => {
     if (!gameId || gameData[gameId]) return
-    setLoading(true)
-    setError(null)
-    api
-      .getGameById(gameId)
-      .then((doc) => {
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const doc = await getGame(gameId)
         setRawDoc(doc)
         const ts = doc.townSquare
         if (!ts?.players) {
@@ -57,23 +58,28 @@ export function GamePage() {
           phases: doc.phases ?? undefined,
         })
         setFetchedGame(deriveGame(game))
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load game'))
-      .finally(() => setLoading(false))
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load game')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [gameId])
 
-  const openCopyPanel = () => {
+  const openCopyPanel = async () => {
     setShowCopyPanel(true)
     setCopyError(null)
     if (!serversLoaded) {
-      api
-        .myServers()
-        .then((res) => {
-          setMyServers(res.items)
-          if (res.items.length > 0) setSelectedServerId(res.items[0].serverId)
-        })
-        .catch(() => { })
-        .finally(() => setServersLoaded(true))
+      try {
+        const res = await getServers()
+        setMyServers(res.items)
+        if (res.items.length > 0) setSelectedServerId(res.items[0].serverId)
+      } catch {
+        // ignore
+      } finally {
+        setServersLoaded(true)
+      }
     }
   }
 
@@ -82,7 +88,7 @@ export function GamePage() {
     setCopyError(null)
     setCopyLoading(true)
     try {
-      const copy = await api.copyGame(gameId, selectedServerId)
+      const copy = await copyGame(gameId, selectedServerId)
       navigate(`/game/${copy.gameId}`)
     } catch (err) {
       setCopyError(err instanceof Error ? err.message : 'Copy failed')

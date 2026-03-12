@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api } from '@/api/client'
+import { getServer, updateServer } from '@/api/servers'
+import { getGames } from '@/api/games'
 import type { ServerDocument } from '@/types/api.types'
-import type { GameDocument, PaginatedGamesResponse } from '@/types'
+import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -40,25 +41,36 @@ export function ServerPage() {
 
   useEffect(() => {
     if (!serverId) return
-    setServerLoading(true)
-    api
-      .getServer(serverId)
-      .then((s) => { setServer(s); setRenameName(s.name) })
-      .catch((err) => setServerError(err instanceof Error ? err.message : 'Server not found'))
-      .finally(() => setServerLoading(false))
+    const load = async () => {
+      setServerLoading(true)
+      try {
+        const s = await getServer(serverId)
+        setServer(s)
+        setRenameName(s.name)
+      } catch (err) {
+        setServerError(err instanceof Error ? err.message : 'Server not found')
+      } finally {
+        setServerLoading(false)
+      }
+    }
+    load()
   }, [serverId])
 
   useEffect(() => {
     if (!serverId) return
-    setGamesLoading(true)
-    api
-      .listGames(serverId, skip, PAGE_SIZE)
-      .then((res: PaginatedGamesResponse) => {
+    const load = async () => {
+      setGamesLoading(true)
+      try {
+        const res = await getGames(serverId, skip, PAGE_SIZE)
         setGames(res.items)
         setTotal(res.total)
-      })
-      .catch(() => setGames([]))
-      .finally(() => setGamesLoading(false))
+      } catch {
+        setGames([])
+      } finally {
+        setGamesLoading(false)
+      }
+    }
+    load()
   }, [serverId, skip])
 
   const handleRename = async (e: React.FormEvent) => {
@@ -67,7 +79,7 @@ export function ServerPage() {
     setRenameError(null)
     setRenameLoading(true)
     try {
-      const updated = await api.renameServer(serverId, renameName.trim())
+      const updated = await updateServer(serverId, renameName.trim())
       setServer(updated)
       setRenaming(false)
     } catch (err) {
@@ -77,13 +89,12 @@ export function ServerPage() {
     }
   }
 
-  const copyInviteLink = () => {
+  const copyInviteLink = async () => {
     if (!server?.inviteCode) return
     const url = `${window.location.origin}/invite/${server.inviteCode}`
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const gameDisplayName = (doc: GameDocument) => doc.name || doc.title || 'Untitled'

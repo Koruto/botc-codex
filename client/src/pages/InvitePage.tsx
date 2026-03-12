@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { api } from '@/api/client'
+import { getInvite, joinServer } from '@/api/servers'
 import type { InviteInfo } from '@/types/api.types'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
@@ -20,11 +20,17 @@ export function InvitePage() {
 
   useEffect(() => {
     if (!inviteCode) return
-    api
-      .getInvite(inviteCode)
-      .then(setInvite)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Invalid invite link'))
-      .finally(() => setLoading(false))
+    const load = async () => {
+      try {
+        const invite = await getInvite(inviteCode)
+        setInvite(invite)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Invalid invite link')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [inviteCode])
 
   const handleJoin = async () => {
@@ -32,7 +38,7 @@ export function InvitePage() {
     setJoinError(null)
     setJoining(true)
     try {
-      const res = await api.joinServer(inviteCode)
+      const res = await joinServer(inviteCode)
       if (res.alreadyMember) {
         setAlreadyMember(true)
       } else {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '@/api/client'
-import type { GameDocument, PaginatedGamesResponse } from '@/types'
+import { getMyGames } from '@/api/explore'
+import type { GameDocument } from '@/types'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 
@@ -24,15 +24,19 @@ export function MyGamesPage() {
   const [filter, setFilter] = useState<VisibilityFilter>('all')
 
   useEffect(() => {
-    setLoading(true)
-    api
-      .myGames(skip, PAGE_SIZE)
-      .then((res: PaginatedGamesResponse) => {
+    const load = async () => {
+      setLoading(true)
+      try {
+        const res = await getMyGames(skip, PAGE_SIZE)
         setGames(res.items)
         setTotal(res.total)
-      })
-      .catch(() => setGames([]))
-      .finally(() => setLoading(false))
+      } catch {
+        setGames([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [skip])
 
   const filtered = filter === 'all' ? games : games.filter((g) => g.visibility === filter)
