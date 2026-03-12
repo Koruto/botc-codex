@@ -108,7 +108,7 @@ export function LoginPage() {
       )}
 
       {/* Form card */}
-      <div className="bg-card border border-border rounded-[10px] shadow-[0_4px_16px_rgba(28,20,16,0.08),0_1px_4px_rgba(28,20,16,0.04)] p-7">
+      <div className="bg-card border border-border rounded-[10px] shadow-[0_4px_16px_rgba(28,20,16,0.08),0_1px_4px_rgba(28,20,16,0.04)] dark:shadow-[0_2px_0_rgba(210,110,90,0.18),0_8px_40px_rgba(0,0,0,0.6)] p-7">
         {tab === 'login' ? (
           <form onSubmit={handleLogin(onLogin)}>
             <div className="mb-4">

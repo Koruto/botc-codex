@@ -21,6 +21,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/game/:gameId" element={<GamePage />} />
+          <Route path="/demo" element={<GamePage />} />
 
           <Route path="/">
             <Route index element={<LandingPage />} />

@@ -1,4 +1,5 @@
 export { Layout } from './Layout'
+export { Navbar } from './Navbar'
 export { Grimoire } from './Grimoire'
 export { GameView } from './GameView'
 export { GameTimeline } from './GameTimeline'
