@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { MessageSquarePlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FeedbackModal } from '@/components/FeedbackModal'
 
 interface NavLink {
   label: string
@@ -16,6 +18,7 @@ interface NavbarProps {
 
 export function Navbar({ links, center, fixed = false, children }: NavbarProps) {
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const toggleTheme = () => {
     const next = !isDark
@@ -53,6 +56,17 @@ export function Navbar({ links, center, fixed = false, children }: NavbarProps) 
       <div className="flex items-center justify-end gap-3">
         <button
           type="button"
+          onClick={() => setFeedbackOpen(true)}
+          title="Send Feedback"
+          aria-label="Send Feedback"
+          className="flex cursor-pointer items-center gap-1.5 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <MessageSquarePlus className="size-4" />
+          <span className="hidden text-xs font-medium sm:block">Send Feedback</span>
+        </button>
+
+        <button
+          type="button"
           onClick={toggleTheme}
           aria-label="Toggle theme"
           className="flex items-center gap-1.5 rounded-md p-1 text-muted-foreground transition-opacity hover:opacity-80"
@@ -65,6 +79,8 @@ export function Navbar({ links, center, fixed = false, children }: NavbarProps) 
 
         {children}
       </div>
+
+      <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </header>
   )
 }

@@ -29,12 +29,20 @@ GAMES_COLLECTION = "games"
 USERS_COLLECTION = "users"
 SERVERS_COLLECTION = "servers"
 MEMBERSHIPS_COLLECTION = "memberships"
+FEEDBACK_COLLECTION = "feedback"
 
 # ----- Auth / JWT -----
 JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production-use-a-strong-random-secret")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
+# ----- Resend (feedback email notifications) -----
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+# The "from" address used when sending feedback emails via Resend.
+# Must be from a domain verified in your Resend account.
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "")
 
 # ----- Cookies -----
 # In development (Vite proxy or same-site), keep COOKIE_SECURE=false and COOKIE_SAMESITE=lax.

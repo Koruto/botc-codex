@@ -70,6 +70,12 @@ from app.models.schemas.server import (
     ServerRenameBody,
 )
 
+# Feedback
+from app.models.schemas.feedback import (
+    FeedbackBody,
+    FeedbackDocument,
+)
+
 __all__ = [
     "DEAD_SUFFIX",
     "DebugInfo",
@@ -112,4 +118,6 @@ __all__ = [
     "ServerCreateBody",
     "ServerDocument",
     "ServerRenameBody",
+    "FeedbackBody",
+    "FeedbackDocument",
 ]

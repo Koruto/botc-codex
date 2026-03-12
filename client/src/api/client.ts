@@ -154,6 +154,11 @@ export const api = {
   copyGame: (gameId: string, serverId: string) =>
     request<GameDocument>(`/api/games/${gameId}/copy`, { method: 'POST', body: { serverId } }),
 
+
+
+  submitFeedback: (body: { type: 'bug' | 'feature' | 'general'; title: string; message: string }) =>
+    request<{ id: string; message: string }>('/api/feedback', { method: 'POST', body }),
+
   // -------------------------------------------------------------------------
   // Explore + user public pages
   // -------------------------------------------------------------------------

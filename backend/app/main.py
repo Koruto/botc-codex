@@ -2,6 +2,7 @@
 BotC Codex Parser API – FastAPI app.
 Routes are split into: root, grimoire (processing), auth, servers, games, users.
 """
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,7 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import connect_db, disconnect_db
 from app.routers import games, grimoire, root
-from app.routers import auth, servers, users
+from app.routers import auth, feedback, servers, users
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 
 @asynccontextmanager
@@ -39,3 +45,4 @@ app.include_router(auth.router)
 app.include_router(servers.router)
 app.include_router(games.router)
 app.include_router(users.router)
+app.include_router(feedback.router)

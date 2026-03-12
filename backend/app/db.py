@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 import pymongo
 
 from app.config import (
+    FEEDBACK_COLLECTION,
     GAMES_COLLECTION,
     MEMBERSHIPS_COLLECTION,
     MONGODB_DB_NAME,
@@ -50,6 +51,10 @@ async def connect_db() -> None:
     )
     await db[MEMBERSHIPS_COLLECTION].create_index("userId")
 
+    # --- Feedback ---
+    await db[FEEDBACK_COLLECTION].create_index("feedbackId", unique=True)
+    await db[FEEDBACK_COLLECTION].create_index("created_at")
+
 
 async def disconnect_db() -> None:
     """Close MongoDB connection. Call once at app shutdown."""
@@ -80,3 +85,7 @@ def get_servers_collection() -> AsyncIOMotorCollection:
 
 def get_memberships_collection() -> AsyncIOMotorCollection:
     return get_db()[MEMBERSHIPS_COLLECTION]
+
+
+def get_feedback_collection() -> AsyncIOMotorCollection:
+    return get_db()[FEEDBACK_COLLECTION]
