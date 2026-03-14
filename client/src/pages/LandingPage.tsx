@@ -419,17 +419,20 @@ export function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="relative z-10 flex items-center justify-between border-t border-border bg-background px-6 py-8 md:px-12">
+      <footer className="relative z-10 flex flex-col gap-4 border-t border-border bg-background px-6 py-8 md:flex-row md:items-center md:justify-between md:gap-6 md:px-12">
         {/* Gradient rule at top of footer */}
         <div
           aria-hidden
           className="absolute left-0 right-0 top-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, var(--primary), transparent)', opacity: 0.2 }}
         />
-        <div className="font-app-display text-[0.82rem] uppercase tracking-[0.15em] text-primary/60">
-          BotC Codex
-        </div>
-        <p className="text-[0.72rem] italic text-muted-foreground/60">Not affiliated with The Pandemonium Institute.</p>
+        <Link to="/" className="font-app-display text-[1.05rem] font-semibold text-foreground">
+          BotC <em className="italic text-primary">Codex</em>
+        </Link>
+        <p className="text-center text-sm italic text-muted-foreground/80">Not affiliated with The Pandemonium Institute.</p>
+        <p className="text-right text-sm text-muted-foreground/80">
+          Built by <span className="font-medium text-foreground/90">koruto</span>
+        </p>
       </footer>
     </div>
   )

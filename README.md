@@ -1,44 +1,89 @@
-# BotC Grimoire Parser
+# 🕰️ BotC Codex
 
-A FastAPI-based service that extracts Blood on the Clocktower game state from physical grimoire photographs using computer vision and OCR.
+**A web app for browsing and managing Blood on the Clocktower scripts and games.**  
+FastAPI backend · React + Vite frontend · TypeScript.
 
-## Project Overview
+---
 
-This project aims to automate the process of reading and parsing Blood on the Clocktower grimoire boards from photographs. The system will:
+## ✨ What it is
 
-- Accept grimoire images (photos of the physical game board)
-- Process images using computer vision techniques
-- Extract text and game state information using OCR
-- Return structured JSON data representing the current game state
+**BotC Codex** is your **game journal**, **storyboard builder**, and **role compendium** in one place. Log sessions, track servers, scan grimoires, and never lose a night in the town square again.
 
-## Features (Planned)
+---
 
-- **Image Processing**: Preprocessing and enhancement of grimoire photographs
-- **OCR Integration**: Text extraction from player tokens and game elements
-- **Character Recognition**: Fuzzy matching of OCR results to known BotC characters
-- **Game State Extraction**: Detection of player positions, life/death states, and reminders
-- **RESTful API**: Easy-to-use endpoints for integration with other applications
+## 🎯 What we have
 
-## Project Structure
+|     | Feature              |                                                                                                  |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| 📋  | **Game journal**     | Log every session — script, roles, players, outcome. Searchable, permanent.                      |
+| 📖  | **Storyboard**       | Night and day in order. Nominations, kills, dawn — replay any game as it happened.               |
+| 🏛️  | **Server archive**   | All of your group’s games in one place. New players can read history before their first session. |
+| 📊  | **Player chronicle** | Win rates, alignment history, most-played roles. A profile that grows with every game.           |
+| 🎭  | **Role compendium**  | 200+ roles across scripts, by alignment and ability. Quick reference and first-night reminders.  |
+| 📸  | **Grimoire scan**    | Photograph your grimoire. The app reads tokens and can build the final state automatically.      |
+
+**Plus:** auth (signup/login), feedback flow, dark/light theme, responsive layout.
+
+---
+
+## 🛠️ Tech stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router
+- **Backend:** FastAPI, Python 3.8+
+
+---
+
+## 🚀 Getting started
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+# Windows: venv\Scripts\activate
+# Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+**API:** `http://localhost:8000` · **Docs:** `http://localhost:8000/docs`  
+Or use `./run.sh` / `run.bat` (see [backend/README.md](backend/README.md)).
+
+### Frontend
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+**App:** `http://localhost:5173` (or the port Vite shows).
+
+**Production:** `npm run build` then `npm run preview`.
+
+---
+
+## 📁 Project structure
 
 ```
 botc-codex/
-├── backend/          # FastAPI backend service
-│   ├── app/         # Application code
-│   └── README.md    # Backend-specific documentation
-├── frontend/         # (Future) React frontend application
-└── Doc.md           # Detailed project documentation
+├── client/           # React + Vite frontend (TypeScript)
+├── backend/          # FastAPI backend (Python)
+│   ├── app/          # Application code
+│   └── README.md     # Backend setup & API docs
+└── README.md         # This file
 ```
 
-## Getting Started
+---
 
-See the [backend README](backend/README.md) for instructions on how to run the API server.
+## 📌 Development
 
-## Development Phases
+- **Backend:** [backend/README.md](backend/README.md) — API endpoints, health check, troubleshooting.
+- **Frontend:** `npm run lint` for ESLint.
 
-1. **Phase 1**: Basic infrastructure and API setup
-2. **Phase 2**: Image preprocessing with OpenCV
-3. **Phase 3**: OCR integration (EasyOCR/PaddleOCR)
-4. **Phase 4**: Data processing and character matching
-5. **Phase 5**: Polish, optimization, and error handling
+---
 
+## ⚠️ Disclaimer
+
+**Not affiliated with The Pandemonium Institute.**  
+Blood on the Clocktower is a trademark of The Pandemonium Institute.
