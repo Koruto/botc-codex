@@ -1,18 +1,21 @@
 """
 Feedback router: receive bug reports, feature requests, and general feedback.
-Stores each submission in MongoDB and fires an admin email via Resend.
+Stores each submission in MongoDB and sends an admin notification via Gmail SMTP.
 """
+import asyncio
 import logging
+import smtplib
 import uuid
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from typing import Optional
 
-import httpx
 from fastapi import APIRouter, Depends, status
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from app.auth import get_optional_user
-from app.config import ADMIN_EMAIL, RESEND_API_KEY, RESEND_FROM_EMAIL
+from app.config import ADMIN_EMAIL, GMAIL_APP_PASSWORD, GMAIL_USER
 from app.db import get_feedback_collection
 from app.models.schemas.feedback import FeedbackBody, FeedbackDocument
 
@@ -27,26 +30,41 @@ _TYPE_LABELS = {
 }
 
 
+def _send_email_sync(
+    gmail_user: str,
+    gmail_app_password: str,
+    to_email: str,
+    subject: str,
+    html_body: str,
+) -> None:
+    """Send an email via Gmail SMTP (blocking)."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"Botc Codex <{gmail_user}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(html_body, "html"))
+    with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+        smtp.starttls()
+        smtp.login(gmail_user, gmail_app_password)
+        smtp.sendmail(gmail_user, to_email, msg.as_string())
+
+
 async def _send_email_notification(
     feedback_type: str,
     title: str,
     message: str,
     submitted_by: Optional[str],
 ) -> None:
-    """Send a notification email to the admin via Resend. Silently skips if not configured."""
-    if not RESEND_API_KEY:
-        logger.warning("Email skipped: RESEND_API_KEY is not set")
+    """Send a notification email to the admin via Gmail SMTP. Silently skips if not configured."""
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        logger.warning("Email skipped: GMAIL_USER or GMAIL_APP_PASSWORD is not set")
         return
     if not ADMIN_EMAIL:
         logger.warning("Email skipped: ADMIN_EMAIL is not set")
         return
-    if not RESEND_FROM_EMAIL:
-        logger.warning("Email skipped: RESEND_FROM_EMAIL is not set")
-        return
 
     type_label = _TYPE_LABELS.get(feedback_type, feedback_type)
     author = submitted_by or "Anonymous"
-    from_domain = f"Botc Codex <{RESEND_FROM_EMAIL}>"
     html_body = f"""
 <h2>[BotC Codex] New {type_label}</h2>
 <p><strong>From:</strong> {author}</p>
@@ -54,20 +72,15 @@ async def _send_email_notification(
 <hr />
 <p>{message.replace(chr(10), '<br />')}</p>
 """
-    payload = {
-        "from": from_domain,
-        "to": [ADMIN_EMAIL],
-        "subject": f"[BotC Codex Feedback] {type_label}: {title}",
-        "html": html_body,
-    }
-
-    async with httpx.AsyncClient() as client:
-        await client.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
-            timeout=10.0,
-        )
+    subject = f"[BotC Codex Feedback] {type_label}: {title}"
+    await asyncio.to_thread(
+        _send_email_sync,
+        GMAIL_USER,
+        GMAIL_APP_PASSWORD,
+        ADMIN_EMAIL,
+        subject,
+        html_body,
+    )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

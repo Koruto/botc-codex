@@ -235,20 +235,10 @@ export function ImportPanel({
           </p>
           {(() => {
             const roleIds = townSquare.players.map((p) => p.role).filter(Boolean)
-            const unknownCount = roleIds.filter((id) => id === 'unknown').length
             const isBaseEdition = edition === 'tb' || edition === 'bmr' || edition === 'snv'
             const suggestedEdition = isBaseEdition ? suggestEditionForRoleIds(edition ?? '', roleIds) : null
             const showBanner = Boolean(isBaseEdition && suggestedEdition && onSwitchScript)
-            console.log('[ImportPanel] Script suggestion', {
-              roleIds,
-              unknownCount,
-              totalRoles: roleIds.length,
-              edition,
-              isBaseEdition,
-              suggestedEdition: suggestedEdition ?? null,
-              showBanner,
-              result: showBanner ? `Showing banner: switch to ${EDITION_LABELS[suggestedEdition!]}` : 'No banner shown',
-            })
+
             return showBanner ? (
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
                 <span>
@@ -259,7 +249,6 @@ export function ImportPanel({
                   size="sm"
                   onClick={() => {
                     onSwitchScript?.(suggestedEdition!)
-                    console.log('[ImportPanel] Switch script clicked', { suggestedEdition: suggestedEdition!, label: EDITION_LABELS[suggestedEdition!] })
                   }}
                 >
                   Switch to {EDITION_LABELS[suggestedEdition!]}

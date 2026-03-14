@@ -77,7 +77,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
           {submitted ? (
             <div className="flex flex-col items-center gap-1 pt-6 pb-2 text-center">
               <CheckCircle className="mb-1.5 size-10 text-primary" />
-              <p className="text-sm font-medium text-foreground">Thanks for your feedback!</p>
+              <DialogPrimitive.Title className="text-sm font-medium text-foreground">
+                Thanks for your feedback!
+              </DialogPrimitive.Title>
               <p className="text-xs text-muted-foreground">
                 We've received your message and will look into it.
               </p>
@@ -94,7 +96,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             <>
               <div className="mb-5 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-base font-semibold text-foreground">Send Feedback</p>
+                  <DialogPrimitive.Title className="text-base font-semibold text-foreground">
+                    Send Feedback
+                  </DialogPrimitive.Title>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     Report a bug, suggest a feature, or share a thought.
                   </p>

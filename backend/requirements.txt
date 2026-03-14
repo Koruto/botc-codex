@@ -11,4 +11,3 @@ motor
 pymongo
 PyJWT
 bcrypt
-httpx
