@@ -28,6 +28,24 @@ export const getServerGame = async (serverId: string, gameId: string) => {
   }
 }
 
+export const getServerGameBySlug = async (serverId: string, gameSlug: string) => {
+  try {
+    const res = await http.get<GameDocument>(`/api/servers/${serverId}/games/by-slug/${gameSlug}`)
+    return res.data
+  } catch (error) {
+    throw error
+  }
+}
+
+export const getGameBySlug = async (slug: string) => {
+  try {
+    const res = await http.get<GameDocument>(`/api/games/by-slug/${slug}`)
+    return res.data
+  } catch (error) {
+    throw error
+  }
+}
+
 export const getGames = async (serverId: string, skip = 0, limit = 20) => {
   try {
     const res = await http.get<PaginatedGamesResponse>(`/api/servers/${serverId}/games?skip=${skip}&limit=${limit}`)

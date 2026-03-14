@@ -1,6 +1,8 @@
 """
 Server and membership schemas.
 """
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -13,9 +15,10 @@ class ServerRenameBody(BaseModel):
 
 
 class ServerDocument(BaseModel):
-    """Stored server document."""
+    """Stored server document. slug is set on create/rename; backfill for existing docs."""
     serverId: str
     name: str
+    slug: Optional[str] = None
     createdBy: str
     createdAt: str
     inviteCode: str

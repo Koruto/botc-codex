@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import type { DerivedGame, ExecutionEvent, NarrativeEvent, NarrativePhase, NominationEvent } from '@/types'
 import { PhaseType } from '@/types'
@@ -26,13 +25,6 @@ export function GameView({ game, gameId }: GameViewProps) {
     handleResize()
     return () => window.removeEventListener('resize', handleResize)
   }, [])
-
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
-  const toggleTheme = () => {
-    const next = !isDark
-    setIsDark(next)
-    document.documentElement.classList.toggle('dark', next)
-  }
 
   useEffect(() => {
     document.title = gameId ? `Game ${gameId} — BotC Codex` : 'BotC Codex'
@@ -195,6 +187,7 @@ export function GameView({ game, gameId }: GameViewProps) {
       currentPhaseIndex={activePhaseIndex}
       narrativePlayers={narrativePlayers}
       players={currentPlayers}
+      customRoles={game.meta.customRoles}
     />
   )
 
@@ -236,17 +229,6 @@ export function GameView({ game, gameId }: GameViewProps) {
               <span className="font-game-display text-xs uppercase tracking-widest text-game-text-secondary drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] sm:text-sm">
                 {currentPhaseLabel}
               </span>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                className="flex items-center gap-1.5 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100"
-              >
-                <span className="text-sm leading-none">{isDark ? '☀️' : '🌙'}</span>
-                <div className={cn('h-5 w-9 rounded-full p-0.5 transition-colors', isDark ? 'bg-primary/60' : 'bg-black/25')}>
-                  <div className={cn('h-4 w-4 rounded-full bg-white shadow-sm transition-transform', isDark && 'translate-x-4')} />
-                </div>
-              </button>
             </div>
           </nav>
 

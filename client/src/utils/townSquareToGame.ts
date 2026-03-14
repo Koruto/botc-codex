@@ -39,7 +39,7 @@ export function townSquareToPlayers(townSquare: {
 
 const DEFAULT_META: GameMeta = {
   playedOn: '',
-  edition: '',
+  edition: 'tb',
   playerCount: 0,
   storyteller: '',
 }

@@ -13,6 +13,7 @@ export type UserPublicResponse = {
 export type ServerDocument = {
   serverId: string
   name: string
+  slug: string | null
   createdBy: string
   createdAt: string
   inviteCode: string
@@ -24,6 +25,7 @@ export type ServerDocument = {
 /** Returned by GET /api/invite/:inviteCode (safe fields only — no inviteCode exposed). */
 export type InviteInfo = {
   serverId: string
+  slug: string | null
   name: string
   createdAt: string
 }

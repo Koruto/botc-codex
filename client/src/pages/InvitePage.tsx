@@ -42,7 +42,7 @@ export function InvitePage() {
       if (res.alreadyMember) {
         setAlreadyMember(true)
       } else {
-        navigate(`/servers/${res.serverId}`)
+        navigate(res.serverSlug ? `/s/${res.serverSlug}` : '/dashboard')
       }
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : 'Failed to join server')
@@ -72,7 +72,7 @@ export function InvitePage() {
         <h1 className="mb-2 text-xl font-bold text-primary">{invite.name}</h1>
         <p className="mb-4 text-muted-foreground">You're already a member of this server.</p>
         <Button asChild>
-          <Link to={`/servers/${invite.serverId}`}>Go to server</Link>
+          <Link to={invite.slug ? `/s/${invite.slug}` : '#'}>Go to server</Link>
         </Button>
       </div>
     )

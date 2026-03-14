@@ -27,6 +27,29 @@ router = APIRouter(prefix="/api", tags=["servers"])
 _INVITE_ALPHABET = string.ascii_lowercase + string.digits
 
 
+def _name_to_slug(name: str) -> str:
+    """Lowercase, spaces to hyphens, strip non [a-z0-9-], strip leading/trailing hyphens."""
+    s = name.strip().lower().replace(" ", "-")
+    s = "".join(c for c in s if c in "abcdefghijklmnopqrstuvwxyz0123456789-")
+    return s.strip("-") or "server"
+
+
+async def _ensure_unique_slug(
+    servers: AsyncIOMotorCollection,
+    base_slug: str,
+    exclude_server_id: Optional[str] = None,
+) -> str:
+    """Return base_slug or base_slug-2, base_slug-3, ... so it is unique."""
+    slug = base_slug
+    n = 2
+    while True:
+        existing = await servers.find_one({"slug": slug})
+        if not existing or (exclude_server_id and existing.get("serverId") == exclude_server_id):
+            return slug
+        slug = f"{base_slug}-{n}"
+        n += 1
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -47,6 +70,15 @@ async def _is_member(memberships: AsyncIOMotorCollection, server_id: str, user_i
 
 async def _get_server_or_404(servers: AsyncIOMotorCollection, server_id: str) -> ServerDocument:
     raw = await servers.find_one({"serverId": server_id})
+    if not raw:
+        raise HTTPException(status_code=404, detail="Server not found.")
+    return ServerDocument(**raw)
+
+
+async def _get_server_by_slug_or_404(
+    servers: AsyncIOMotorCollection, slug: str
+) -> ServerDocument:
+    raw = await servers.find_one({"slug": slug})
     if not raw:
         raise HTTPException(status_code=404, detail="Server not found.")
     return ServerDocument(**raw)
@@ -75,11 +107,14 @@ async def create_server(
 
     server_id = str(uuid.uuid4())
     invite_code = await _generate_unique_invite_code(servers)
+    base_slug = _name_to_slug(name)
+    slug = await _ensure_unique_slug(servers, base_slug)
     now = datetime.now(timezone.utc).isoformat()
 
     server = ServerDocument(
         serverId=server_id,
         name=name,
+        slug=slug,
         createdBy=current_user["userId"],
         createdAt=now,
         inviteCode=invite_code,
@@ -95,6 +130,31 @@ async def create_server(
     await memberships.insert_one(membership.model_dump(mode="json"))
 
     return server.model_dump(mode="json")
+
+
+@router.get("/servers/by-slug/{slug}")
+async def get_server_by_slug(
+    slug: str,
+    current_user: Optional[dict] = Depends(get_optional_user),
+    servers: AsyncIOMotorCollection = Depends(get_servers_collection),
+    memberships: AsyncIOMotorCollection = Depends(get_memberships_collection),
+):
+    """
+    Get server info by slug. Public — no auth required.
+    Response includes isMember and isCreator flags for the caller.
+    """
+    server = await _get_server_by_slug_or_404(servers, slug)
+    user_id = current_user["userId"] if current_user else None
+    is_member = (
+        await _is_member(memberships, server.serverId, user_id) if user_id else False
+    )
+    is_creator = user_id == server.createdBy if user_id else False
+
+    return {
+        **server.model_dump(mode="json"),
+        "isMember": is_member,
+        "isCreator": is_creator,
+    }
 
 
 @router.get("/servers/{server_id}")
@@ -138,8 +198,14 @@ async def rename_server(
     if len(name) > 100:
         raise HTTPException(status_code=400, detail="Server name must be 100 characters or fewer.")
 
-    await servers.update_one({"serverId": server_id}, {"$set": {"name": name}})
+    base_slug = _name_to_slug(name)
+    new_slug = await _ensure_unique_slug(servers, base_slug, exclude_server_id=server_id)
+    await servers.update_one(
+        {"serverId": server_id},
+        {"$set": {"name": name, "slug": new_slug}},
+    )
     server.name = name
+    server.slug = new_slug
     return server.model_dump(mode="json")
 
 
@@ -159,6 +225,7 @@ async def get_invite(
     # Expose only safe fields (no inviteCode in the public resolve response)
     return {
         "serverId": server.serverId,
+        "slug": server.slug,
         "name": server.name,
         "createdAt": server.createdAt,
     }
@@ -183,10 +250,18 @@ async def join_server(
 
     already_member = await memberships.find_one({"serverId": server.serverId, "userId": user_id})
     if already_member:
-        return {"serverId": server.serverId, "alreadyMember": True}
+        return {
+            "serverId": server.serverId,
+            "serverSlug": server.slug,
+            "alreadyMember": True,
+        }
 
     now = datetime.now(timezone.utc).isoformat()
     membership = MembershipDocument(serverId=server.serverId, userId=user_id, joinedAt=now)
     await memberships.insert_one(membership.model_dump(mode="json"))
 
-    return {"serverId": server.serverId, "alreadyMember": False}
+    return {
+        "serverId": server.serverId,
+        "serverSlug": server.slug,
+        "alreadyMember": False,
+    }

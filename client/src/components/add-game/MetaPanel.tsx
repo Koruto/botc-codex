@@ -23,6 +23,7 @@ const metaSchema = z.object({
     .min(5, 'Min 5 players')
     .max(20, 'Max 20 players'),
   storyteller: z.string().min(1, 'Storyteller is required'),
+  winner: z.enum(['', 'good', 'evil']).optional(),
 })
 
 export type MetaFormValues = z.infer<typeof metaSchema>
@@ -32,6 +33,7 @@ export type MetaPanelProps = {
   saving: boolean
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   derivedGame: DerivedGame | null
+  edition?: string
   onBack: () => void
   onSave: (data: MetaFormValues) => void | Promise<void>
   onSaveAndNext: (data: MetaFormValues) => void | Promise<void>
@@ -80,6 +82,7 @@ export function MetaPanel({
     edition: 'tb',
     playerCount: 0,
     storyteller: '',
+    winner: '',
     ...defaultValues,
   }
   if (resolvedDefaults.edition === undefined || resolvedDefaults.edition === '' || !EDITION_OPTIONS.some((o) => o.id === resolvedDefaults.edition)) {
@@ -89,12 +92,14 @@ export function MetaPanel({
   const {
     register,
     control,
+    watch,
     handleSubmit,
     formState: { errors },
   } = useForm<MetaFormValues>({
     resolver: zodResolver(metaSchema),
     defaultValues: resolvedDefaults,
   })
+  const currentEdition = watch('edition')
 
   return (
     <form onSubmit={handleSubmit(onSaveAndNext)}>
@@ -128,7 +133,7 @@ export function MetaPanel({
             />
           </FormField>
 
-          <FormField label="Script / edition" error={errors.edition?.message}>
+          <FormField label="Script / edition" error={errors.edition?.message} hint={currentEdition === 'custom' ? 'Define your custom script and roles in the Import step next.' : undefined}>
             <select
               {...register('edition')}
               className={inputClass}
@@ -176,6 +181,14 @@ export function MetaPanel({
               placeholder="e.g. Eleven in the dark..."
               className={inputClass}
             />
+          </FormField>
+
+          <FormField label="Who won?" hint="Shown on game cards and in the storyboard.">
+            <select {...register('winner')} className={inputClass}>
+              <option value="">Not set</option>
+              <option value="good">Good wins</option>
+              <option value="evil">Evil wins</option>
+            </select>
           </FormField>
         </div>
 

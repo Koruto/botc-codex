@@ -28,6 +28,7 @@ async def connect_db() -> None:
     await db[GAMES_COLLECTION].create_index(
         [("serverId", pymongo.ASCENDING), ("gameId", pymongo.ASCENDING)], unique=True
     )
+    await db[GAMES_COLLECTION].create_index("slug", unique=True, sparse=True)
     await db[GAMES_COLLECTION].create_index("updatedAt")
     await db[GAMES_COLLECTION].create_index("createdBy")
     await db[GAMES_COLLECTION].create_index("visibility")
@@ -43,6 +44,7 @@ async def connect_db() -> None:
     # --- Servers ---
     await db[SERVERS_COLLECTION].create_index("serverId", unique=True)
     await db[SERVERS_COLLECTION].create_index("inviteCode", unique=True)
+    await db[SERVERS_COLLECTION].create_index("slug", unique=True, sparse=True)
     await db[SERVERS_COLLECTION].create_index("createdBy")
 
     # --- Memberships ---

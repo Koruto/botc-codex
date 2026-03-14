@@ -20,8 +20,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/game/:gameId" element={<GamePage />} />
-          <Route path="/demo" element={<GamePage />} />
+          <Route path="/game/:gameSlug" element={<GamePage />} />
+          <Route path="/featured/the-wizards-gambit" element={<GamePage />} />
 
           <Route path="/">
             <Route index element={<LandingPage />} />
@@ -29,9 +29,9 @@ export default function App() {
             <Route path="*" element={<Layout />}>
               {/* Public routes */}
               <Route path="login" element={<LoginPage />} />
-              <Route path="servers/:serverId" element={<ServerPage />} />
+              <Route path="s/:serverSlug" element={<ServerPage />} />
               <Route path="invite/:inviteCode" element={<InvitePage />} />
-              <Route path="user/:username" element={<UserPublicPage />} />
+              <Route path="u/:username" element={<UserPublicPage />} />
 
               {/* Protected routes */}
               <Route
@@ -67,7 +67,15 @@ export default function App() {
                 }
               />
               <Route
-                path="servers/:serverId/add-game"
+                path="s/:serverSlug/add"
+                element={
+                  <ProtectedRoute>
+                    <AddGamePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="s/:serverSlug/games/:gameSlug/edit"
                 element={
                   <ProtectedRoute>
                     <AddGamePage />

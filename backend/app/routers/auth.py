@@ -76,8 +76,9 @@ async def signup(
     """
     Create a new account with username + password.
     On success, sets auth cookies and returns the public user profile.
+    Username is stored and returned in lowercase.
     """
-    username = body.username.strip()
+    username = body.username.strip().lower()
     if not username:
         raise HTTPException(status_code=400, detail="Username cannot be empty.")
     if len(username) < 3 or len(username) > 32:
@@ -118,8 +119,10 @@ async def login(
     """
     Authenticate with username + password.
     On success, sets auth cookies and returns the public user profile.
+    Username lookup is case-insensitive (stored as lowercase).
     """
-    raw = await users.find_one({"username": body.username})
+    username = body.username.strip().lower()
+    raw = await users.find_one({"username": username})
     if not raw:
         raise HTTPException(status_code=401, detail="Invalid username or password.")
     doc = UserDocument(**raw)

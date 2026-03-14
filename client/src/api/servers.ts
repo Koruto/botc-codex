@@ -19,6 +19,15 @@ export const getServer = async (serverId: string) => {
   }
 }
 
+export const getServerBySlug = async (slug: string) => {
+  try {
+    const res = await http.get<ServerDocument>(`/api/servers/by-slug/${slug}`)
+    return res.data
+  } catch (error) {
+    throw error
+  }
+}
+
 export const updateServer = async (serverId: string, name: string) => {
   try {
     const res = await http.patch<ServerDocument>(`/api/servers/${serverId}`, { name })
@@ -48,7 +57,11 @@ export const getInvite = async (inviteCode: string) => {
 
 export const joinServer = async (inviteCode: string) => {
   try {
-    const res = await http.post<{ serverId: string; alreadyMember: boolean }>(`/api/invite/${inviteCode}/join`)
+    const res = await http.post<{
+      serverId: string
+      serverSlug: string | null
+      alreadyMember: boolean
+    }>(`/api/invite/${inviteCode}/join`)
     return res.data
   } catch (error) {
     throw error

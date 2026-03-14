@@ -44,12 +44,13 @@ function getIconUrl(roleId: string): string {
   return customIcon
 }
 
-function getRoleById(roleId: string): RoleInfo | null {
-  const id = roleId.toLowerCase().replace(/\s+/g, '')
-  return rolesById.get(id) ?? null
+function normalizeRoleId(roleId: string): string {
+  return roleId.toLowerCase().replace(/\s+/g, '')
 }
 
-
+function getRoleByIdStatic(roleId: string): RoleInfo | null {
+  return rolesById.get(normalizeRoleId(roleId)) ?? null
+}
 
 interface GrimoireProps {
   isDay?: boolean
@@ -72,9 +73,23 @@ interface GrimoireProps {
   players?: Array<GrimoirePlayer & { id?: string }>
   /** Player IDs who have used their ghost vote (dead + ghost used = fully black token). */
   ghostVotesUsedIds?: string[]
+  /** Custom roles (e.g. from game meta); merged with static roles for lookup. */
+  customRoles?: Array<{ id: string; name: string; ability?: string; team?: string }>
 }
 
-export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds = [] }: GrimoireProps) {
+export function Grimoire({ isDay: isDayControlled, isPreGame, totalPlayers, aliveCount, voteCount, nomination, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds = [], customRoles }: GrimoireProps) {
+  const getRoleById = useMemo(() => {
+    if (!customRoles?.length) return getRoleByIdStatic
+    const customMap = new Map<string, RoleInfo>(
+      customRoles.map((r) => [
+        normalizeRoleId(r.id),
+        { id: r.id, name: r.name, ability: r.ability ?? '', team: (r.team as RoleInfo['team']) ?? 'townsfolk' },
+      ])
+    )
+    return (roleId: string): RoleInfo | null =>
+      customMap.get(normalizeRoleId(roleId)) ?? rolesById.get(normalizeRoleId(roleId)) ?? null
+  }, [customRoles])
+
   const currentPlayers = players ?? defaultPlayers
   const total = totalPlayers ?? currentPlayers.length
   const alive = aliveCount ?? total

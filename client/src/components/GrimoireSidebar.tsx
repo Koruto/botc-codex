@@ -41,9 +41,11 @@ interface GrimoireSidebarProps {
   players: Array<{ id?: string; name: string; role: string }>
   /** Player IDs who have used their ghost vote (for current phase snapshot). */
   ghostVotesUsedIds?: string[]
+  /** Custom roles for lookup (e.g. from game.meta.customRoles). */
+  customRoles?: Array<{ id: string; name: string; ability?: string; team?: string }>
 }
 
-export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds }: GrimoireSidebarProps) {
+export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoireStats, nomination, townSquare, storytellerName, currentPhaseIndex, narrativePlayers, players, ghostVotesUsedIds, customRoles }: GrimoireSidebarProps) {
   const handleCopy = () => {
     if (townSquare) {
       navigator.clipboard.writeText(JSON.stringify(townSquare, null, 2))
@@ -82,6 +84,7 @@ export function GrimoireSidebar({ currentPhaseLabel, isNight, isPreGame, grimoir
         narrativePlayers={narrativePlayers}
         players={players}
         ghostVotesUsedIds={ghostVotesUsedIds}
+        customRoles={customRoles}
       />
     </aside>
   )

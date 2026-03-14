@@ -41,8 +41,8 @@ export function ProfilePage() {
           <div className="flex items-start justify-between px-6 py-4">
             <span className="text-sm text-muted-foreground w-32 shrink-0">Public page</span>
             <div className="text-right">
-              <a href={`/user/${user?.username}`} className="text-sm text-primary hover:underline">
-                /user/{user?.username}
+              <a href={`/u/${user?.username ?? ''}`} className="text-sm text-primary hover:underline">
+                /u/{user?.username}
               </a>
               <p className="mt-0.5 text-xs text-muted-foreground">Your public games are visible here.</p>
             </div>

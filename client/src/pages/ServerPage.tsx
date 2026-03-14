@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getServer, updateServer } from '@/api/servers'
-import { getGames } from '@/api/games'
+import { getServerBySlug, updateServer } from '@/api/servers'
+import { getGames, updateGame } from '@/api/games'
 import type { ServerDocument } from '@/types/api.types'
 import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { GameCard } from '@/components/GameCard'
 import { StatItem } from '@/components/ui/StatItem'
 import {
   Breadcrumb,
@@ -20,7 +21,7 @@ import {
 const PAGE_SIZE = 20
 
 export function ServerPage() {
-  const { serverId } = useParams<{ serverId: string }>()
+  const { serverSlug } = useParams<{ serverSlug: string }>()
   const { user } = useAuth()
 
   const [server, setServer] = useState<ServerDocument | null>(null)
@@ -40,11 +41,11 @@ export function ServerPage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!serverId) return
+    if (!serverSlug) return
     const load = async () => {
       setServerLoading(true)
       try {
-        const s = await getServer(serverId)
+        const s = await getServerBySlug(serverSlug)
         setServer(s)
         setRenameName(s.name)
       } catch (err) {
@@ -54,14 +55,14 @@ export function ServerPage() {
       }
     }
     load()
-  }, [serverId])
+  }, [serverSlug])
 
   useEffect(() => {
-    if (!serverId) return
+    if (!server?.serverId) return
     const load = async () => {
       setGamesLoading(true)
       try {
-        const res = await getGames(serverId, skip, PAGE_SIZE)
+        const res = await getGames(server.serverId, skip, PAGE_SIZE)
         setGames(res.items)
         setTotal(res.total)
       } catch {
@@ -71,15 +72,15 @@ export function ServerPage() {
       }
     }
     load()
-  }, [serverId, skip])
+  }, [server?.serverId, skip])
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!serverId || !renameName.trim()) return
+    if (!server?.serverId || !renameName.trim()) return
     setRenameError(null)
     setRenameLoading(true)
     try {
-      const updated = await updateServer(serverId, renameName.trim())
+      const updated = await updateServer(server.serverId, renameName.trim())
       setServer(updated)
       setRenaming(false)
     } catch (err) {
@@ -97,7 +98,20 @@ export function ServerPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const gameDisplayName = (doc: GameDocument) => doc.name || doc.title || 'Untitled'
+  const handleVisibilityChange = useCallback(
+    async (gameId: string, visibility: 'public' | 'private') => {
+      if (!server?.serverId) return
+      try {
+        await updateGame(server.serverId, gameId, { visibility })
+        setGames((prev) =>
+          prev.map((g) => (g.gameId === gameId ? { ...g, visibility } : g))
+        )
+      } catch {
+        // Optionally show toast; list will refresh on next load
+      }
+    },
+    [server?.serverId]
+  )
 
   if (serverLoading) {
     return <p className="py-8 text-sm text-muted-foreground">Loading…</p>
@@ -185,9 +199,9 @@ export function ServerPage() {
               {copied ? 'Copied!' : 'Copy invite link'}
             </Button>
           )}
-          {isMember && (
+          {isMember && server.slug && (
             <Button size="sm" asChild>
-              <Link to={`/servers/${serverId}/add-game`}>+ Add game</Link>
+              <Link to={`/s/${server.slug}/add`}>+ Add game</Link>
             </Button>
           )}
         </div>
@@ -221,45 +235,36 @@ export function ServerPage() {
                 : 'No public games in this server yet.'
             }
             action={
-              isMember ? (
+              isMember && server.slug ? (
                 <Button size="sm" asChild>
-                  <Link to={`/servers/${serverId}/add-game`}>+ Add game</Link>
+                  <Link to={`/s/${server.slug}/add`}>+ Add game</Link>
                 </Button>
               ) : undefined
             }
           />
         ) : (
           <div>
-            {games.map((doc) => (
-              <Link key={doc.gameId} to={`/game/${doc.gameId}`} className="game-row">
-                <div>
-                  <div className="game-row-name text-sm font-medium text-foreground">
-                    {gameDisplayName(doc)}
-                  </div>
-                  {(doc.meta?.playerCount || doc.meta?.playedOn) && (
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {[
-                        doc.meta.playerCount ? `${doc.meta.playerCount} players` : null,
-                        doc.meta.playedOn,
-                      ].filter(Boolean).join(' · ')}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {doc.winner && (
-                    <span className={`game-badge game-badge-${doc.winner}`}>{doc.winner}</span>
-                  )}
-                  {doc.visibility === 'private' && (
-                    <span className="game-badge game-badge-private">private</span>
-                  )}
-                </div>
-                {doc.createdAt && (
-                  <div className="text-xs text-placeholder text-right tabular-nums">
-                    {new Date(doc.createdAt).toLocaleDateString()}
-                  </div>
-                )}
-              </Link>
-            ))}
+            {games.map((doc) => {
+              const isGameCreator = user?.userId === doc.createdBy
+              return (
+                <GameCard
+                  key={doc.gameId}
+                  variant="row"
+                  doc={doc}
+                  showServerName={false}
+                  secondLineMode="author-and-visibility"
+                  showAuthor
+                  currentUserId={user?.userId}
+                  showEdit={isGameCreator}
+                  showEditAsButton={isGameCreator}
+                  serverSlug={server.slug ?? undefined}
+                  showPrivacyToggle={isGameCreator}
+                  onVisibilityChange={(visibility) =>
+                    handleVisibilityChange(doc.gameId, visibility)
+                  }
+                />
+              )
+            })}
           </div>
         )}
 

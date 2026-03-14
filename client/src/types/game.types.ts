@@ -4,10 +4,11 @@ import type { TownSquareGameState } from "./townSquare.types"
 
 // ----- API document & request bodies (match backend schemas.py JSON) -----
 
-/** Stored game document from API. Matches backend GameDocument. */
+/** Stored game document from API. Matches backend GameDocument. List endpoints may include serverName and createdByUsername. */
 export type GameDocument = {
   gameId: string
   serverId: string
+  slug: string | null
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -20,6 +21,12 @@ export type GameDocument = {
   title?: string | null
   subtitle?: string | null
   winner?: string | null
+  /** Present on list responses (servers/:id/games, me/games, explore). */
+  serverName?: string | null
+  /** Present on list responses; creator's display name. */
+  createdByUsername?: string | null
+  /** Present on list responses; server slug for linking to /s/:slug. */
+  serverSlug?: string | null
 }
 
 /** Request body for POST /api/servers/{id}/games. Matches backend GameCreateBody. */
@@ -30,6 +37,7 @@ export type GameCreateBody = {
   phases?: GamePhase[] | null
   title?: string | null
   subtitle?: string | null
+  winner?: string | null
   visibility?: 'private' | 'public'
 }
 

@@ -4,17 +4,11 @@ import { getMyGames } from '@/api/explore'
 import type { GameDocument } from '@/types'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { GameCard } from '@/components/GameCard'
 
 const PAGE_SIZE = 20
 
 type VisibilityFilter = 'all' | 'public' | 'private'
-
-const EDITION_LABELS: Record<string, string> = {
-  tb: 'Trouble Brewing',
-  bmr: 'Bad Moon Rising',
-  snv: 'Sects & Violets',
-  custom: 'Custom Script',
-}
 
 export function MyGamesPage() {
   const [games, setGames] = useState<GameDocument[]>([])
@@ -40,7 +34,6 @@ export function MyGamesPage() {
   }, [skip])
 
   const filtered = filter === 'all' ? games : games.filter((g) => g.visibility === filter)
-  const gameDisplayName = (doc: GameDocument) => doc.name || doc.title || 'Untitled'
   const totalPages = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(skip / PAGE_SIZE) + 1
 
@@ -110,50 +103,13 @@ export function MyGamesPage() {
         ) : (
           <div>
             {filtered.map((doc) => (
-              <Link key={doc.gameId} to={`/game/${doc.gameId}`} className="game-row">
-                <div>
-                  <div className="game-row-name text-sm font-medium text-foreground">
-                    {gameDisplayName(doc)}
-                  </div>
-                  {(doc.meta?.edition || doc.meta?.playerCount || doc.meta?.playedOn || doc.serverId) && (
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-                      {doc.meta?.edition && (
-                        <span>{EDITION_LABELS[doc.meta.edition] ?? doc.meta.edition}</span>
-                      )}
-                      {doc.meta?.playerCount && (
-                        <><span className="text-border">·</span><span>{doc.meta.playerCount} players</span></>
-                      )}
-                      {doc.meta?.playedOn && (
-                        <><span className="text-border">·</span><span>{doc.meta.playedOn}</span></>
-                      )}
-                      {doc.serverId && (
-                        <>
-                          <span className="text-border">·</span>
-                          <Link
-                            to={`/servers/${doc.serverId}`}
-                            className="text-muted-foreground hover:text-primary hover:underline"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Server
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {doc.winner && (
-                    <span className={`game-badge game-badge-${doc.winner}`}>{doc.winner} wins</span>
-                  )}
-                </div>
-                <div className="text-xs text-placeholder text-right tabular-nums">
-                  {doc.visibility === 'private' ? (
-                    <span className="game-badge game-badge-private">Private</span>
-                  ) : (
-                    <span className="text-muted-foreground">Public</span>
-                  )}
-                </div>
-              </Link>
+              <GameCard
+                key={doc.gameId}
+                variant="row"
+                doc={doc}
+                showServerName={false}
+                secondLineMode="script-and-time"
+              />
             ))}
           </div>
         )}

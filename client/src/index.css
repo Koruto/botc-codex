@@ -698,3 +698,12 @@ html {
 .game-row:hover .game-row-name {
   color: var(--primary);
 }
+
+/* Game list row — two-line table style, no full-row link so select/edit don't propagate */
+.game-list-row .game-row-name {
+  transition: color 0.15s;
+}
+
+.game-list-row:hover .game-row-name {
+  color: var(--primary);
+}

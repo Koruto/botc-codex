@@ -6,6 +6,7 @@ import type { MyServerItem } from '@/types/api.types'
 import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
+import { GameCard } from '@/components/GameCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StatItem } from '@/components/ui/StatItem'
 
@@ -67,15 +68,13 @@ export function HomePage() {
       setServers((prev) => [{ ...server, isCreator: true, isMember: true, joinedAt: server.createdAt }, ...prev])
       setNewServerName('')
       setCreating(false)
-      navigate(`/servers/${server.serverId}`)
+      navigate(server.slug ? `/s/${server.slug}` : `/dashboard`)
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create server')
     } finally {
       setCreateLoading(false)
     }
   }
-
-  const gameDisplayName = (doc: GameDocument) => doc.name || doc.title || 'Untitled'
 
   const toggleCreate = () => {
     setCreating((v) => !v)
@@ -137,7 +136,7 @@ export function HomePage() {
           ) : (
             <div>
               {servers.map((s) => (
-                <Link key={s.serverId} to={`/servers/${s.serverId}`} className="server-row">
+                <Link key={s.serverId} to={s.slug ? `/s/${s.slug}` : '#'} className="server-row">
                   <div>
                     <div className="text-sm font-medium text-primary">{s.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">
@@ -174,7 +173,7 @@ export function HomePage() {
               action={
                 servers.length > 0 ? (
                   <Button size="sm" asChild>
-                    <Link to={`/servers/${servers[0].serverId}`}>
+                    <Link to={servers[0].slug ? `/s/${servers[0].slug}` : '#'}>
                       Go to {servers[0].name} →
                     </Link>
                   </Button>
@@ -184,25 +183,13 @@ export function HomePage() {
           ) : (
             <div>
               {recentGames.map((doc) => (
-                <Link key={doc.gameId} to={`/game/${doc.gameId}`} className="game-row">
-                  <div>
-                    <div className="game-row-name text-sm font-medium text-foreground">
-                      {gameDisplayName(doc)}
-                    </div>
-                    {doc.meta?.playedOn && (
-                      <div className="text-xs text-muted-foreground mt-0.5">{doc.meta.playedOn}</div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {doc.winner && (
-                      <span className={`game-badge game-badge-${doc.winner}`}>{doc.winner}</span>
-                    )}
-                    {doc.visibility === 'private' && (
-                      <span className="game-badge game-badge-private">private</span>
-                    )}
-                  </div>
-                  <div />
-                </Link>
+                <GameCard
+                  key={doc.gameId}
+                  variant="row"
+                  doc={doc}
+                  showServerName={false}
+                  secondLineMode="script-and-time"
+                />
               ))}
             </div>
           )}

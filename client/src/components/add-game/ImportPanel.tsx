@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { Grimoire } from '@/components/Grimoire'
 import type { RoleOption } from '@/types'
+import type { CustomScript, RoleInfo } from '@/types/grimoire.types'
 import type { TownSquareGameState, TownSquarePlayer } from '@/types/townSquare.types'
 import type { DerivedGame } from '@/types'
+
+const DEFAULT_SCRIPT_META = { id: '_meta' as const, name: '', author: '' }
 
 export type ImportPanelProps = {
   townSquare: TownSquareGameState | null
@@ -10,6 +13,11 @@ export type ImportPanelProps = {
   loading: boolean
   rolesList: RoleOption[]
   derivedGame: DerivedGame | null
+  edition?: string
+  customScript?: CustomScript | null
+  customRoles?: RoleInfo[]
+  onCustomScriptChange?: (script: CustomScript | null) => void
+  onCustomRolesChange?: (roles: RoleInfo[]) => void
   onFileUpload: (file: File) => Promise<void>
   onPasteSubmit: (json: string) => Promise<void>
   onReplaceWithPaste: (json: string) => Promise<void>
@@ -23,6 +31,11 @@ export function ImportPanel({
   loading,
   rolesList,
   derivedGame,
+  edition,
+  customScript,
+  customRoles = [],
+  onCustomScriptChange,
+  onCustomRolesChange,
   onFileUpload,
   onPasteSubmit,
   onReplaceWithPaste,
@@ -264,6 +277,175 @@ export function ImportPanel({
             </div>
           </div>
 
+          {/* Demon bluffs */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-foreground">Bluffs:</span>
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">{i + 1}.</span>
+                <select
+                  value={townSquare.bluffs?.[i] ?? ''}
+                  onChange={(e) => {
+                    const next = [...(townSquare.bluffs ?? [])]
+                    while (next.length < i + 1) next.push('')
+                    next[i] = e.target.value
+                    onUpdateTownSquare({ ...townSquare, bluffs: next.filter(Boolean).length ? next : [] })
+                  }}
+                  className="min-w-[120px] rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
+                >
+                  <option value="">—</option>
+                  {rolesList.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </span>
+            ))}
+          </div>
+
+          {edition === 'custom' && onCustomScriptChange && onCustomRolesChange && (
+            <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4">
+              <h3 className="mb-3 text-md font-medium text-foreground">Custom script & roles</h3>
+              <div className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Script name</label>
+                    <input
+                      type="text"
+                      value={customScript?.meta?.name ?? ''}
+                      onChange={(e) =>
+                        onCustomScriptChange({
+                          meta: { ...DEFAULT_SCRIPT_META, ...customScript?.meta, name: e.target.value },
+                          roles: customScript?.roles ?? [],
+                        })
+                      }
+                      placeholder="e.g. My Homebrew"
+                      className="w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Author</label>
+                    <input
+                      type="text"
+                      value={customScript?.meta?.author ?? ''}
+                      onChange={(e) =>
+                        onCustomScriptChange({
+                          meta: { ...DEFAULT_SCRIPT_META, ...customScript?.meta, author: e.target.value },
+                          roles: customScript?.roles ?? [],
+                        })
+                      }
+                      placeholder="Your name"
+                      className="w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Roles in script (add from list)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(customScript?.roles ?? []).map((roleId, idx) => (
+                      <span
+                        key={`${roleId}-${idx}`}
+                        className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs"
+                      >
+                        {rolesList.find((r) => r.id === roleId)?.name ?? roleId}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onCustomScriptChange({
+                              meta: customScript?.meta ?? { ...DEFAULT_SCRIPT_META },
+                              roles: (customScript?.roles ?? []).filter((_, i) => i !== idx),
+                            })
+                          }
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const id = e.target.value
+                        if (!id) return
+                        onCustomScriptChange({
+                          meta: customScript?.meta ?? { ...DEFAULT_SCRIPT_META },
+                          roles: [...(customScript?.roles ?? []), id],
+                        })
+                        e.target.value = ''
+                      }}
+                      className="rounded border border-input bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value="">+ Add role</option>
+                      {rolesList.filter((r) => r.id !== 'unknown').map((r) => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Custom role definitions (optional)</label>
+                  <p className="mb-2 text-xs text-muted-foreground">Add homebrew roles so they appear in the role list above.</p>
+                  <div className="space-y-2">
+                    {(customRoles ?? []).map((r, idx) => (
+                      <div key={idx} className="flex flex-wrap items-center gap-2 rounded border border-border bg-background p-2">
+                        <input
+                          type="text"
+                          value={r.id}
+                          onChange={(e) => {
+                            const next = [...(customRoles ?? [])]
+                            next[idx] = { ...next[idx], id: e.target.value }
+                            onCustomRolesChange(next)
+                          }}
+                          placeholder="id (e.g. my_demon)"
+                          className="w-28 rounded border border-input px-2 py-1 text-xs focus:border-primary focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={r.name}
+                          onChange={(e) => {
+                            const next = [...(customRoles ?? [])]
+                            next[idx] = { ...next[idx], name: e.target.value }
+                            onCustomRolesChange(next)
+                          }}
+                          placeholder="Display name"
+                          className="min-w-[100px] rounded border border-input px-2 py-1 text-xs focus:border-primary focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onCustomRolesChange((customRoles ?? []).filter((_, i) => i !== idx))}
+                          className="text-muted-foreground hover:text-red-400"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onCustomRolesChange([
+                          ...(customRoles ?? []),
+                          {
+                            id: '',
+                            name: '',
+                            edition: '',
+                            team: 'townsfolk',
+                            ability: '',
+                            firstNightReminder: '',
+                            otherNightReminder: '',
+                            reminders: [],
+                            setup: false,
+                          },
+                        ])
+                      }
+                      className="rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
+                    >
+                      + Add custom role
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <h3 className="mb-3 text-md font-medium text-foreground">Grimoire preview</h3>
           <p className="mb-3 text-sm text-muted-foreground">
             You can also paste new JSON above and click &quot;Replace with pasted JSON&quot; to overwrite.
@@ -281,6 +463,7 @@ export function ImportPanel({
                 players={derivedGame.players.map((p) => ({ id: p.id, name: p.name, role: p.roleId }))}
                 ghostVotesUsedIds={[]}
                 storytellerName=""
+                customRoles={customRoles?.length ? customRoles : undefined}
               />
             </div>
           </div>
@@ -292,7 +475,7 @@ export function ImportPanel({
               disabled={loading}
               className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              Continue to Meta
+              Continue to Events
             </button>
             {saveStatus === 'saved' && <span className="text-sm text-green-400">Draft saved</span>}
             {saveStatus === 'error' && <span className="text-sm text-red-400">Save failed</span>}

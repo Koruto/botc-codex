@@ -71,7 +71,7 @@ export function UserPublicPage() {
                 className="flex items-center justify-between rounded border border-border px-3 py-2.5"
               >
                 <div>
-                  <Link to={`/game/${doc.gameId}`} className="text-sm text-primary hover:underline">
+                  <Link to={doc.slug ? `/game/${doc.slug}` : `/game/${doc.gameId}`} className="text-sm text-primary hover:underline">
                     {gameDisplayName(doc)}
                   </Link>
                   <p className="text-xs text-muted-foreground">
@@ -80,7 +80,7 @@ export function UserPublicPage() {
                   </p>
                 </div>
                 <Link
-                  to={`/servers/${doc.serverId}`}
+                  to={doc.serverSlug ? `/s/${doc.serverSlug}` : '#'}
                   className="text-xs text-muted-foreground hover:text-primary hover:underline"
                 >
                   server

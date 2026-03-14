@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/Button'
 import { Navbar } from '@/components/Navbar'
+import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
 
 const LANDING_NAV_LINKS = [
@@ -26,7 +27,7 @@ const GAME_CARDS = [
     title: 'The Empath lied to everyone for six nights — and pulled it off',
     desc: 'Nobody suspected the Empath was the Demon. Perfect numbers fed to a town that built their entire logic on a lie.',
     script: 'Sects & Violets · 12 players',
-    to: '/demo',
+    to: '/featured/the-wizards-gambit',
   },
   {
     server: 'Night Birds BotC',
@@ -34,7 +35,7 @@ const GAME_CARDS = [
     title: 'Vigormortis keeps a dead army alive for five nights straight',
     desc: "The minions wouldn't die. Exorcist found the Demon on the very last possible night in an extraordinary comeback.",
     script: 'Bad Moon Rising · 14 players',
-    to: '/demo',
+    to: '/featured/the-wizards-gambit',
   },
   {
     server: 'The Clocktower',
@@ -42,7 +43,7 @@ const GAME_CARDS = [
     title: 'Baron floods the town — four dead before day two ends',
     desc: 'Outsiders everywhere. The Drunk never found out what role they had been playing the whole time.',
     script: 'Trouble Brewing · 8 players',
-    to: '/demo',
+    to: '/featured/the-wizards-gambit',
   },
 ] as const
 
@@ -56,6 +57,7 @@ const FEATURES = [
 ] as const
 
 export function LandingPage() {
+  const { user } = useAuth()
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
   const [revealed, setRevealed] = useState<Set<number>>(new Set())
 
@@ -88,12 +90,20 @@ export function LandingPage() {
 
       {/* ── Header ── */}
       <Navbar fixed links={LANDING_NAV_LINKS}>
-        <Button variant="secondary" size="sm" className="hidden sm:inline-flex" asChild>
-          <Link to="/login">Sign in</Link>
-        </Button>
-        <Button size="sm" asChild>
-          <Link to="/login">Enter the Codex</Link>
-        </Button>
+        {user ? (
+          <Button size="sm" asChild>
+            <Link to="/dashboard">Enter the Codex</Link>
+          </Button>
+        ) : (
+          <>
+            <Button variant="secondary" size="sm" className="hidden sm:inline-flex" asChild>
+              <Link to="/login">Sign in</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link to="/login">Enter the Codex</Link>
+            </Button>
+          </>
+        )}
       </Navbar>
 
       {/* ── Hero ── */}
@@ -139,7 +149,7 @@ export function LandingPage() {
               <Link to="/login">Log your first game</Link>
             </Button>
             <Button variant="secondary" size="lg" className="w-full sm:w-auto" asChild>
-              <Link to="/demo">See the demo</Link>
+              <Link to="/featured/the-wizards-gambit">See the demo</Link>
             </Button>
           </div>
 
@@ -402,7 +412,7 @@ export function LandingPage() {
               <Link to="/login">Sign up — it's free</Link>
             </Button>
             <Button variant="secondary" size="lg" asChild>
-              <Link to="/demo">Browse the demo</Link>
+              <Link to="/featured/the-wizards-gambit">Browse the demo</Link>
             </Button>
           </div>
         </div>

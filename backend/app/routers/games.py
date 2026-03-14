@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from app.auth import get_current_user, get_optional_user
-from app.db import get_games_collection, get_memberships_collection
+from app.db import get_games_collection, get_memberships_collection, get_servers_collection, get_users_collection
 from app.models.schemas import (
     CopyGameBody,
     GameCreateBody,
@@ -30,6 +30,27 @@ from app.models.schemas import (
 )
 
 router = APIRouter(prefix="/api", tags=["games"])
+
+
+def _title_to_slug(title: str) -> str:
+    """Lowercase, spaces to hyphens, strip non [a-z0-9-], strip leading/trailing hyphens."""
+    s = (title or "").strip().lower().replace(" ", "-")
+    s = "".join(c for c in s if c in "abcdefghijklmnopqrstuvwxyz0123456789-")
+    return s.strip("-") or "game"
+
+
+async def _ensure_unique_game_slug(
+    collection: AsyncIOMotorCollection, base_slug: str, exclude_game_id: Optional[str] = None
+) -> str:
+    """Return base_slug or base_slug-2, base_slug-3, ... globally unique."""
+    slug = base_slug
+    n = 2
+    while True:
+        existing = await collection.find_one({"slug": slug})
+        if not existing or (exclude_game_id and existing.get("gameId") == exclude_game_id):
+            return slug
+        slug = f"{base_slug}-{n}"
+        n += 1
 
 
 # ---------------------------------------------------------------------------
@@ -49,6 +70,24 @@ async def _get_game_or_404(
     if server_id:
         query["serverId"] = server_id
     raw = await collection.find_one(query)
+    if not raw:
+        raise HTTPException(status_code=404, detail="Game not found.")
+    return GameDocument(**raw)
+
+
+async def _get_game_by_slug_or_404(
+    collection: AsyncIOMotorCollection, slug: str
+) -> GameDocument:
+    raw = await collection.find_one({"slug": slug})
+    if not raw:
+        raise HTTPException(status_code=404, detail="Game not found.")
+    return GameDocument(**raw)
+
+
+async def _get_game_by_server_and_slug_or_404(
+    collection: AsyncIOMotorCollection, server_id: str, game_slug: str
+) -> GameDocument:
+    raw = await collection.find_one({"serverId": server_id, "slug": game_slug})
     if not raw:
         raise HTTPException(status_code=404, detail="Game not found.")
     return GameDocument(**raw)
@@ -90,10 +129,13 @@ async def create_game(
             status_code=403, detail="You must be a member of the server to create games."
         )
 
+    base_slug = _title_to_slug(body.title or body.name or "Untitled")
+    slug = await _ensure_unique_game_slug(collection, base_slug)
     now = datetime.now(timezone.utc).isoformat()
     doc = GameDocument(
         gameId=str(uuid.uuid4()),
         serverId=server_id,
+        slug=slug,
         createdBy=current_user["userId"],
         createdAt=now,
         updatedAt=now,
@@ -104,6 +146,7 @@ async def create_game(
         phases=body.phases,
         title=body.title,
         subtitle=body.subtitle,
+        winner=body.winner,
     )
     await collection.insert_one(doc.model_dump(mode="json"))
     return doc.model_dump(mode="json")
@@ -126,6 +169,18 @@ async def get_game(
     return game.model_dump(mode="json")
 
 
+@router.get("/games/by-slug/{slug}")
+async def get_game_by_slug(
+    slug: str,
+    current_user: Optional[dict] = Depends(get_optional_user),
+    collection: AsyncIOMotorCollection = Depends(get_games_collection),
+):
+    """Get a game by its slug (cross-server). Used for shareable game links. Visibility enforced."""
+    game = await _get_game_by_slug_or_404(collection, slug)
+    _enforce_visibility(game, current_user)
+    return game.model_dump(mode="json")
+
+
 @router.get("/games/{game_id}")
 async def get_game_by_id(
     game_id: str,
@@ -134,6 +189,19 @@ async def get_game_by_id(
 ):
     """Get a game by its ID (cross-server). Used for shareable game links. Visibility enforced."""
     game = await _get_game_or_404(collection, game_id)
+    _enforce_visibility(game, current_user)
+    return game.model_dump(mode="json")
+
+
+@router.get("/servers/{server_id}/games/by-slug/{game_slug}")
+async def get_game_by_server_and_slug(
+    server_id: str,
+    game_slug: str,
+    current_user: Optional[dict] = Depends(get_optional_user),
+    collection: AsyncIOMotorCollection = Depends(get_games_collection),
+):
+    """Get a game by server id + game slug. Used for edit page. Visibility enforced."""
+    game = await _get_game_by_server_and_slug_or_404(collection, server_id, game_slug)
     _enforce_visibility(game, current_user)
     return game.model_dump(mode="json")
 
@@ -149,9 +217,12 @@ async def list_games(
     limit: int = Query(20, ge=1, le=100),
     current_user: Optional[dict] = Depends(get_optional_user),
     collection: AsyncIOMotorCollection = Depends(get_games_collection),
+    servers: AsyncIOMotorCollection = Depends(get_servers_collection),
+    users: AsyncIOMotorCollection = Depends(get_users_collection),
 ):
     """
     List games for a server, sorted by updatedAt descending. Paginated.
+    Each item includes serverName and createdByUsername for card display.
 
     Visibility filter:
     - Anonymous users see only public games.
@@ -160,7 +231,6 @@ async def list_games(
     user_id = current_user["userId"] if current_user else None
 
     if user_id:
-        # Public games OR games owned by the caller (which may be private)
         query = {
             "serverId": server_id,
             "$or": [{"visibility": "public"}, {"createdBy": user_id}],
@@ -170,7 +240,28 @@ async def list_games(
 
     cursor = collection.find(query).sort("updatedAt", -1).skip(skip).limit(limit)
     total = await collection.count_documents(query)
-    items = [GameDocument(**raw).model_dump(mode="json") async for raw in cursor]
+    raw_items = [GameDocument(**raw).model_dump(mode="json") async for raw in cursor]
+
+    server_name: Optional[str] = None
+    server_doc = await servers.find_one({"serverId": server_id})
+    if server_doc:
+        server_name = server_doc.get("name")
+
+    creator_ids = list({g.get("createdBy") for g in raw_items if g.get("createdBy")})
+    user_id_to_username: dict[str, str] = {}
+    if creator_ids:
+        async for u in users.find({"userId": {"$in": creator_ids}}):
+            uid = u.get("userId")
+            uname = u.get("username")
+            if uid and uname:
+                user_id_to_username[uid] = uname
+
+    items = []
+    for g in raw_items:
+        out = dict(g)
+        out["serverName"] = server_name
+        out["createdByUsername"] = user_id_to_username.get(g.get("createdBy") or "") if g.get("createdBy") else None
+        items.append(out)
 
     return {"total": total, "skip": skip, "limit": limit, "items": items}
 
@@ -242,10 +333,13 @@ async def copy_game(
             detail="You must be a member of the destination server.",
         )
 
+    base_slug = _title_to_slug(source.title or source.name or "Untitled")
+    slug = await _ensure_unique_game_slug(collection, base_slug)
     now = datetime.now(timezone.utc).isoformat()
     copy = GameDocument(
         gameId=str(uuid.uuid4()),
         serverId=body.serverId,
+        slug=slug,
         createdBy=current_user["userId"],
         createdAt=now,
         updatedAt=now,

@@ -18,6 +18,7 @@ class GameCreateBody(BaseModel):
     phases: Optional[list[GamePhase]] = None
     title: Optional[str] = None
     subtitle: Optional[str] = None
+    winner: Optional[str] = None
     visibility: Optional[Literal["private", "public"]] = None
 
 
@@ -44,6 +45,7 @@ class GameDocument(BaseModel):
     """
     gameId: str
     serverId: str
+    slug: Optional[str] = None
     updatedAt: str
     createdAt: Optional[str] = None
     createdBy: Optional[str] = None

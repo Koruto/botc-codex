@@ -5,28 +5,22 @@ import type { DerivedGame, Game, GameDocument } from '@/types'
 import type { MyServerItem } from '@/types/api.types'
 import { deriveGame } from '../utils/deriveGame'
 import { townSquareToGame } from '../utils/townSquareToGame'
-import { getGame, copyGame } from '@/api/games'
+import { getGameBySlug, copyGame } from '@/api/games'
 import { getServers } from '@/api/servers'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
 import wizardTeensy from '../data/wizard-teensy.json'
-import g3 from '../data/g3.json'
-
-const gameData: Record<string, Game> = {
-  'wizard-game': wizardTeensy as Game,
-  'the-beginning': g3 as Game,
-}
 
 const defaultGame = wizardTeensy as Game
 
 export function GamePage() {
-  const { gameId } = useParams()
+  const { gameSlug } = useParams<{ gameSlug?: string }>()
   const { user } = useAuth()
   const navigate = useNavigate()
 
   const [rawDoc, setRawDoc] = useState<GameDocument | null>(null)
   const [fetchedGame, setFetchedGame] = useState<DerivedGame | null>(null)
-  const [loading, setLoading] = useState(() => !!(gameId && !gameData[gameId]))
+  const [loading, setLoading] = useState(() => !!gameSlug)
   const [error, setError] = useState<string | null>(null)
 
   // Copy panel state
@@ -38,12 +32,12 @@ export function GamePage() {
   const [serversLoaded, setServersLoaded] = useState(false)
 
   useEffect(() => {
-    if (!gameId || gameData[gameId]) return
+    if (!gameSlug) return
     const load = async () => {
       setLoading(true)
       setError(null)
       try {
-        const doc = await getGame(gameId)
+        const doc = await getGameBySlug(gameSlug)
         setRawDoc(doc)
         const ts = doc.townSquare
         if (!ts?.players) {
@@ -65,7 +59,7 @@ export function GamePage() {
       }
     }
     load()
-  }, [gameId])
+  }, [gameSlug])
 
   const openCopyPanel = async () => {
     setShowCopyPanel(true)
@@ -84,12 +78,12 @@ export function GamePage() {
   }
 
   const handleCopy = async () => {
-    if (!gameId || !selectedServerId) return
+    if (!rawDoc?.gameId || !selectedServerId) return
     setCopyError(null)
     setCopyLoading(true)
     try {
-      const copy = await copyGame(gameId, selectedServerId)
-      navigate(`/game/${copy.gameId}`)
+      const copy = await copyGame(rawDoc.gameId, selectedServerId)
+      navigate(copy.slug ? `/game/${copy.slug}` : '/dashboard')
     } catch (err) {
       setCopyError(err instanceof Error ? err.message : 'Copy failed')
     } finally {
@@ -98,10 +92,9 @@ export function GamePage() {
   }
 
   const game = useMemo((): DerivedGame => {
-    if (gameId && gameData[gameId]) return deriveGame(gameData[gameId])
     if (fetchedGame) return fetchedGame
     return deriveGame(defaultGame)
-  }, [gameId, fetchedGame])
+  }, [fetchedGame])
 
   // Determine if copy button should be shown
   const canCopy =
@@ -175,7 +168,7 @@ export function GamePage() {
         </div>
       )}
 
-      <GameView game={game} gameId={gameId} />
+      <GameView game={game} gameId={rawDoc?.gameId ?? gameSlug} />
     </div>
   )
 }

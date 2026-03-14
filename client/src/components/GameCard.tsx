@@ -1,0 +1,240 @@
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+import type { GameDocument } from '@/types'
+import { Button } from '@/components/Button'
+
+const EDITION_LABELS: Record<string, string> = {
+  tb: 'Trouble Brewing',
+  bmr: 'Bad Moon Rising',
+  snv: 'Sects & Violets',
+  custom: 'Custom Script',
+}
+
+export function scriptLine(doc: GameDocument): string {
+  const meta = doc.meta
+  if (!meta) return ''
+  const edition = meta.edition ? (EDITION_LABELS[meta.edition] ?? meta.edition) : ''
+  const count = meta.playerCount ? `${meta.playerCount} players` : ''
+  return [edition, count].filter(Boolean).join(' · ')
+}
+
+function relativeTime(isoDate: string): string {
+  const date = new Date(isoDate)
+  const now = new Date()
+  const sec = Math.floor((now.getTime() - date.getTime()) / 1000)
+  if (sec < 60) return 'just now'
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min}m ago`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `${d}d ago`
+  const mo = Math.floor(d / 30)
+  if (mo < 12) return `${mo} mo ago`
+  const y = Math.floor(mo / 12)
+  return `${y}y ago`
+}
+
+export interface GameCardProps {
+  doc: GameDocument
+  /** 'card' = landing-style card; 'row' = compact two-line table row, no "Watch the game", table hover. */
+  variant?: 'card' | 'row'
+  /** When false, hide server name (e.g. on Server page, Recent games, My games). */
+  showServerName?: boolean
+  /** Override server name (e.g. from Server page context). */
+  serverNameOverride?: string | null
+  /** Row only: 'author-and-visibility' = "By You · Public/Private" (text); 'script-and-time' = "Script · N players · 5d ago". */
+  secondLineMode?: 'author-and-visibility' | 'script-and-time'
+  /** Show "By You" / "By {username}" (used when secondLineMode is author-and-visibility). */
+  showAuthor?: boolean
+  /** Current user id to show "By You" when doc.createdBy matches. */
+  currentUserId?: string | null
+  /** Show Edit (creator only). When true and showEditAsButton, render as Button like Log out. */
+  showEdit?: boolean
+  /** Render Edit as a prominent button (secondary, sm) instead of link. */
+  showEditAsButton?: boolean
+  /** Server slug for add/edit links (e.g. /s/:serverSlug/add). */
+  serverSlug?: string
+  /** Show standalone privacy toggle (creator only). */
+  showPrivacyToggle?: boolean
+  /** Called when user changes visibility. */
+  onVisibilityChange?: (visibility: 'public' | 'private') => void
+}
+
+export function GameCard({
+  doc,
+  variant = 'card',
+  showServerName = true,
+  serverNameOverride,
+  secondLineMode = 'author-and-visibility',
+  showAuthor = false,
+  currentUserId,
+  showEdit = false,
+  showEditAsButton = false,
+  serverSlug,
+  showPrivacyToggle = false,
+  onVisibilityChange,
+}: GameCardProps) {
+  const serverName = showServerName ? (serverNameOverride ?? doc.serverName ?? null) : null
+  const headline = doc.title || doc.name || 'Untitled'
+  const description = doc.subtitle ?? ''
+  const winner = doc.winner
+  const outcomeLabel = winner === 'evil' ? 'Evil wins' : winner === 'good' ? 'Good wins' : null
+  const script = scriptLine(doc)
+  const isYou = currentUserId && doc.createdBy === currentUserId
+  const authorLabel = showAuthor ? (isYou ? 'By You' : doc.createdByUsername ? `By ${doc.createdByUsername}` : null) : null
+  const timeAgo = doc.updatedAt ? relativeTime(doc.updatedAt) : (doc.createdAt ? relativeTime(doc.createdAt) : '')
+
+  if (variant === 'row') {
+    const gameUrl = doc.slug ? `/game/${doc.slug}` : `/game/${doc.gameId}`
+    const secondLineLeft =
+      secondLineMode === 'author-and-visibility'
+        ? authorLabel
+          ? [authorLabel, doc.visibility === 'private' ? 'Private' : 'Public'].join(' · ')
+          : null
+        : [script, timeAgo].filter(Boolean).join(' · ')
+    const visibilityColor =
+      doc.visibility === 'private'
+        ? 'text-muted-foreground'
+        : 'text-primary/90'
+
+    return (
+      <div className="game-list-row group flex items-stretch gap-4 border-b border-border py-5 px-6 transition-colors hover:bg-muted last:border-b-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <Link to={gameUrl} className="flex items-center gap-2">
+            {serverName && (
+              <span className="font-app-display shrink-0 text-[0.58rem] uppercase tracking-[0.12em] text-muted-foreground/50">
+                {serverName}
+              </span>
+            )}
+            <span className="game-row-name font-app-display text-sm font-medium text-foreground">
+              {headline}
+            </span>
+          </Link>
+          <Link to={gameUrl} className="flex items-center gap-x-1.5 text-xs text-muted-foreground">
+            {secondLineMode === 'author-and-visibility' && authorLabel ? (
+              <>
+                <span>{authorLabel}</span>
+                <span className="text-border">·</span>
+                <span className={visibilityColor}>{doc.visibility === 'private' ? 'Private' : 'Public'}</span>
+              </>
+            ) : (
+              <span>{secondLineLeft}</span>
+            )}
+          </Link>
+        </div>
+        <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {outcomeLabel && (
+            <span className={cn('game-badge', winner === 'evil' ? 'game-badge-evil' : 'game-badge-good')}>
+              {outcomeLabel}
+            </span>
+          )}
+          {showPrivacyToggle && onVisibilityChange && (
+            <select
+              value={doc.visibility}
+              onChange={(e) => onVisibilityChange(e.target.value as 'public' | 'private')}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs rounded border border-border bg-background px-2 py-1.5 text-muted-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          )}
+          {showEdit && serverSlug &&
+            (showEditAsButton ? (
+              <Button variant="secondary" size="sm" asChild>
+                <Link to={doc.slug ? `/s/${serverSlug}/games/${doc.slug}/edit` : `/s/${serverSlug}/add?edit=${doc.gameId}`}>Edit</Link>
+              </Button>
+            ) : (
+              <Link
+                to={doc.slug ? `/s/${serverSlug}/games/${doc.slug}/edit` : `/s/${serverSlug}/add?edit=${doc.gameId}`}
+                className="text-xs text-primary hover:underline"
+              >
+                Edit
+              </Link>
+            ))}
+        </div>
+      </div>
+    )
+  }
+
+  const cardGameUrl = doc.slug ? `/game/${doc.slug}` : `/game/${doc.gameId}`
+  return (
+    <Link
+      to={cardGameUrl}
+      className="group relative block overflow-hidden bg-card p-8 transition-colors hover:bg-muted/50"
+    >
+      <div
+        aria-hidden
+        className="absolute left-0 right-0 top-0 h-px origin-center scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
+        style={{ background: 'linear-gradient(90deg, transparent, var(--primary), transparent)' }}
+      />
+
+      <div className="mb-4 flex items-center justify-between gap-2">
+        {serverName && (
+          <span className="font-app-display text-[0.58rem] uppercase tracking-[0.12em] text-muted-foreground/50">
+            {serverName}
+          </span>
+        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {outcomeLabel && (
+            <span className={cn('game-badge', winner === 'evil' ? 'game-badge-evil' : 'game-badge-good')}>
+              {outcomeLabel}
+            </span>
+          )}
+          {doc.visibility === 'private' && (
+            <span className="game-badge game-badge-private">private</span>
+          )}
+        </div>
+      </div>
+
+      <div className="font-app-display mb-2 text-[1.02rem] font-semibold leading-[1.3] text-foreground">
+        {headline}
+      </div>
+      {description && (
+        <p className="mb-6 text-[0.82rem] leading-[1.62] text-muted-foreground line-clamp-2">
+          {description}
+        </p>
+      )}
+      {!description && (showAuthor && authorLabel || showEdit || showPrivacyToggle) && <div className="mb-4" />}
+
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {script && (
+            <span className="text-[0.62rem] italic text-muted-foreground/50">{script}</span>
+          )}
+          {authorLabel && (
+            <span className="text-[0.62rem] text-muted-foreground/50">{authorLabel}</span>
+          )}
+          {showEdit && serverSlug && (
+            <Link
+              to={doc.slug ? `/s/${serverSlug}/games/${doc.slug}/edit` : `/s/${serverSlug}/add?edit=${doc.gameId}`}
+              className="text-[0.7rem] text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Edit
+            </Link>
+          )}
+          {showPrivacyToggle && onVisibilityChange && (
+            <select
+              value={doc.visibility}
+              onChange={(e) => {
+                e.stopPropagation()
+                onVisibilityChange(e.target.value as 'public' | 'private')
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="text-[0.7rem] rounded border border-border bg-background px-2 py-0.5 text-muted-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          )}
+        </div>
+        <span className="text-[0.7rem] text-primary transition-colors group-hover:text-primary-hover">
+          Watch the game →
+        </span>
+      </div>
+    </Link>
+  )
+}
