@@ -210,18 +210,31 @@ async def get_game_by_server_and_slug(
 # Read (list)
 # ---------------------------------------------------------------------------
 
+SORT_FIELDS = {"updatedAt", "playedOn", "edition", "winner", "playerCount"}
+SORT_TO_KEY = {
+    "updatedAt": "updatedAt",
+    "playedOn": "meta.playedOn",
+    "edition": "meta.edition",
+    "winner": "winner",
+    "playerCount": "meta.playerCount",
+}
+
+
 @router.get("/servers/{server_id}/games")
 async def list_games(
     server_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    sort: str = Query("updatedAt", description="Sort field: updatedAt, playedOn, edition, winner, playerCount"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
     current_user: Optional[dict] = Depends(get_optional_user),
     collection: AsyncIOMotorCollection = Depends(get_games_collection),
     servers: AsyncIOMotorCollection = Depends(get_servers_collection),
     users: AsyncIOMotorCollection = Depends(get_users_collection),
 ):
     """
-    List games for a server, sorted by updatedAt descending. Paginated.
+    List games for a server. Paginated.
+    Sort: updatedAt (default), playedOn, edition, winner, playerCount. Order: asc | desc.
     Each item includes serverName and createdByUsername for card display.
 
     Visibility filter:
@@ -238,7 +251,9 @@ async def list_games(
     else:
         query = {"serverId": server_id, "visibility": "public"}
 
-    cursor = collection.find(query).sort("updatedAt", -1).skip(skip).limit(limit)
+    sort_key = SORT_TO_KEY.get(sort, "updatedAt")
+    sort_dir = -1 if order == "desc" else 1
+    cursor = collection.find(query).sort(sort_key, sort_dir).skip(skip).limit(limit)
     total = await collection.count_documents(query)
     raw_items = [GameDocument(**raw).model_dump(mode="json") async for raw in cursor]
 

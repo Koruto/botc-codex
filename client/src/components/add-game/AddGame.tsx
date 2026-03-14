@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { createServer, getServers, getServerBySlug } from '@/api/servers'
-import { createGame, getServerGame, getServerGameBySlug, getGames, updateGame } from '@/api/games'
+import { createGame, getServerGame, getServerGameBySlug, updateGame } from '@/api/games'
 import { parseGrimoireJson, processGrimoire } from '@/api/grimoire'
 import type { EditionId, GamePhase, GameUpdateBody } from '@/types'
 import type { TownSquareGameState } from '@/types/townSquare.types'
@@ -10,7 +11,7 @@ import type { CustomScript, RoleInfo } from '@/types/grimoire.types'
 import { defaultPregamePhase, emptyGrimoireRevealPhase, townSquareToGame } from '@/utils/townSquareToGame'
 import { PhaseType } from '@/types'
 import { deriveGame } from '@/utils/deriveGame'
-import { getRolesList, getRolesListByEdition, UNKNOWN_ROLE_OPTION } from '@/utils/roles'
+import { getRolesList, getRolesListByEdition, getBluffsRoleOptions, UNKNOWN_ROLE_OPTION } from '@/utils/roles'
 import { GameView } from '@/components/GameView'
 import { Button } from '@/components/Button'
 import { ImportGameJsonPanel } from './ImportGameJsonPanel'
@@ -28,9 +29,7 @@ export function AddGame() {
   const editGameId = searchParams.get('edit')
   const navigate = useNavigate()
 
-  // Resolved server id when URL has server slug (e.g. /s/ravenswood/add)
   const [resolvedServerId, setResolvedServerId] = useState<string | null>(null)
-  // Server selection — comes from URL (resolved) or user picks inline
   const [selectedServerId, setSelectedServerId] = useState<string>('')
   const [myServers, setMyServers] = useState<MyServerItem[]>([])
   const [serversLoading, setServersLoading] = useState(!!urlServerSlug)
@@ -47,14 +46,15 @@ export function AddGame() {
   const [customScript, setCustomScript] = useState<CustomScript | null>(null)
   const [customRoles, setCustomRoles] = useState<RoleInfo[]>([])
 
+  // storyteller and playerCount are gathered in ImportPanel (step 2), not in MetaPanel
+  const [storyteller, setStoryteller] = useState('')
+
   const [metaFormValues, setMetaFormValues] = useState<MetaFormValues>({
     gameName: '',
     title: '',
     subtitle: '',
     playedOn: '',
     edition: '',
-    playerCount: 0,
-    storyteller: '',
     winner: '',
   })
   const [committedPhases, setCommittedPhases] = useState<GamePhase[]>([
@@ -64,9 +64,7 @@ export function AddGame() {
 
   const [formResetToken, setFormResetToken] = useState(0)
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [loadingImport, setLoadingImport] = useState(false)
-  const [draftOffer, setDraftOffer] = useState<{ gameId: string; updatedAt: string } | null>(null)
 
   // Resolve server slug from URL to serverId (e.g. /s/ravenswood/add)
   useEffect(() => {
@@ -119,14 +117,13 @@ export function AddGame() {
         setEditLoadedId(doc.gameId)
         setDraftId(doc.gameId)
         if (doc.townSquare) setTownSquare(doc.townSquare)
+        setStoryteller(doc.meta?.storyteller ?? '')
         setMetaFormValues({
           gameName: doc.name ?? '',
           title: doc.title ?? '',
           subtitle: doc.subtitle ?? '',
           playedOn: doc.meta?.playedOn ?? '',
           edition: doc.meta?.edition ?? 'tb',
-          playerCount: doc.meta?.playerCount ?? 0,
-          storyteller: doc.meta?.storyteller ?? '',
           winner: doc.winner === 'good' || doc.winner === 'evil' ? doc.winner : '',
         })
         setCustomScript(doc.meta?.script ?? null)
@@ -154,14 +151,13 @@ export function AddGame() {
         setEditLoadedId(editGameId)
         setDraftId(doc.gameId)
         if (doc.townSquare) setTownSquare(doc.townSquare)
+        setStoryteller(doc.meta?.storyteller ?? '')
         setMetaFormValues({
           gameName: doc.name ?? '',
           title: doc.title ?? '',
           subtitle: doc.subtitle ?? '',
           playedOn: doc.meta?.playedOn ?? '',
           edition: doc.meta?.edition ?? 'tb',
-          playerCount: doc.meta?.playerCount ?? 0,
-          storyteller: doc.meta?.storyteller ?? '',
           winner: doc.winner === 'good' || doc.winner === 'evil' ? doc.winner : '',
         })
         setCustomScript(doc.meta?.script ?? null)
@@ -181,21 +177,6 @@ export function AddGame() {
     load()
   }, [resolvedServerId, editGameId, editLoadedId])
 
-  // Check for existing draft only when coming from a specific server (no edit param, no edit path)
-  useEffect(() => {
-    if (!resolvedServerId || editGameId || urlGameSlug) return
-    const load = async () => {
-      try {
-        const res = await getGames(resolvedServerId, 0, 1)
-        const latest = res.items[0]
-        if (latest && !draftId) setDraftOffer({ gameId: latest.gameId, updatedAt: latest.updatedAt })
-      } catch {
-        // ignore
-      }
-    }
-    load()
-  }, [resolvedServerId, draftId, editGameId])
-
   const rolesList = useMemo(() => {
     const edition = metaFormValues.edition
     if (edition === 'custom') {
@@ -208,6 +189,14 @@ export function AddGame() {
     return [...getRolesList(), UNKNOWN_ROLE_OPTION]
   }, [metaFormValues.edition, customRoles])
 
+  const bluffsRoleList = useMemo(
+    () =>
+      getBluffsRoleOptions(metaFormValues.edition, customRoles.length ? customRoles : undefined),
+    [metaFormValues.edition, customRoles]
+  )
+
+  const playerCount = townSquare?.players.length ?? 0
+
   const game = townSquare
     ? townSquareToGame(townSquare, {
       gameId: draftId ?? 'draft',
@@ -216,8 +205,8 @@ export function AddGame() {
       meta: {
         playedOn: metaFormValues.playedOn,
         edition: metaFormValues.edition as EditionId,
-        playerCount: metaFormValues.playerCount,
-        storyteller: metaFormValues.storyteller,
+        playerCount,
+        storyteller,
         script: customScript ?? undefined,
         customRoles: customRoles.length > 0 ? customRoles : undefined,
       },
@@ -225,16 +214,6 @@ export function AddGame() {
     })
     : null
   const derivedGame = game ? deriveGame(game) : null
-
-  useEffect(() => {
-    if (townSquare && metaFormValues.playerCount === 0) {
-      setMetaFormValues((prev) => ({
-        ...prev,
-        playerCount: townSquare.players.length,
-        edition: (townSquare.edition?.id as string) || prev.edition as string,
-      }))
-    }
-  }, [townSquare])
 
   const handleCreateServer = async () => {
     const name = newServerName.trim()
@@ -255,11 +234,11 @@ export function AddGame() {
     }
   }
 
+  /** Save draft. Pass `notify: true` to show a success/error toast (use for explicit "Save" button clicks only). */
   const saveDraft = useCallback(
-    async (payload: GameUpdateBody) => {
+    async (payload: GameUpdateBody, opts?: { notify?: boolean }) => {
       if (!selectedServerId) return  // silently skip — data held in local state
       setSaving(true)
-      setSaveStatus('saving')
       try {
         if (draftId) {
           await updateGame(selectedServerId, draftId, payload)
@@ -267,43 +246,15 @@ export function AddGame() {
           const created = await createGame(selectedServerId, payload)
           setDraftId(created.gameId)
         }
-        setSaveStatus('saved')
+        if (opts?.notify) toast.success('Game saved')
       } catch {
-        setSaveStatus('error')
+        if (opts?.notify) toast.error('Save failed')
       } finally {
         setSaving(false)
       }
     },
     [selectedServerId, draftId],
   )
-
-  const resumeDraft = useCallback(async () => {
-    if (!resolvedServerId || !draftOffer) return
-    const doc = await getServerGame(resolvedServerId, draftOffer.gameId)
-    setDraftId(doc.gameId)
-    if (doc.townSquare) setTownSquare(doc.townSquare)
-    if (doc.phases && Array.isArray(doc.phases) && doc.phases.length > 0) {
-      const phases = doc.phases as GamePhase[]
-      const last = phases[phases.length - 1]
-      setCommittedPhases(
-        last?.type === PhaseType.GRIMOIRE_REVEAL ? phases : [...phases, emptyGrimoireRevealPhase()],
-      )
-    }
-    setMetaFormValues({
-      gameName: doc.name ?? '',
-      title: doc.title ?? '',
-      subtitle: doc.subtitle ?? '',
-      playedOn: doc.meta?.playedOn ?? '',
-      edition: doc.meta?.edition ?? '',
-      playerCount: doc.meta?.playerCount ?? 0,
-      storyteller: doc.meta?.storyteller ?? '',
-      winner: doc.winner === 'good' || doc.winner === 'evil' ? doc.winner : '',
-    })
-    setCustomScript(doc.meta?.script ?? null)
-    setCustomRoles(doc.meta?.customRoles ?? [])
-    setFormResetToken((t) => t + 1)
-    setDraftOffer(null)
-  }, [resolvedServerId, draftOffer])
 
   const handleFileUpload = async (file: File) => {
     setLoadingImport(true)
@@ -321,7 +272,12 @@ export function AddGame() {
     try {
       const res = await parseGrimoireJson(JSON.parse(json) as Record<string, unknown>)
       setTownSquare(res.townSquare)
-      if (res.meta) setMetaFormValues((prev) => ({ ...prev, ...res.meta }))
+      if (res.meta) {
+        // Extract storyteller separately; never auto-change the edition the user picked
+        const { storyteller: st, playerCount: _pc, edition: _ed, ...metaRest } = res.meta as Record<string, unknown>
+        setMetaFormValues((prev) => ({ ...prev, ...(metaRest as Partial<MetaFormValues>) }))
+        if (typeof st === 'string' && st) setStoryteller(st)
+      }
       await saveDraft({ townSquare: res.townSquare })
     } finally {
       setLoadingImport(false)
@@ -334,27 +290,32 @@ export function AddGame() {
     try {
       const res = await parseGrimoireJson(JSON.parse(json) as Record<string, unknown>)
       setTownSquare(res.townSquare)
-      if (res.meta) setMetaFormValues((prev) => ({ ...prev, ...res.meta }))
+      if (res.meta) {
+        const { storyteller: st, playerCount: _pc, edition: _ed, ...metaRest } = res.meta as Record<string, unknown>
+        setMetaFormValues((prev) => ({ ...prev, ...(metaRest as Partial<MetaFormValues>) }))
+        if (typeof st === 'string' && st) setStoryteller(st)
+      }
       await updateGame(selectedServerId, draftId, { townSquare: res.townSquare })
-      setSaveStatus('saved')
     } finally {
       setLoadingImport(false)
     }
   }
 
-  const saveMetaPayload = (data: MetaFormValues) => ({
+  const buildMeta = () => ({
+    playedOn: metaFormValues.playedOn,
+    edition: metaFormValues.edition as EditionId,
+    playerCount,
+    storyteller,
+    script: customScript ?? undefined,
+    customRoles: customRoles.length > 0 ? customRoles : undefined,
+  })
+
+  const saveMetaPayload = (data: MetaFormValues): GameUpdateBody => ({
     name: data.gameName || undefined,
     title: data.title || undefined,
     subtitle: data.subtitle || undefined,
     winner: data.winner,
-    meta: {
-      playedOn: data.playedOn,
-      edition: data.edition as EditionId,
-      playerCount: data.playerCount,
-      storyteller: data.storyteller,
-      script: customScript ?? undefined,
-      customRoles: customRoles.length > 0 ? customRoles : undefined,
-    },
+    meta: buildMeta(),
   })
 
   const handleSaveMeta = async (data: MetaFormValues) => {
@@ -363,15 +324,32 @@ export function AddGame() {
     setStep(2)
   }
 
+  // Explicit "Save" on Meta step — shows toast
   const handleSaveMetaOnly = async (data: MetaFormValues) => {
     setMetaFormValues(data)
-    await saveDraft(saveMetaPayload(data))
+    await saveDraft(saveMetaPayload(data), { notify: true })
   }
 
   const handleSavePhaseDraft = async (phases: GamePhase[]) => {
     setCommittedPhases(phases)
     await saveDraft({ phases })
   }
+
+  // Explicit "Save" on Import step — shows toast
+  const handleSaveImportDraft = useCallback(async () => {
+    if (!townSquare) return
+    await saveDraft({
+      townSquare,
+      meta: {
+        playedOn: metaFormValues.playedOn,
+        edition: metaFormValues.edition as EditionId,
+        playerCount: townSquare.players.length,
+        storyteller,
+        script: customScript ?? undefined,
+        customRoles: customRoles.length > 0 ? customRoles : undefined,
+      },
+    }, { notify: true })
+  }, [townSquare, storyteller, saveDraft, metaFormValues, customScript, customRoles])
 
   const handlePublishGame = async (phases: GamePhase[]) => {
     if (!selectedServerId) {
@@ -386,30 +364,40 @@ export function AddGame() {
         Array.isArray(customScript.roles) &&
         customScript.roles.length > 0
       if (!hasScript) {
-        setSaveStatus('error')
+        toast.error('Custom script requires a name, author, and at least one role.')
         return
       }
     }
     setSaving(true)
     setNoServerError(false)
     try {
+      const serverSlug = urlServerSlug ?? selectedServer?.slug
       if (draftId) {
         const updated = await updateGame(selectedServerId, draftId, {
           phases,
           winner: metaFormValues.winner,
         })
-        navigate(updated.slug ? `/game/${updated.slug}` : '/dashboard')
+        const gameSlug = updated.slug ?? updated.gameId
+        if (serverSlug) {
+          navigate(`/s/${serverSlug}?gameSaved=${encodeURIComponent(gameSlug)}`)
+        } else {
+          navigate(`/dashboard?gameSaved=${encodeURIComponent(gameSlug)}`)
+        }
       } else {
-        // No draft saved yet (e.g. user skipped import) — create fresh
         const created = await createGame(selectedServerId, {
           ...saveMetaPayload(metaFormValues),
           townSquare: townSquare ?? undefined,
           phases,
         })
-        navigate(created.slug ? `/game/${created.slug}` : '/dashboard')
+        const gameSlug = created.slug ?? created.gameId
+        if (serverSlug) {
+          navigate(`/s/${serverSlug}?gameSaved=${encodeURIComponent(gameSlug)}`)
+        } else {
+          navigate(`/dashboard?gameSaved=${encodeURIComponent(gameSlug)}`)
+        }
       }
     } catch {
-      setSaveStatus('error')
+      toast.error('Failed to save game')
     } finally {
       setSaving(false)
     }
@@ -423,14 +411,17 @@ export function AddGame() {
       title: string
       subtitle: string
       name: string
+      storyteller: string
       customScript: CustomScript | null
       customRoles: RoleInfo[]
     }) => {
       setTownSquare(prefill.townSquare)
       setMetaFormValues((prev) => ({ ...prev, ...prefill.metaFormValues }))
+      if (prefill.storyteller) setStoryteller(prefill.storyteller)
       if (prefill.phases && prefill.phases.length > 0) setCommittedPhases(prefill.phases)
       setCustomScript(prefill.customScript)
       setCustomRoles(prefill.customRoles)
+      setFormResetToken((t) => t + 1)
       setStep(1)
     },
     [],
@@ -446,30 +437,19 @@ export function AddGame() {
     : selectedServer?.slug
       ? `/s/${selectedServer.slug}`
       : '/dashboard'
-  const backLabel = urlServerSlug
-    ? '← Back to server'
-    : selectedServerId
-      ? `← ${myServers.find((s) => s.serverId === selectedServerId)?.name ?? 'Back to server'}`
-      : '← Back to dashboard'
 
   if (showPreview && derivedGame) {
     return (
-      <div className="relative min-h-screen">
+      <div className="fixed inset-0 z-9999 overflow-auto bg-background">
         <GameView game={derivedGame} gameId={draftId ?? undefined} />
-        <div className="fixed right-4 top-4 z-1001 flex gap-2">
-          <button
+        <div className="fixed right-1/2 top-2 z-10000 flex gap-2">
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setShowPreview(false)}
-            className="rounded bg-card px-4 py-2 text-sm font-medium text-foreground shadow-lg ring-1 ring-border hover:bg-muted backdrop-blur-sm"
           >
             ← Back to editing
-          </button>
-          <Link
-            to={backLink}
-            className="rounded border border-border bg-card px-4 py-2 text-sm text-foreground hover:bg-muted backdrop-blur-sm"
-          >
-            {selectedServerId ? 'Back to server' : 'Back to dashboard'}
-          </Link>
+          </Button>
         </div>
       </div>
     )
@@ -480,7 +460,7 @@ export function AddGame() {
       <div className="mx-auto max-w-4xl px-4 py-6">
         <div className="mb-6">
           <Link to={backLink} className="text-sm text-primary hover:underline">
-            {backLabel}
+            ← Back
           </Link>
           <h1 className="mt-2 text-2xl font-bold text-primary">
             {editGameId || urlGameSlug ? 'Edit game' : 'Add game'}
@@ -488,27 +468,6 @@ export function AddGame() {
           <p className="text-muted-foreground">
             Step {step + 1} of {STEPS.length}: {STEPS[step]}
           </p>
-
-          {/* Draft offer */}
-          {draftOffer && (
-            <div className="mt-3 flex items-center gap-3 rounded border border-primary/50 bg-primary/10 px-3 py-2 text-sm">
-              <span className="text-primary">You have an existing draft.</span>
-              <button
-                type="button"
-                onClick={resumeDraft}
-                className="rounded bg-primary px-3 py-1 font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Resume draft
-              </button>
-              <button
-                type="button"
-                onClick={() => setDraftOffer(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Server picker — shown when not coming from a specific server URL */}
@@ -611,33 +570,39 @@ export function AddGame() {
             key={formResetToken}
             defaultValues={metaFormValues}
             saving={saving}
-            saveStatus={saveStatus}
             derivedGame={derivedGame}
             edition={metaFormValues.edition}
             onBack={goBack}
             onSave={handleSaveMetaOnly}
             onSaveAndNext={handleSaveMeta}
-            onShowPreview={() => setShowPreview(true)}
           />
         )}
 
         {step === 2 && (
           <ImportPanel
             townSquare={townSquare}
-            saveStatus={saveStatus}
+            saving={saving}
             loading={loadingImport}
             rolesList={rolesList}
+            bluffsRoleList={bluffsRoleList}
             derivedGame={derivedGame}
             edition={metaFormValues.edition}
             customScript={customScript}
             customRoles={customRoles}
+            storyteller={storyteller}
             onCustomScriptChange={setCustomScript}
             onCustomRolesChange={setCustomRoles}
             onFileUpload={handleFileUpload}
             onPasteSubmit={handlePasteSubmit}
             onReplaceWithPaste={handleReplaceWithPaste}
             onUpdateTownSquare={setTownSquare}
+            onStorytellerChange={setStoryteller}
+            onBack={goBack}
             onNext={() => setStep(3)}
+            onSwitchScript={(edition) =>
+              setMetaFormValues((prev) => ({ ...prev, edition }))
+            }
+            onSaveDraft={handleSaveImportDraft}
           />
         )}
 
@@ -648,7 +613,6 @@ export function AddGame() {
             rolesList={rolesList}
             defaultPhases={committedPhases}
             saving={saving}
-            saveStatus={saveStatus}
             derivedGame={derivedGame}
             onBack={goBack}
             onSaveDraft={handleSavePhaseDraft}

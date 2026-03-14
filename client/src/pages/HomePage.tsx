@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import { getServers, createServer } from '@/api/servers'
 import { getMyGames } from '@/api/explore'
 import type { MyServerItem } from '@/types/api.types'
@@ -13,6 +14,8 @@ import { StatItem } from '@/components/ui/StatItem'
 export function HomePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const gameSavedSlug = searchParams.get('gameSaved')
 
   const [servers, setServers] = useState<MyServerItem[]>([])
   const [serversLoading, setServersLoading] = useState(true)
@@ -56,6 +59,23 @@ export function HomePage() {
   useEffect(() => {
     if (creating) inputRef.current?.focus()
   }, [creating])
+
+  useEffect(() => {
+    if (!gameSavedSlug) return
+    const slug = gameSavedSlug
+    toast.success('Game saved', {
+      action: {
+        label: 'View game',
+        onClick: () => navigate(`/game/${slug}`),
+      },
+      duration: 6000,
+    })
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('gameSaved')
+      return next
+    }, { replace: true })
+  }, [gameSavedSlug])
 
   const handleCreateServer = async (e: React.FormEvent) => {
     e.preventDefault()

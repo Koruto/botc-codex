@@ -1,4 +1,5 @@
 import { useForm, useFieldArray } from 'react-hook-form'
+import { Button } from '@/components/Button'
 import type { ExecutionEvent, GameEvent, GamePhase, Player } from '@/types'
 import { PhaseType } from '@/types'
 import type { DerivedGame } from '@/types'
@@ -24,7 +25,6 @@ export type EventsPanelProps = {
   rolesList?: RoleOption[]
   defaultPhases?: GamePhase[]
   saving: boolean
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   derivedGame: DerivedGame | null
   onBack: () => void
   onSaveDraft: (phases: GamePhase[]) => void | Promise<void>
@@ -79,7 +79,6 @@ export function EventsPanel({
   rolesList = [],
   defaultPhases,
   saving,
-  saveStatus,
   derivedGame,
   onBack,
   onSaveDraft,
@@ -147,7 +146,6 @@ export function EventsPanel({
     setValue(`phases.${phaseIndex}.events`, newEvents)
   }
 
-  const handleSaveDraft = handleSubmit((data) => onSaveDraft(data.phases))
   const handleSaveGame = handleSubmit((data) => onSaveGame(data.phases))
 
   return (
@@ -610,43 +608,25 @@ export function EventsPanel({
       </button>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveDraft}
-          disabled={saving}
-          className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/20 disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : 'Save draft'}
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveGame}
-          disabled={saving}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          Save game
-        </button>
+        <Button type="button" variant="ghost" onClick={onBack} disabled={saving}>
+          ← Back
+        </Button>
         {derivedGame && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            disabled={saving}
             onClick={handleSubmit(async (data) => {
               await onSaveDraft(data.phases)
               onShowPreview()
             })}
-            className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/10"
           >
-            Preview full page
-          </button>
+            Preview
+          </Button>
         )}
-        {saveStatus === 'saved' && <span className="text-sm text-green-400">Draft saved</span>}
-        {saveStatus === 'error' && <span className="text-sm text-red-400">Save failed</span>}
+        <Button type="button" onClick={handleSaveGame} disabled={saving}>
+          {saving ? 'Saving…' : 'Save & Finish'}
+        </Button>
       </div>
     </section>
   )

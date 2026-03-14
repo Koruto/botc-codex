@@ -46,9 +46,20 @@ export const getGameBySlug = async (slug: string) => {
   }
 }
 
-export const getGames = async (serverId: string, skip = 0, limit = 20) => {
+export type GamesSortField = 'updatedAt' | 'playedOn' | 'edition' | 'winner' | 'playerCount'
+export type GamesSortOrder = 'asc' | 'desc'
+
+export const getGames = async (
+  serverId: string,
+  skip = 0,
+  limit = 20,
+  sort: GamesSortField = 'updatedAt',
+  order: GamesSortOrder = 'desc'
+) => {
   try {
-    const res = await http.get<PaginatedGamesResponse>(`/api/servers/${serverId}/games?skip=${skip}&limit=${limit}`)
+    const res = await http.get<PaginatedGamesResponse>(
+      `/api/servers/${serverId}/games?skip=${skip}&limit=${limit}&sort=${sort}&order=${order}`
+    )
     return res.data
   } catch (error) {
     throw error

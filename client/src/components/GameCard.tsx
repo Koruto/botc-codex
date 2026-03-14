@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import type { GameDocument } from '@/types'
 import { Button } from '@/components/Button'
+import { Download } from 'lucide-react'
 
 const EDITION_LABELS: Record<string, string> = {
   tb: 'Trouble Brewing',
@@ -59,6 +60,10 @@ export interface GameCardProps {
   showPrivacyToggle?: boolean
   /** Called when user changes visibility. */
   onVisibilityChange?: (visibility: 'public' | 'private') => void
+  /** Show download JSON button (e.g. on server page). */
+  showDownload?: boolean
+  /** Called when user clicks download. */
+  onDownload?: () => void
 }
 
 export function GameCard({
@@ -74,6 +79,8 @@ export function GameCard({
   serverSlug,
   showPrivacyToggle = false,
   onVisibilityChange,
+  showDownload = false,
+  onDownload,
 }: GameCardProps) {
   const serverName = showServerName ? (serverNameOverride ?? doc.serverName ?? null) : null
   const headline = doc.title || doc.name || 'Untitled'
@@ -83,7 +90,13 @@ export function GameCard({
   const script = scriptLine(doc)
   const isYou = currentUserId && doc.createdBy === currentUserId
   const authorLabel = showAuthor ? (isYou ? 'By You' : doc.createdByUsername ? `By ${doc.createdByUsername}` : null) : null
-  const timeAgo = doc.updatedAt ? relativeTime(doc.updatedAt) : (doc.createdAt ? relativeTime(doc.createdAt) : '')
+  const playedOn = doc.meta?.playedOn?.trim()
+  const timeAgo = playedOn
+    ? (() => {
+      const d = new Date(playedOn)
+      return isNaN(d.getTime()) ? '' : relativeTime(playedOn)
+    })()
+    : (doc.updatedAt ? relativeTime(doc.updatedAt) : doc.createdAt ? relativeTime(doc.createdAt) : '')
 
   if (variant === 'row') {
     const gameUrl = doc.slug ? `/game/${doc.slug}` : `/game/${doc.gameId}`
@@ -154,6 +167,17 @@ export function GameCard({
                 Edit
               </Link>
             ))}
+          {showDownload && onDownload && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onDownload() }}
+              title="Download JSON"
+              aria-label="Download JSON"
+            >
+              <Download className="size-4" />
+            </Button>
+          )}
         </div>
       </div>
     )

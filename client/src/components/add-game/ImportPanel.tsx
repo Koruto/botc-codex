@@ -4,43 +4,63 @@ import type { RoleOption } from '@/types'
 import type { CustomScript, RoleInfo } from '@/types/grimoire.types'
 import type { TownSquareGameState, TownSquarePlayer } from '@/types/townSquare.types'
 import type { DerivedGame } from '@/types'
+import { suggestEditionForRoleIds, EDITION_LABELS, getRolesList } from '@/utils/roles'
+import { Button } from '@/components/Button'
+import { X } from 'lucide-react'
+
+const allRolesMap = new Map(getRolesList().map((r) => [r.id, r.name]))
 
 const DEFAULT_SCRIPT_META = { id: '_meta' as const, name: '', author: '' }
 
 export type ImportPanelProps = {
   townSquare: TownSquareGameState | null
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
+  saving: boolean
   loading: boolean
   rolesList: RoleOption[]
+  /** Role options for bluffs (townsfolk + outsider only). Falls back to rolesList if not provided. */
+  bluffsRoleList?: RoleOption[]
   derivedGame: DerivedGame | null
   edition?: string
   customScript?: CustomScript | null
   customRoles?: RoleInfo[]
+  storyteller: string
   onCustomScriptChange?: (script: CustomScript | null) => void
   onCustomRolesChange?: (roles: RoleInfo[]) => void
   onFileUpload: (file: File) => Promise<void>
   onPasteSubmit: (json: string) => Promise<void>
   onReplaceWithPaste: (json: string) => Promise<void>
   onUpdateTownSquare: (ts: TownSquareGameState) => void
+  onStorytellerChange: (value: string) => void
+  onBack: () => void
   onNext: () => void
+  /** When most roles are unknown, suggest switching script. Only for base editions (tb/bmr/snv). */
+  onSwitchScript?: (edition: 'tb' | 'bmr' | 'snv') => void
+  /** Save current import/game state to draft. */
+  onSaveDraft?: () => void | Promise<void>
 }
 
 export function ImportPanel({
   townSquare,
-  saveStatus,
+  saving,
   loading,
   rolesList,
+  bluffsRoleList,
   derivedGame,
   edition,
   customScript,
   customRoles = [],
+  storyteller,
   onCustomScriptChange,
   onCustomRolesChange,
   onFileUpload,
   onPasteSubmit,
   onReplaceWithPaste,
   onUpdateTownSquare,
+  onStorytellerChange,
+  onBack,
   onNext,
+  onSwitchScript,
+  onSaveDraft,
 }: ImportPanelProps) {
   const [pasteJson, setPasteJson] = useState('')
   const [pasteError, setPasteError] = useState<string | null>(null)
@@ -131,9 +151,8 @@ export function ImportPanel({
       <div className="mb-6">
         <p className="mb-2 text-sm text-muted-foreground">Upload grimoire image</p>
         <div
-          className={`flex flex-col items-center justify-center rounded border-2 border-dashed py-10 text-muted-foreground transition-colors ${
-            loading ? 'border-primary/50 bg-muted/50' : 'border-input hover:border-primary hover:bg-muted/30'
-          }`}
+          className={`flex flex-col items-center justify-center rounded border-2 border-dashed py-10 text-muted-foreground transition-colors ${loading ? 'border-primary/50 bg-muted/50' : 'border-input hover:border-primary hover:bg-muted/30'
+            }`}
           onDrop={(e) => {
             e.preventDefault()
             const f = e.dataTransfer.files[0]
@@ -186,23 +205,23 @@ export function ImportPanel({
         />
         {pasteError && <p className="mt-1 text-sm text-red-400">{pasteError}</p>}
         <div className="mt-2 flex gap-2">
-          <button
+          <Button
             type="button"
+            variant="primary"
             onClick={handlePasteSubmit}
             disabled={loading}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? 'Processing…' : 'Use pasted JSON'}
-          </button>
+          </Button>
           {hasImported && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={handleReplaceWithPaste}
               disabled={loading}
-              className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50"
             >
               Replace with pasted JSON
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -214,6 +233,40 @@ export function ImportPanel({
           <p className="mb-3 text-sm text-muted-foreground">
             Edit player names and roles below. Roles are stored by id; changes update the grimoire preview in real time.
           </p>
+          {(() => {
+            const roleIds = townSquare.players.map((p) => p.role).filter(Boolean)
+            const unknownCount = roleIds.filter((id) => id === 'unknown').length
+            const isBaseEdition = edition === 'tb' || edition === 'bmr' || edition === 'snv'
+            const suggestedEdition = isBaseEdition ? suggestEditionForRoleIds(edition ?? '', roleIds) : null
+            const showBanner = Boolean(isBaseEdition && suggestedEdition && onSwitchScript)
+            console.log('[ImportPanel] Script suggestion', {
+              roleIds,
+              unknownCount,
+              totalRoles: roleIds.length,
+              edition,
+              isBaseEdition,
+              suggestedEdition: suggestedEdition ?? null,
+              showBanner,
+              result: showBanner ? `Showing banner: switch to ${EDITION_LABELS[suggestedEdition!]}` : 'No banner shown',
+            })
+            return showBanner ? (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-foreground">
+                <span>
+                  Most roles match {EDITION_LABELS[suggestedEdition!]} better than {EDITION_LABELS[edition!] ?? edition}. This might be {EDITION_LABELS[suggestedEdition!]}.
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    onSwitchScript?.(suggestedEdition!)
+                    console.log('[ImportPanel] Switch script clicked', { suggestedEdition: suggestedEdition!, label: EDITION_LABELS[suggestedEdition!] })
+                  }}
+                >
+                  Switch to {EDITION_LABELS[suggestedEdition!]}
+                </Button>
+              </div>
+            ) : null
+          })()}
           <div className="mb-4 overflow-x-auto rounded-lg border border-border bg-muted/50">
             <table className="w-full min-w-[320px] border-collapse text-sm">
               <thead>
@@ -244,7 +297,7 @@ export function ImportPanel({
                         className="w-full min-w-[140px] rounded border border-input bg-background px-2 py-1 text-foreground focus:border-primary focus:outline-none"
                       >
                         {!rolesList.some((r) => r.id === player.role) && player.role && (
-                          <option value={player.role}>{player.role} (unknown)</option>
+                          <option value={player.role}>{player.role} (not in script)</option>
                         )}
                         {rolesList.map((r) => (
                           <option key={r.id} value={r.id}>{r.name}</option>
@@ -252,15 +305,16 @@ export function ImportPanel({
                       </select>
                     </td>
                     <td className="px-2 py-1.5">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => removePlayer(i)}
                         disabled={townSquare.players.length <= 1}
-                        className="rounded p-1 text-stone-400 hover:bg-stone-700 hover:text-red-400 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-stone-400"
                         title="Remove player"
                       >
-                        ×
-                      </button>
+                        <X className="size-3.5" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -278,28 +332,51 @@ export function ImportPanel({
           </div>
 
           {/* Demon bluffs */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-foreground">Bluffs:</span>
-            {[0, 1, 2].map((i) => (
-              <span key={i} className="flex items-center gap-1">
-                <span className="text-xs text-muted-foreground">{i + 1}.</span>
-                <select
-                  value={townSquare.bluffs?.[i] ?? ''}
-                  onChange={(e) => {
-                    const next = [...(townSquare.bluffs ?? [])]
-                    while (next.length < i + 1) next.push('')
-                    next[i] = e.target.value
-                    onUpdateTownSquare({ ...townSquare, bluffs: next.filter(Boolean).length ? next : [] })
-                  }}
-                  className="min-w-[120px] rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
-                >
-                  <option value="">—</option>
-                  {rolesList.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
-              </span>
-            ))}
+          <div className="mb-4">
+            <span className="mb-2 block text-sm font-medium text-foreground">Bluffs</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {[0, 1, 2].map((i) => {
+                const currentBluff = townSquare.bluffs?.[i] ?? ''
+                const bluffOptions = bluffsRoleList ?? rolesList
+                const inList = !currentBluff || bluffOptions.some((r) => r.id === currentBluff)
+                const fallbackName = !inList ? (allRolesMap.get(currentBluff) ?? currentBluff) : ''
+                return (
+                  <span key={i} className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">{i + 1}.</span>
+                    <select
+                      value={currentBluff}
+                      onChange={(e) => {
+                        const next = [...(townSquare.bluffs ?? [])]
+                        while (next.length < i + 1) next.push('')
+                        next[i] = e.target.value
+                        onUpdateTownSquare({ ...townSquare, bluffs: next.filter(Boolean).length ? next : [] })
+                      }}
+                      className="min-w-[120px] rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
+                    >
+                      <option value="">—</option>
+                      {!inList && currentBluff && (
+                        <option value={currentBluff}>{fallbackName} (not in script)</option>
+                      )}
+                      {bluffOptions.map((r) => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Storyteller */}
+          <div className="mb-6">
+            <label className="mb-1 block text-sm font-medium text-foreground">Storyteller</label>
+            <input
+              type="text"
+              value={storyteller}
+              onChange={(e) => onStorytellerChange(e.target.value)}
+              placeholder="e.g. Ele"
+              className="w-full max-w-xs rounded border border-input bg-background px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
           </div>
 
           {edition === 'custom' && onCustomScriptChange && onCustomRolesChange && (
@@ -468,18 +545,37 @@ export function ImportPanel({
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-4">
-            <button
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button type="button" variant="ghost" onClick={onBack} disabled={loading}>
+              ← Back
+            </Button>
+            {onSaveDraft && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onSaveDraft()}
+                disabled={loading || saving}
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </Button>
+            )}
+            <Button
               type="button"
-              onClick={onNext}
-              disabled={loading}
-              className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              onClick={async () => { await onSaveDraft?.(); onNext() }}
+              disabled={loading || saving}
             >
-              Continue to Events
-            </button>
-            {saveStatus === 'saved' && <span className="text-sm text-green-400">Draft saved</span>}
-            {saveStatus === 'error' && <span className="text-sm text-red-400">Save failed</span>}
+              Save & Continue →
+            </Button>
           </div>
+        </div>
+      )}
+
+      {/* Bottom nav when nothing imported yet */}
+      {!hasImported && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button type="button" variant="ghost" onClick={onBack} disabled={loading}>
+            ← Back
+          </Button>
         </div>
       )}
     </section>

@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getServerBySlug, updateServer } from '@/api/servers'
-import { getGames, updateGame } from '@/api/games'
+import { getGames, getServerGameBySlug, getServerGame, updateGame, type GamesSortField, type GamesSortOrder } from '@/api/games'
 import type { ServerDocument } from '@/types/api.types'
 import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
+import { toast } from 'sonner'
 import { Button } from '@/components/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { GameCard } from '@/components/GameCard'
@@ -22,7 +23,10 @@ const PAGE_SIZE = 20
 
 export function ServerPage() {
   const { serverSlug } = useParams<{ serverSlug: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const { user } = useAuth()
+  const gameSavedSlug = searchParams.get('gameSaved')
 
   const [server, setServer] = useState<ServerDocument | null>(null)
   const [serverLoading, setServerLoading] = useState(true)
@@ -31,7 +35,12 @@ export function ServerPage() {
   const [games, setGames] = useState<GameDocument[]>([])
   const [total, setTotal] = useState(0)
   const [skip, setSkip] = useState(0)
+  const [gamesSort, setGamesSort] = useState<GamesSortField>('updatedAt')
+  const [gamesOrder, setGamesOrder] = useState<GamesSortOrder>('desc')
   const [gamesLoading, setGamesLoading] = useState(true)
+
+  // All games fetched once for stats (win counts etc.)
+  const [statsGames, setStatsGames] = useState<GameDocument[]>([])
 
   const [renaming, setRenaming] = useState(false)
   const [renameName, setRenameName] = useState('')
@@ -62,7 +71,7 @@ export function ServerPage() {
     const load = async () => {
       setGamesLoading(true)
       try {
-        const res = await getGames(server.serverId, skip, PAGE_SIZE)
+        const res = await getGames(server.serverId, skip, PAGE_SIZE, gamesSort, gamesOrder)
         setGames(res.items)
         setTotal(res.total)
       } catch {
@@ -72,7 +81,32 @@ export function ServerPage() {
       }
     }
     load()
-  }, [server?.serverId, skip])
+  }, [server?.serverId, skip, gamesSort, gamesOrder])
+
+  useEffect(() => {
+    if (!server?.serverId || total === 0) return
+    const limit = Math.min(total, 500)
+    getGames(server.serverId, 0, limit, 'playedOn', 'desc')
+      .then((res) => setStatsGames(res.items))
+      .catch(() => { })
+  }, [server?.serverId, total])
+
+  useEffect(() => {
+    if (!gameSavedSlug) return
+    const slug = gameSavedSlug
+    toast.success('Game saved', {
+      action: {
+        label: 'View game',
+        onClick: () => navigate(`/game/${slug}`),
+      },
+      duration: 6000,
+    })
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('gameSaved')
+      return next
+    }, { replace: true })
+  }, [gameSavedSlug])
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,12 +140,48 @@ export function ServerPage() {
         setGames((prev) =>
           prev.map((g) => (g.gameId === gameId ? { ...g, visibility } : g))
         )
+        toast(visibility === 'private' ? 'Changed to private' : 'Changed to public')
       } catch {
-        // Optionally show toast; list will refresh on next load
+        // list will refresh on next load
       }
     },
     [server?.serverId]
   )
+
+  const handleDownloadGame = useCallback(
+    async (doc: GameDocument) => {
+      if (!server?.serverId) return
+      try {
+        const full =
+          doc.slug
+            ? await getServerGameBySlug(server.serverId, doc.slug)
+            : await getServerGame(server.serverId, doc.gameId)
+        const exportData = {
+          townSquare: full.townSquare,
+          meta: full.meta,
+          phases: full.phases,
+          title: full.title,
+          subtitle: full.subtitle,
+          name: full.name,
+        }
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+          type: 'application/json',
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `game-${full.slug || full.gameId}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch {
+        toast.error('Failed to download game')
+      }
+    },
+    [server?.serverId]
+  )
+
+  const goodWins = useMemo(() => statsGames.filter((g) => g.winner === 'good').length, [statsGames])
+  const evilWins = useMemo(() => statsGames.filter((g) => g.winner === 'evil').length, [statsGames])
 
   if (serverLoading) {
     return <p className="py-8 text-sm text-muted-foreground">Loading…</p>
@@ -211,16 +281,42 @@ export function ServerPage() {
       <div className="app-card mb-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 px-6 py-5">
           <StatItem value={total} label="Games" />
-          <StatItem value="—" label="Good wins" faint />
-          <StatItem value="—" label="Evil wins" faint />
+          <StatItem value={statsGames.length > 0 ? goodWins : '—'} label="Good wins" faint={statsGames.length === 0} />
+          <StatItem value={statsGames.length > 0 ? evilWins : '—'} label="Evil wins" faint={statsGames.length === 0} />
           <StatItem value="—" label="Members" faint />
         </div>
       </div>
 
       {/* Games list */}
       <div className="app-card">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5 border-b border-border">
           <span className="text-sm font-semibold text-foreground">Games</span>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground" htmlFor="games-sort">
+              Sort:
+            </label>
+            <select
+              id="games-sort"
+              value={`${gamesSort}-${gamesOrder}`}
+              onChange={(e) => {
+                const [s, o] = e.target.value.split('-') as [GamesSortField, GamesSortOrder]
+                setGamesSort(s)
+                setGamesOrder(o)
+                setSkip(0)
+              }}
+              className="rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            >
+              <option value="playedOn-desc">Date played (newest)</option>
+              <option value="playedOn-asc">Date played (oldest)</option>
+              <option value="updatedAt-desc">Last updated</option>
+              <option value="updatedAt-asc">Last updated (oldest)</option>
+              <option value="edition-asc">Script (A–Z)</option>
+              <option value="edition-desc">Script (Z–A)</option>
+              <option value="winner-asc">Winner</option>
+              <option value="playerCount-desc">Players (most)</option>
+              <option value="playerCount-asc">Players (fewest)</option>
+            </select>
+          </div>
         </div>
 
         {gamesLoading ? (
@@ -262,6 +358,8 @@ export function ServerPage() {
                   onVisibilityChange={(visibility) =>
                     handleVisibilityChange(doc.gameId, visibility)
                   }
+                  showDownload={isMember}
+                  onDownload={() => handleDownloadGame(doc)}
                 />
               )
             })}

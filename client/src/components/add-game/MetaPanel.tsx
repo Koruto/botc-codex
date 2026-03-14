@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { DerivedGame } from '@/types'
 import { DatePicker } from '@/components/ui/date-picker'
+import { Button } from '@/components/Button'
 
 const EDITION_OPTIONS = [
   { id: 'tb', label: 'Trouble Brewing' },
@@ -17,12 +18,6 @@ const metaSchema = z.object({
   subtitle: z.string(),
   playedOn: z.string().min(1, 'Date played is required'),
   edition: z.string().min(1, 'Edition is required'),
-  playerCount: z
-    .number({ error: 'Required' })
-    .int('Must be a whole number')
-    .min(5, 'Min 5 players')
-    .max(20, 'Max 20 players'),
-  storyteller: z.string().min(1, 'Storyteller is required'),
   winner: z.enum(['', 'good', 'evil']).optional(),
 })
 
@@ -31,13 +26,11 @@ export type MetaFormValues = z.infer<typeof metaSchema>
 export type MetaPanelProps = {
   defaultValues?: Partial<MetaFormValues>
   saving: boolean
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   derivedGame: DerivedGame | null
   edition?: string
   onBack: () => void
   onSave: (data: MetaFormValues) => void | Promise<void>
   onSaveAndNext: (data: MetaFormValues) => void | Promise<void>
-  onShowPreview: () => void
 }
 
 const inputClass =
@@ -67,12 +60,9 @@ function FormField({
 export function MetaPanel({
   defaultValues,
   saving,
-  saveStatus,
-  derivedGame,
   onBack,
   onSave,
   onSaveAndNext,
-  onShowPreview,
 }: MetaPanelProps) {
   const resolvedDefaults: Partial<MetaFormValues> = {
     gameName: '',
@@ -80,8 +70,6 @@ export function MetaPanel({
     subtitle: '',
     playedOn: '',
     edition: 'tb',
-    playerCount: 0,
-    storyteller: '',
     winner: '',
     ...defaultValues,
   }
@@ -143,25 +131,6 @@ export function MetaPanel({
               ))}
             </select>
           </FormField>
-
-          <FormField label="Player count" error={errors.playerCount?.message}>
-            <input
-              {...register('playerCount', { valueAsNumber: true })}
-              type="number"
-              min={5}
-              max={20}
-              className={inputClass}
-            />
-          </FormField>
-
-          <FormField label="Storyteller" error={errors.storyteller?.message}>
-            <input
-              {...register('storyteller')}
-              type="text"
-              placeholder="e.g. Ele"
-              className={inputClass}
-            />
-          </FormField>
         </div>
 
         <div className="mt-4 grid gap-4">
@@ -193,38 +162,15 @@ export function MetaPanel({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit(onSave)}
-            disabled={saving}
-            className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/20 disabled:opacity-50"
-          >
+          <Button type="button" variant="ghost" onClick={onBack} disabled={saving}>
+            ← Back
+          </Button>
+          <Button type="button" variant="secondary" onClick={handleSubmit(onSave)} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save & continue'}
-          </button>
-          {derivedGame && (
-            <button
-              type="button"
-              onClick={onShowPreview}
-              className="rounded border border-primary px-4 py-2 text-sm text-primary hover:bg-primary/10"
-            >
-              Preview full page
-            </button>
-          )}
-          {saveStatus === 'saved' && <span className="text-sm text-green-400">Draft saved</span>}
+          </Button>
+          <Button type="submit" variant="primary" disabled={saving}>
+            {saving ? 'Saving…' : 'Save & Continue →'}
+          </Button>
         </div>
       </section>
     </form>

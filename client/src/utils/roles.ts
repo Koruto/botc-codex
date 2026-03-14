@@ -44,3 +44,71 @@ export function getDemonRoleIds(): Set<string> {
   cachedDemonRoleIds = new Set(roles.filter((r) => r.team === 'demon').map((r) => r.id.toUpperCase()))
   return cachedDemonRoleIds
 }
+
+const BLUFF_TEAMS = new Set<string>(['townsfolk', 'outsider'])
+const cachedBluffsByEdition = new Map<string, RoleOption[]>()
+
+/** Role options for demon bluffs: only townsfolk and outsiders (no minion/demon). */
+export function getBluffsRoleOptions(
+  edition: string,
+  customRoles?: { id: string; name: string; team?: string }[]
+): RoleOption[] {
+  if (edition === 'custom' && customRoles?.length) {
+    const filtered = customRoles.filter(
+      (r) => r.team === 'townsfolk' || r.team === 'outsider'
+    )
+    return filtered.map((r) => ({ id: r.id, name: r.name }))
+  }
+  if (edition === 'tb' || edition === 'bmr' || edition === 'snv') {
+    const cached = cachedBluffsByEdition.get(edition)
+    if (cached) return cached
+    const ids = scriptByEdition[edition]
+    const list: RoleOption[] = ids
+      .filter((id) => {
+        const row = rolesById.get(id)
+        return row && BLUFF_TEAMS.has(row.team)
+      })
+      .map((id) => {
+        const row = rolesById.get(id)
+        return { id, name: row?.name ?? id }
+      })
+    cachedBluffsByEdition.set(edition, list)
+    return list
+  }
+  return roles
+    .filter((r) => BLUFF_TEAMS.has(r.team))
+    .map((r) => ({ id: r.id, name: r.name }))
+}
+
+const BASE_EDITIONS = ['tb', 'bmr', 'snv'] as const
+export const EDITION_LABELS: Record<string, string> = {
+  tb: 'Trouble Brewing',
+  bmr: 'Bad Moon Rising',
+  snv: 'Sects & Violets',
+  custom: 'Custom Script',
+}
+
+/**
+ * Given current edition and role ids from players, suggest a base script that matches better.
+ * Only for base editions (tb, bmr, snv). Returns the other script with strictly more matches, or null.
+ */
+export function suggestEditionForRoleIds(
+  currentEdition: string,
+  roleIds: string[]
+): 'tb' | 'bmr' | 'snv' | null {
+  if (currentEdition !== 'tb' && currentEdition !== 'bmr' && currentEdition !== 'snv') return null
+  const currentSet = new Set(scriptByEdition[currentEdition])
+  const currentMatches = roleIds.filter((id) => id && id !== 'unknown' && currentSet.has(id)).length
+  let bestEdition: 'tb' | 'bmr' | 'snv' | null = null
+  let bestCount = currentMatches
+  for (const ed of BASE_EDITIONS) {
+    if (ed === currentEdition) continue
+    const set = new Set(scriptByEdition[ed])
+    const count = roleIds.filter((id) => id && id !== 'unknown' && set.has(id)).length
+    if (count > bestCount) {
+      bestCount = count
+      bestEdition = ed
+    }
+  }
+  return bestEdition
+}

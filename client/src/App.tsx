@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { AuthProvider } from '@/context/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { Toaster } from '@/components/ui/sonner'
 import { Layout } from './components/Layout'
 import { LandingPage } from './pages/LandingPage'
 import { HomePage } from './pages/HomePage'
@@ -85,6 +86,7 @@ export default function App() {
             </Route>
           </Route>
         </Routes>
+        <Toaster />
         <Analytics />
         <SpeedInsights />
       </AuthProvider>

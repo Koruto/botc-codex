@@ -3,6 +3,7 @@ import type { GameDocument, GamePhase } from '@/types'
 import type { MetaFormValues } from './MetaPanel'
 import type { TownSquareGameState } from '@/types/townSquare.types'
 import type { CustomScript, RoleInfo } from '@/types/grimoire.types'
+import { Button } from '@/components/Button'
 
 export type ImportGameJsonPanelProps = {
   onPrefill: (prefill: {
@@ -12,6 +13,7 @@ export type ImportGameJsonPanelProps = {
     title: string
     subtitle: string
     name: string
+    storyteller: string
     customScript: CustomScript | null
     customRoles: RoleInfo[]
   }) => void
@@ -47,8 +49,7 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
       subtitle: typeof d.subtitle === 'string' ? d.subtitle : '',
       playedOn: meta?.playedOn ?? '',
       edition: meta?.edition ?? '',
-      playerCount: typeof meta?.playerCount === 'number' ? meta.playerCount : 0,
-      storyteller: meta?.storyteller ?? '',
+      winner: (d.winner === 'good' || d.winner === 'evil') ? d.winner : '',
     }
     const customScript = meta?.script && typeof meta.script === 'object' && Array.isArray((meta.script as CustomScript).roles)
       ? (meta.script as CustomScript)
@@ -62,6 +63,7 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
       title: typeof d.title === 'string' ? d.title : '',
       subtitle: typeof d.subtitle === 'string' ? d.subtitle : '',
       name: typeof d.name === 'string' ? d.name : '',
+      storyteller: meta?.storyteller ?? '',
       customScript,
       customRoles,
     })
@@ -100,7 +102,7 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
         />
         {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <input
           type="file"
           accept=".json,application/json"
@@ -108,27 +110,21 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
           className="hidden"
           id="import-game-json-file"
         />
-        <label
-          htmlFor="import-game-json-file"
-          className="cursor-pointer rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          Upload JSON file
-        </label>
-        <button
+        <Button variant="secondary" asChild>
+          <label htmlFor="import-game-json-file" className="cursor-pointer">
+            Upload JSON
+          </label>
+        </Button>
+        <Button
           type="button"
           onClick={handleSubmit}
           disabled={!pasteJson.trim()}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          Continue to Meta
-        </button>
-        <button
-          type="button"
-          onClick={onSkip}
-          className="rounded border border-input px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          Skip to Meta
-        </button>
+          Continue →
+        </Button>
+        <Button type="button" variant="ghost" onClick={onSkip}>
+          Skip
+        </Button>
       </div>
     </section>
   )
