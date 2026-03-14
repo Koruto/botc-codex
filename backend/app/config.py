@@ -45,6 +45,11 @@ GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 # Email address that receives feedback notifications.
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
 
+# ----- CORS -----
+CORS_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o.strip()
+]
+
 # ----- Cookies -----
 # In development (Vite proxy or same-site), keep COOKIE_SECURE=false and COOKIE_SAMESITE=lax.
 # In production (HTTPS, cross-origin), set COOKIE_SECURE=true and COOKIE_SAMESITE=none.
