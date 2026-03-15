@@ -1,12 +1,19 @@
+# Core API
 fastapi
 uvicorn[standard]
 python-dotenv
 python-multipart
-pillow
-opencv-python
-numpy
 pydantic
-easyocr
+
+# Image handling (headless only — no GUI; keeps deploy under 512MB)
+pillow
+opencv-python-headless
+numpy
+
+# OCR (lightweight wrapper; needs Tesseract binary on system/Render)
+pytesseract
+
+# DB & auth
 motor
 pymongo
 PyJWT

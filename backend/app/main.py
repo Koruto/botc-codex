@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import CORS_ORIGINS
 from app.db import connect_db, disconnect_db
 from app.routers import games, grimoire, root
-from app.routers import auth, feedback, servers, users
+from app.routers import auth, debug, feedback, servers, users
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +42,7 @@ app.add_middleware(
 
 app.include_router(root.router)
 app.include_router(grimoire.router)
+app.include_router(debug.router)
 app.include_router(auth.router)
 app.include_router(servers.router)
 app.include_router(games.router)

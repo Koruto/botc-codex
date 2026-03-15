@@ -1,122 +1,76 @@
-# Backend - BotC Grimoire Parser API
+# Backend – BotC Grimoire Parser API
 
-FastAPI backend service for parsing Blood on the Clocktower grimoire images.
+FastAPI backend for parsing Blood on the Clocktower grimoire images.
 
 ## Prerequisites
 
-- Python 3.8 or higher
-- pip (Python package manager)
+- Python 3.11+
+- **Tesseract OCR** system binary (required for player-name extraction)
+  - **Windows**: download the installer from [UB-Mannheim/tesseract](https://github.com/UB-Mannheim/tesseract/wiki) and add it to `PATH`, or just install it – the app auto-detects `C:\Program Files\Tesseract-OCR\tesseract.exe`.
+  - **Linux/Mac**: `sudo apt install tesseract-ocr` / `brew install tesseract`
 
-## Installation
+## Local Development
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+```bash
+cd backend
+python -m venv venv
 
-2. Create a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   ```
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
 
-3. Activate the virtual environment:
-   - **Windows**:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - **Linux/Mac**:
-     ```bash
-     source venv/bin/activate
-     ```
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-4. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The API will be available at `http://localhost:8000`.  
+Swagger UI: `http://localhost:8000/docs`
 
-## Running the Project
+## Production (Render)
 
-### Easy Way (Recommended)
+### Build Command
 
-Simply run the provided script:
+```bash
+./build.sh
+```
 
-- **Windows (Git Bash or Command Prompt)**:
-  ```bash
-  ./run.sh
-  ```
-  or
-  ```bash
-  run.bat
-  ```
+`build.sh` runs `apt-get install tesseract-ocr` **then** `pip install -r requirements.txt`.  
+Tesseract must be installed at build time because Render's filesystem is read-only at runtime and `apt-get` is only available during the build phase.
 
-- **Linux/Mac**:
-  ```bash
-  ./run.sh
-  ```
+### Start Command
 
-The script will automatically activate your virtual environment and start the server.
+```bash
+./start.sh
+```
 
-### Manual Way
+Binds to `0.0.0.0:$PORT` as required by Render. The `PORT` env var is set automatically by Render.
 
-1. Make sure you're in the `backend` directory and your virtual environment is activated.
+> **Note:** Do not use `run.sh` or a hardcoded port for the start command – Render will report "No open ports detected" and the deploy will fail.
 
-2. Start the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+### Filesystem note
 
-   The `--reload` flag enables auto-reload on code changes (useful for development).
+Render's filesystem is **read-only at runtime**. The debug pipeline endpoint gracefully skips saving debug images (`detected_tokens/`) when the filesystem is not writable – the JSON trace is still returned in full.
 
-3. The API will be available at:
-   - **API Base URL**: `http://localhost:8000`
-   - **Interactive API Docs (Swagger)**: `http://localhost:8000/docs`
-   - **Alternative API Docs (ReDoc)**: `http://localhost:8000/redoc`
+## Scripts
 
-## Accessing Swagger Documentation
+| Script | Purpose |
+|---|---|
+| `build.sh` | Render build: install Tesseract + Python deps |
+| `start.sh` | Render start: production uvicorn on `$PORT` |
+| `run.sh` | Local dev: activate venv + uvicorn with `--reload` |
 
-The FastAPI framework automatically generates interactive API documentation using Swagger UI. Here's how to access it:
+## Endpoints
 
-1. **Start the server** (see "Running the Project" above)
+| Method | Path | Description |
+|---|---|---|
+| GET | `/` | Root – confirms API is running |
+| GET | `/api/health` | Health check |
+| POST | `/api/grimoire/process` | Full grimoire image pipeline |
+| POST | `/api/debug/pipeline` | Step-by-step pipeline trace (no auth) |
 
-2. **Open your web browser** and navigate to:
-   ```
-   http://localhost:8000/docs
-   ```
+## Tech notes
 
-3. **Explore the API**:
-   - You'll see a list of all available endpoints
-   - Click on any endpoint to expand it and see details
-   - Click "Try it out" to test endpoints directly from the browser
-   - Enter any required parameters and click "Execute"
-   - View the response, including status codes and response bodies
-
-4. **Test Endpoints**:
-   - **GET /** - Root endpoint to verify the API is running
-   - **GET /api/health** - Health check endpoint
-
-## API Endpoints
-
-### Root Endpoint
-- **GET** `/`
-  - Returns a simple status message confirming the API is running
-  - Response includes a link to the documentation
-
-### Health Check
-- **GET** `/api/health`
-  - Returns the health status of the service
-  - Useful for monitoring and health checks
-
-## Development
-
-The project uses FastAPI with automatic API documentation. Any changes to the code will be reflected in the Swagger UI when using `--reload` mode.
-
-## Troubleshooting
-
-- **Port already in use**: If port 8000 is already in use, you can specify a different port:
-  ```bash
-  uvicorn app.main:app --reload --port 8001
-  ```
-
-- **Module not found**: Make sure you're in the `backend` directory and have activated your virtual environment before installing dependencies.
-
-- **Swagger UI not loading**: Ensure the server is running and accessible at `http://localhost:8000` before trying to access the docs.
+- **OpenCV**: `opencv-python-headless` (no GUI libs, keeps deploy under 512 MB).
+- **OCR**: `pytesseract` wraps the Tesseract binary – no heavy model downloads, fast startup.
+- **Image preprocessing**: bilateral filter + Otsu threshold before OCR to maximise accuracy on varied grimoire lighting.
