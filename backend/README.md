@@ -35,7 +35,7 @@ Swagger UI: `http://localhost:8000/docs`
 ./build.sh
 ```
 
-`build.sh` runs `apt-get install tesseract-ocr` **then** `pip install -r requirements.txt`.  
+`build.sh` runs `sudo apt-get install tesseract-ocr` **then** `pip install -r requirements.txt`.  
 Tesseract must be installed at build time because Render's filesystem is read-only at runtime and `apt-get` is only available during the build phase.
 
 ### Start Command

@@ -5,7 +5,7 @@
 set -euo pipefail
 
 echo "--- Installing Tesseract OCR ---"
-apt-get install -y --no-install-recommends tesseract-ocr
+sudo apt-get install -y --no-install-recommends tesseract-ocr
 
 echo "--- Installing Python dependencies ---"
 pip install -r requirements.txt
