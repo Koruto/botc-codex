@@ -29,24 +29,17 @@ Swagger UI: `http://localhost:8000/docs`
 
 ## Production (Render)
 
-### Build Command
+Deploy as a **Docker** service (not a Python service). Render's Python build environment has a read-only `/var/lib/apt`, so `apt-get` cannot be used there. A Dockerfile is the correct way to install Tesseract.
 
-```bash
-./build.sh
-```
+### Render dashboard settings
 
-`build.sh` runs `sudo apt-get install tesseract-ocr` **then** `pip install -r requirements.txt`.  
-Tesseract must be installed at build time because Render's filesystem is read-only at runtime and `apt-get` is only available during the build phase.
+| Field | Value |
+|---|---|
+| **Environment** | Docker |
+| **Dockerfile Path** | `./backend/Dockerfile` (or `./Dockerfile` if root is `backend/`) |
+| **Docker Context** | `./backend` |
 
-### Start Command
-
-```bash
-./start.sh
-```
-
-Binds to `0.0.0.0:$PORT` as required by Render. The `PORT` env var is set automatically by Render.
-
-> **Note:** Do not use `run.sh` or a hardcoded port for the start command – Render will report "No open ports detected" and the deploy will fail.
+Render will build the image, install Tesseract + Python deps inside it, and start the container automatically. No Build Command or Start Command fields needed — the `CMD` in the Dockerfile handles it.
 
 ### Filesystem note
 
@@ -56,9 +49,9 @@ Render's filesystem is **read-only at runtime**. The debug pipeline endpoint gra
 
 | Script | Purpose |
 |---|---|
-| `build.sh` | Render build: install Tesseract + Python deps |
-| `start.sh` | Render start: production uvicorn on `$PORT` |
 | `run.sh` | Local dev: activate venv + uvicorn with `--reload` |
+| `start.sh` | Fallback production start (non-Docker): uvicorn on `$PORT` |
+| `Dockerfile` | Production image for Render Docker deploys |
 
 ## Endpoints
 
