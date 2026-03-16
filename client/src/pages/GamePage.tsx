@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { GameView } from '../components'
-import type { DerivedGame, Game, GameDocument } from '@/types'
+import type { DerivedGame, Game } from '@/types'
 import { deriveGame } from '../utils/deriveGame'
 import { townSquareToGame } from '../utils/townSquareToGame'
 import { getGameBySlug, } from '@/api/games'
@@ -12,7 +12,6 @@ const defaultGame = wizardTeensy as Game
 export function GamePage() {
   const { gameSlug } = useParams<{ gameSlug?: string }>()
 
-  const [rawDoc, setRawDoc] = useState<GameDocument | null>(null)
   const [fetchedGame, setFetchedGame] = useState<DerivedGame | null>(null)
   const [loading, setLoading] = useState(() => !!gameSlug)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +24,6 @@ export function GamePage() {
       setError(null)
       try {
         const doc = await getGameBySlug(gameSlug)
-        setRawDoc(doc)
         const ts = doc.townSquare
         if (!ts?.players) {
           setError('Invalid game data')
@@ -71,7 +69,7 @@ export function GamePage() {
 
   return (
     <div className="relative">
-      <GameView game={game} gameId={rawDoc?.gameId ?? gameSlug} />
+      <GameView game={game} />
     </div>
   )
 }

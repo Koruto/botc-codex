@@ -435,7 +435,7 @@ export function AddGame() {
   if (showPreview && derivedGame) {
     return (
       <div className="fixed inset-0 z-9999 overflow-auto bg-background">
-        <GameView game={derivedGame} gameId={draftId ?? undefined} />
+        <GameView game={derivedGame} />
         <div className="fixed right-1/2 top-2 z-10000 flex gap-2">
           <Button
             type="button"

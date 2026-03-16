@@ -10,10 +10,9 @@ import { GrimoireSidebar } from './GrimoireSidebar'
 
 interface GameViewProps {
   game: DerivedGame
-  gameId?: string
 }
 
-export function GameView({ game, gameId }: GameViewProps) {
+export function GameView({ game }: GameViewProps) {
   const [activePhaseIndex, setActivePhaseIndex] = useState(0)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const phaseRefs = useRef<(HTMLElement | null)[]>([])
@@ -27,9 +26,10 @@ export function GameView({ game, gameId }: GameViewProps) {
   }, [])
 
   useEffect(() => {
-    document.title = gameId ? `Game ${gameId} — BotC Codex` : 'BotC Codex'
+    const title = game.title?.trim()
+    document.title = title ? `${title} - BotC Codex` : 'BotC Codex'
     return () => { document.title = 'BotC Codex' }
-  }, [gameId])
+  }, [game.title])
 
   const nameById = useMemo(() => {
     const map = new Map<string, string>()
