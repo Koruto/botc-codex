@@ -80,7 +80,7 @@ export function GameCard({
   onDelete,
 }: GameCardProps) {
   const serverName = showServerName ? (serverNameOverride ?? doc.serverName ?? null) : null
-  const headline = doc.title || doc.name || 'Untitled'
+  const headline = doc.title || 'Untitled'
   const description = doc.subtitle ?? ''
   const winner = doc.winner
   const outcomeLabel = winner === 'evil' ? 'Evil wins' : winner === 'good' ? 'Good wins' : null
@@ -97,13 +97,9 @@ export function GameCard({
     const secondLineLeft =
       secondLineMode === 'author-and-visibility'
         ? authorLabel
-          ? [authorLabel, doc.visibility === 'private' ? 'Private' : 'Public'].join(' · ')
+          ? authorLabel
           : null
         : [script, timeLabel].filter(Boolean).join(' · ')
-    const visibilityColor =
-      doc.visibility === 'private'
-        ? 'text-muted-foreground'
-        : 'text-primary/90'
 
     return (
       <div className="game-list-row group flex items-stretch gap-4 border-b border-border py-5 px-6 transition-colors hover:bg-muted last:border-b-0">
@@ -118,17 +114,29 @@ export function GameCard({
               {headline}
             </span>
           </Link>
-          <Link to={gameUrl} className="flex items-center gap-x-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-x-1.5 text-xs text-muted-foreground">
             {secondLineMode === 'author-and-visibility' && authorLabel ? (
-              <>
-                <span>{authorLabel}</span>
-                <span className="text-border">·</span>
-                <span className={visibilityColor}>{doc.visibility === 'private' ? 'Private' : 'Public'}</span>
-              </>
+              <span>{authorLabel}</span>
             ) : (
-              <span>{secondLineLeft}</span>
+              <>
+                <span>{secondLineLeft}</span>
+                {doc.createdByUsername && (
+                  <>
+                    <span>·</span>
+                    <span>
+                      Added by{' '}
+                      <Link
+                        to={`/u/${doc.createdByUsername}`}
+                        className="text-muted-foreground capitalize hover:text-primary hover:underline"
+                      >
+                        {doc.createdByUsername}
+                      </Link>
+                    </span>
+                  </>
+                )}
+              </>
             )}
-          </Link>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {outcomeLabel && (
@@ -147,6 +155,17 @@ export function GameCard({
               <option value="public">Public</option>
               <option value="private">Private</option>
             </select>
+          )}
+          {showDownload && onDownload && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onDownload() }}
+              title="Download JSON"
+              aria-label="Download JSON"
+            >
+              <Download className="size-4" />
+            </Button>
           )}
           {showEdit && serverSlug &&
             (showEditAsButton ? (

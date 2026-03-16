@@ -35,7 +35,7 @@ async def main() -> None:
         {"$or": [{"slug": None}, {"slug": ""}, {"slug": {"$exists": False}}]}
     ):
         game_id = doc.get("gameId")
-        title = doc.get("title") or doc.get("name") or "Untitled"
+        title = doc.get("title") or "Untitled"
         base = _title_to_slug(title)
         slug = base
         n = 2

@@ -7,6 +7,7 @@ import type { RoleOption } from '@/types'
 import { defaultPregamePhase, emptyPhase, emptyGrimoireRevealPhase } from '@/utils/townSquareToGame'
 import { phaseLabel } from '@/utils/phaseUtils'
 import { X } from 'lucide-react'
+import { Label } from '@/components/ui/label'
 
 const EVENT_TYPES = [
   { value: 'narrative', label: 'Narrative' },
@@ -382,7 +383,7 @@ export function EventsPanel({
                               ))}
                             </select>
                           </div>
-                          <label className="flex items-center gap-2 text-sm text-foreground pb-1">
+                          <Label className="flex items-center gap-2 text-sm text-foreground pb-1">
                             <input
                               type="checkbox"
                               checked={evt.prevented ?? false}
@@ -433,7 +434,7 @@ export function EventsPanel({
                               className="rounded border-border"
                             />
                             Prevented
-                          </label>
+                          </Label>
                         </div>
                         {(evt.prevented ?? false) && (
                           <input
@@ -478,7 +479,7 @@ export function EventsPanel({
                             {players.map((p) => {
                               const voted = evt.votesFor.includes(p.id)
                               return (
-                                <label
+                                <Label
                                   key={p.id}
                                   className="flex cursor-pointer items-center gap-1.5 text-sm text-foreground"
                                 >
@@ -494,14 +495,14 @@ export function EventsPanel({
                                     className="rounded border-border"
                                   />
                                   {p.name}
-                                </label>
+                                </Label>
                               )
                             })}
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
                           <span className="text-xs text-muted-foreground">Outcome</span>
-                          <label className="flex items-center gap-2 text-sm text-foreground">
+                          <Label className="flex items-center gap-2 text-sm text-foreground">
                             <input
                               type="checkbox"
                               checked={evt.passed}
@@ -565,7 +566,7 @@ export function EventsPanel({
                               className="rounded border-border"
                             />
                             Vote passed (nominee executed)
-                          </label>
+                          </Label>
                         </div>
                       </div>
                     )}
@@ -610,7 +611,7 @@ export function EventsPanel({
                                 const checked = participantIds.includes(p.id)
                                 const isCreator = p.id === creatorId
                                 return (
-                                  <label
+                                  <Label
                                     key={p.id}
                                     className={`flex items-center gap-1.5 text-sm text-foreground ${isCreator ? 'cursor-default' : 'cursor-pointer'}`}
                                   >
@@ -623,7 +624,7 @@ export function EventsPanel({
                                     />
                                     {p.name}
                                     {isCreator && <span className="text-xs text-muted-foreground">(creator)</span>}
-                                  </label>
+                                  </Label>
                                 )
                               })}
                             </div>

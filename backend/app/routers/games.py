@@ -129,7 +129,7 @@ async def create_game(
             status_code=403, detail="You must be a member of the server to create games."
         )
 
-    base_slug = _title_to_slug(body.title or body.name or "Untitled")
+    base_slug = _title_to_slug(body.title or "Untitled")
     slug = await _ensure_unique_game_slug(collection, base_slug)
     now = datetime.now(timezone.utc).isoformat()
     doc = GameDocument(
@@ -140,7 +140,6 @@ async def create_game(
         createdAt=now,
         updatedAt=now,
         visibility=body.visibility or "private",
-        name=body.name,
         townSquare=body.townSquare,
         meta=body.meta,
         phases=body.phases,
@@ -348,7 +347,7 @@ async def copy_game(
             detail="You must be a member of the destination server.",
         )
 
-    base_slug = _title_to_slug(source.title or source.name or "Untitled")
+    base_slug = _title_to_slug(source.title or "Untitled")
     slug = await _ensure_unique_game_slug(collection, base_slug)
     now = datetime.now(timezone.utc).isoformat()
     copy = GameDocument(
@@ -361,7 +360,6 @@ async def copy_game(
         updatedBy=None,
         visibility="private",
         # Content fields copied as-is
-        name=source.name,
         townSquare=source.townSquare,
         meta=source.meta,
         phases=source.phases,

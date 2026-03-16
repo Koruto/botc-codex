@@ -12,7 +12,6 @@ from app.models.schemas.grimoire import TownSquareGameState
 
 class GameCreateBody(BaseModel):
     """Body for creating a new game."""
-    name: Optional[str] = None
     townSquare: Optional[TownSquareGameState] = None
     meta: Optional[GameMeta] = None
     phases: Optional[list[GamePhase]] = None
@@ -24,7 +23,6 @@ class GameCreateBody(BaseModel):
 
 class GameUpdateBody(BaseModel):
     """Body for a partial game update (owner only)."""
-    name: Optional[str] = None
     townSquare: Optional[TownSquareGameState] = None
     meta: Optional[GameMeta] = None
     phases: Optional[list[GamePhase]] = None
@@ -51,7 +49,6 @@ class GameDocument(BaseModel):
     createdBy: Optional[str] = None
     updatedBy: Optional[str] = None
     visibility: str = "public"
-    name: Optional[str] = None
     townSquare: Optional[TownSquareGameState] = None
     meta: Optional[GameMeta] = None
     phases: Optional[list[GamePhase]] = None

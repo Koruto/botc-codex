@@ -50,7 +50,6 @@ export function AddGame() {
   const [storyteller, setStoryteller] = useState('')
 
   const [metaFormValues, setMetaFormValues] = useState<MetaFormValues>({
-    gameName: '',
     title: '',
     subtitle: '',
     playedOn: '',
@@ -119,7 +118,6 @@ export function AddGame() {
         if (doc.townSquare) setTownSquare(doc.townSquare)
         setStoryteller(doc.meta?.storyteller ?? '')
         setMetaFormValues({
-          gameName: doc.name ?? '',
           title: doc.title ?? '',
           subtitle: doc.subtitle ?? '',
           playedOn: doc.meta?.playedOn ?? '',
@@ -136,6 +134,7 @@ export function AddGame() {
           )
         }
         setFormResetToken((t) => t + 1)
+        setStep(1)
       } catch {
         // e.g. 403 or 404; leave form in create state
       }
@@ -153,7 +152,6 @@ export function AddGame() {
         if (doc.townSquare) setTownSquare(doc.townSquare)
         setStoryteller(doc.meta?.storyteller ?? '')
         setMetaFormValues({
-          gameName: doc.name ?? '',
           title: doc.title ?? '',
           subtitle: doc.subtitle ?? '',
           playedOn: doc.meta?.playedOn ?? '',
@@ -170,6 +168,7 @@ export function AddGame() {
           )
         }
         setFormResetToken((t) => t + 1)
+        setStep(1)
       } catch {
         // e.g. 403 if not owner; leave form in create state
       }
@@ -305,9 +304,9 @@ export function AddGame() {
     }
   }
 
-  const buildMeta = () => ({
-    playedOn: metaFormValues.playedOn,
-    edition: metaFormValues.edition as EditionId,
+  const buildMeta = (values: MetaFormValues) => ({
+    playedOn: values.playedOn,
+    edition: values.edition as EditionId,
     playerCount,
     storyteller,
     script: customScript ?? undefined,
@@ -315,11 +314,10 @@ export function AddGame() {
   })
 
   const saveMetaPayload = (data: MetaFormValues): GameUpdateBody => ({
-    name: data.gameName || undefined,
     title: data.title || undefined,
     subtitle: data.subtitle || undefined,
     winner: data.winner,
-    meta: buildMeta(),
+    meta: buildMeta(data),
   })
 
   const handleSaveMeta = async (data: MetaFormValues) => {
@@ -344,14 +342,7 @@ export function AddGame() {
     if (!townSquare) return
     await saveDraft({
       townSquare,
-      meta: {
-        playedOn: metaFormValues.playedOn,
-        edition: metaFormValues.edition as EditionId,
-        playerCount: townSquare.players.length,
-        storyteller,
-        script: customScript ?? undefined,
-        customRoles: customRoles.length > 0 ? customRoles : undefined,
-      },
+      meta: buildMeta(metaFormValues),
     }, { notify: true })
   }, [townSquare, storyteller, saveDraft, metaFormValues, customScript, customRoles])
 
@@ -414,7 +405,6 @@ export function AddGame() {
       phases: GamePhase[] | null
       title: string
       subtitle: string
-      name: string
       storyteller: string
       customScript: CustomScript | null
       customRoles: RoleInfo[]

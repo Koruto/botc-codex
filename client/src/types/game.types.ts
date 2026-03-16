@@ -14,7 +14,6 @@ export type GameDocument = {
   updatedAt: string
   updatedBy?: string | null
   visibility: 'private' | 'public'
-  name?: string | null
   townSquare?: TownSquareGameState | null
   meta?: GameMeta | null
   phases?: GamePhase[] | null
@@ -31,7 +30,6 @@ export type GameDocument = {
 
 /** Request body for POST /api/servers/{id}/games. Matches backend GameCreateBody. */
 export type GameCreateBody = {
-  name?: string | null
   townSquare?: TownSquareGameState | null
   meta?: GameMeta | null
   phases?: GamePhase[] | null

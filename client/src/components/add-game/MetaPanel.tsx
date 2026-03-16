@@ -13,7 +13,6 @@ const EDITION_OPTIONS = [
 ] as const
 
 const metaSchema = z.object({
-  gameName: z.string(),
   title: z.string().min(1, 'Title is required'),
   subtitle: z.string(),
   playedOn: z.string().min(1, 'Date played is required'),
@@ -65,7 +64,6 @@ export function MetaPanel({
   onSaveAndNext,
 }: MetaPanelProps) {
   const resolvedDefaults: Partial<MetaFormValues> = {
-    gameName: '',
     title: '',
     subtitle: '',
     playedOn: '',
@@ -94,17 +92,25 @@ export function MetaPanel({
       <section className="rounded-lg border border-border bg-card p-6">
         <h2 className="mb-4 text-lg font-medium text-foreground">Meta</h2>
 
-        <FormField
-          label="Game name"
-          hint="Used to identify this game in the list (stored in JSON)."
-        >
-          <input
-            {...register('gameName')}
-            type="text"
-            placeholder="e.g. tuesday-bmr-feb-2025"
-            className={inputClass}
-          />
-        </FormField>
+        <div className="grid gap-4">
+          <FormField label="Game title" error={errors.title?.message}>
+            <input
+              {...register('title')}
+              type="text"
+              placeholder="e.g. The Beginning"
+              className={inputClass}
+            />
+          </FormField>
+
+          <FormField label="Subtitle (optional)">
+            <input
+              {...register('subtitle')}
+              type="text"
+              placeholder="e.g. Eleven in the dark..."
+              className={inputClass}
+            />
+          </FormField>
+        </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <FormField label="Date played" error={errors.playedOn?.message}>
@@ -135,23 +141,6 @@ export function MetaPanel({
         </div>
 
         <div className="mt-4 grid gap-4">
-          <FormField label="Game title" error={errors.title?.message}>
-            <input
-              {...register('title')}
-              type="text"
-              placeholder="e.g. The Beginning"
-              className={inputClass}
-            />
-          </FormField>
-
-          <FormField label="Subtitle (optional)">
-            <input
-              {...register('subtitle')}
-              type="text"
-              placeholder="e.g. Eleven in the dark..."
-              className={inputClass}
-            />
-          </FormField>
 
           <FormField label="Who won?" hint="Shown on game cards and in the storyboard.">
             <select {...register('winner')} className={inputClass}>

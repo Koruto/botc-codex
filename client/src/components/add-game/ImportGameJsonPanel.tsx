@@ -12,7 +12,6 @@ export type ImportGameJsonPanelProps = {
     phases: GamePhase[] | null
     title: string
     subtitle: string
-    name: string
     storyteller: string
     customScript: CustomScript | null
     customRoles: RoleInfo[]
@@ -44,7 +43,6 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
     const meta = d.meta && typeof d.meta === 'object' ? d.meta as GameDocument['meta'] : undefined
     const phases = Array.isArray(d.phases) ? (d.phases as GamePhase[]) : null
     const metaFormValues: Partial<MetaFormValues> = {
-      gameName: typeof d.name === 'string' ? d.name : '',
       title: typeof d.title === 'string' ? d.title : '',
       subtitle: typeof d.subtitle === 'string' ? d.subtitle : '',
       playedOn: meta?.playedOn ?? '',
@@ -62,7 +60,6 @@ export function ImportGameJsonPanel({ onPrefill, onSkip }: ImportGameJsonPanelPr
       phases,
       title: typeof d.title === 'string' ? d.title : '',
       subtitle: typeof d.subtitle === 'string' ? d.subtitle : '',
-      name: typeof d.name === 'string' ? d.name : '',
       storyteller: meta?.storyteller ?? '',
       customScript,
       customRoles,

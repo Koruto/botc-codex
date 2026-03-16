@@ -190,7 +190,6 @@ export function ServerPage() {
           phases: full.phases,
           title: full.title,
           subtitle: full.subtitle,
-          name: full.name,
         }
         const blob = new Blob([JSON.stringify(exportData, null, 2)], {
           type: 'application/json',
