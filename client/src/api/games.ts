@@ -83,3 +83,11 @@ export const copyGame = async (gameId: string, serverId: string) => {
     throw error
   }
 }
+
+export const deleteGame = async (serverId: string, gameId: string) => {
+  try {
+    await http.delete<void>(`/api/servers/${serverId}/games/${gameId}`)
+  } catch (error) {
+    throw error
+  }
+}

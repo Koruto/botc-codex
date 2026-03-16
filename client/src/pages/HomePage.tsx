@@ -109,7 +109,10 @@ export function HomePage() {
       <div className="mb-8">
         <h1 className="app-page-title">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Welcome back, <strong className="font-medium text-foreground">{user?.username}</strong>.
+          Welcome back,{' '}
+          <strong className="font-medium text-foreground capitalize">
+            {user?.username ?? ''}
+          </strong>.
         </p>
       </div>
 
@@ -179,7 +182,7 @@ export function HomePage() {
           <div className="flex items-center justify-between px-6 py-5 border-b border-border">
             <span className="text-sm font-semibold text-foreground">Recent games</span>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/me/games">View all</Link>
+              <Link to={user ? `/u/${user.username}` : '#'}>View all</Link>
             </Button>
           </div>
 

@@ -68,6 +68,7 @@ export function DatePicker({
             mode="single"
             selected={date}
             onSelect={(d) => onChange(d ? format(d, 'yyyy-MM-dd') : '')}
+            captionLayout="dropdown"
             className="border-0 bg-transparent p-3 text-foreground"
           />
         </div>

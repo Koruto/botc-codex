@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/Button'
 import { Navbar } from '@/components/Navbar'
@@ -6,6 +6,7 @@ import { Navbar } from '@/components/Navbar'
 export function Layout() {
   const { user, isLoading, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleLogout = async () => {
     await logout()
@@ -14,15 +15,32 @@ export function Layout() {
 
   const initial = user?.username?.[0]?.toUpperCase() ?? '?'
 
+  const isDashboard = location.pathname === '/dashboard'
+  const isMyGames = location.pathname.startsWith('/u/')
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar
         center={!isLoading && user ? (
           <nav className="hidden items-center gap-6 md:flex">
-            <Link to="/dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <Link
+              to="/dashboard"
+              className={
+                isDashboard
+                  ? 'text-sm font-semibold text-primary transition-colors'
+                  : 'text-sm text-muted-foreground transition-colors hover:text-foreground'
+              }
+            >
               Dashboard
             </Link>
-            <Link to="/me/games" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <Link
+              to={user ? `/u/${user.username}` : '#'}
+              className={
+                isMyGames
+                  ? 'text-sm font-semibold text-primary transition-colors'
+                  : 'text-sm text-muted-foreground transition-colors hover:text-foreground'
+              }
+            >
               My games
             </Link>
           </nav>
@@ -34,7 +52,9 @@ export function Layout() {
               <span className="inline-flex size-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">
                 {initial}
               </span>
-              {user.username}
+              <span className="capitalize">
+                {user?.username}
+              </span>
             </Link>
             <Button variant="secondary" size="sm" onClick={handleLogout}>
               Log out

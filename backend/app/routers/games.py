@@ -9,7 +9,7 @@ Auth rules:
   - Create:  must be a member of the target server
   - Edit:    owner only
   - Copy:    any logged-in user; target game must be public; self-copy blocked
-  - Delete:  not supported
+  - Delete:  owner only
 
 All list endpoints are paginated via ?skip=&limit= query params.
 """
@@ -371,3 +371,25 @@ async def copy_game(
     )
     await collection.insert_one(copy.model_dump(mode="json"))
     return copy.model_dump(mode="json")
+
+
+# ---------------------------------------------------------------------------
+# Delete
+# ---------------------------------------------------------------------------
+
+@router.delete("/servers/{server_id}/games/{game_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_game(
+    server_id: str,
+    game_id: str,
+    current_user: dict = Depends(get_current_user),
+    collection: AsyncIOMotorCollection = Depends(get_games_collection),
+):
+    """
+    Permanently delete a game. Owner only.
+    """
+    game = await _get_game_or_404(collection, game_id, server_id)
+
+    if game.createdBy != current_user["userId"]:
+        raise HTTPException(status_code=403, detail="Only the game owner can delete it.")
+
+    await collection.delete_one({"serverId": server_id, "gameId": game_id})

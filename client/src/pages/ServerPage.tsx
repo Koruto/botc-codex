@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getServerBySlug, updateServer } from '@/api/servers'
-import { getGames, getServerGameBySlug, getServerGame, updateGame, type GamesSortField, type GamesSortOrder } from '@/api/games'
+import { getGames, getServerGameBySlug, getServerGame, updateGame, deleteGame, type GamesSortField, type GamesSortOrder } from '@/api/games'
 import type { ServerDocument } from '@/types/api.types'
 import type { GameDocument } from '@/types'
 import { useAuth } from '@/context/AuthContext'
@@ -208,6 +208,21 @@ export function ServerPage() {
     [server?.serverId]
   )
 
+  const handleDeleteGame = useCallback(
+    async (gameId: string) => {
+      if (!server?.serverId) return
+      try {
+        await deleteGame(server.serverId, gameId)
+        setGames((prev) => prev.filter((g) => g.gameId !== gameId))
+        setTotal((prev) => Math.max(0, prev - 1))
+        toast.success('Game deleted')
+      } catch {
+        toast.error('Failed to delete game')
+      }
+    },
+    [server?.serverId]
+  )
+
   const goodWins = useMemo(() => statsGames.filter((g) => g.winner === 'good').length, [statsGames])
   const evilWins = useMemo(() => statsGames.filter((g) => g.winner === 'evil').length, [statsGames])
 
@@ -383,8 +398,7 @@ export function ServerPage() {
                   variant="row"
                   doc={doc}
                   showServerName={false}
-                  secondLineMode="author-and-visibility"
-                  showAuthor
+                  secondLineMode="script-and-time"
                   currentUserId={user?.userId}
                   showEdit={isGameCreator}
                   showEditAsButton={isGameCreator}
@@ -395,6 +409,8 @@ export function ServerPage() {
                   }
                   showDownload={isMember}
                   onDownload={() => handleDownloadGame(doc)}
+                  showDelete={isGameCreator}
+                  onDelete={() => handleDeleteGame(doc.gameId)}
                 />
               )
             })}

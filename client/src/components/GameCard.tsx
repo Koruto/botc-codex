@@ -3,7 +3,8 @@ import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { GameDocument } from '@/types'
 import { Button } from '@/components/Button'
-import { Download } from 'lucide-react'
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
+import { Download, Trash2 } from 'lucide-react'
 
 const EDITION_LABELS: Record<string, string> = {
   tb: 'Trouble Brewing',
@@ -54,6 +55,10 @@ export interface GameCardProps {
   showDownload?: boolean
   /** Called when user clicks download. */
   onDownload?: () => void
+  /** Show delete button (creator only). */
+  showDelete?: boolean
+  /** Called when user confirms delete. */
+  onDelete?: () => void | Promise<void>
 }
 
 export function GameCard({
@@ -71,6 +76,8 @@ export function GameCard({
   onVisibilityChange,
   showDownload = false,
   onDownload,
+  showDelete = false,
+  onDelete,
 }: GameCardProps) {
   const serverName = showServerName ? (serverNameOverride ?? doc.serverName ?? null) : null
   const headline = doc.title || doc.name || 'Untitled'
@@ -164,6 +171,24 @@ export function GameCard({
             >
               <Download className="size-4" />
             </Button>
+          )}
+          {showDelete && onDelete && (
+            <DeleteConfirmationDialog
+              title="Delete game"
+              description="This will permanently remove this game. This action cannot be undone."
+              confirmLabel="Delete"
+              onConfirm={onDelete}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => e.stopPropagation()}
+                title="Delete game"
+                aria-label="Delete game"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </DeleteConfirmationDialog>
           )}
         </div>
       </div>

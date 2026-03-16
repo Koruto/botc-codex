@@ -9,7 +9,7 @@ export function ProfilePage() {
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="app-page-title">{user?.username ?? 'Profile'}</h1>
+        <h1 className="app-page-title capitalize">{user?.username ?? 'Profile'}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Your account and stats.</p>
       </div>
 
@@ -22,7 +22,7 @@ export function ProfilePage() {
           <div className="flex items-start justify-between px-6 py-4">
             <span className="text-sm text-muted-foreground w-32 shrink-0">Username</span>
             <div className="text-right">
-              <p className="text-sm font-medium text-primary">{user?.username}</p>
+              <p className="text-sm font-medium text-primary capitalize">{user?.username}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">Username cannot be changed.</p>
             </div>
           </div>
@@ -31,18 +31,18 @@ export function ProfilePage() {
             <span className="text-sm text-foreground">
               {user?.createdAt
                 ? new Date(user.createdAt).toLocaleDateString(undefined, {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
                 : '—'}
             </span>
           </div>
           <div className="flex items-start justify-between px-6 py-4">
             <span className="text-sm text-muted-foreground w-32 shrink-0">Public page</span>
             <div className="text-right">
-              <a href={`/u/${user?.username ?? ''}`} className="text-sm text-primary hover:underline">
-                /u/{user?.username}
+              <a href={user ? `/u/${user.username}` : '#'} className="text-sm text-primary hover:underline">
+                {user ? `/u/${user.username}` : 'Not available'}
               </a>
               <p className="mt-0.5 text-xs text-muted-foreground">Your public games are visible here.</p>
             </div>
