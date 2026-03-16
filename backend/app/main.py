@@ -47,7 +47,6 @@ app.add_middleware(
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start = perf_counter()
-
     username = "-"
     try:
         token = _resolve_token(

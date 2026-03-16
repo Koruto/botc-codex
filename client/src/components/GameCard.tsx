@@ -180,17 +180,6 @@ export function GameCard({
                 Edit
               </Link>
             ))}
-          {showDownload && onDownload && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onDownload() }}
-              title="Download JSON"
-              aria-label="Download JSON"
-            >
-              <Download className="size-4" />
-            </Button>
-          )}
           {showDelete && onDelete && (
             <DeleteConfirmationDialog
               title="Delete game"
