@@ -285,7 +285,7 @@ export function ImportPanel({
                         onChange={(e) => updatePlayer(i, { role: e.target.value })}
                         className="w-full min-w-[140px] rounded border border-input bg-background px-2 py-1 text-foreground focus:border-primary focus:outline-none"
                       >
-                        {!rolesList.some((r) => r.id === player.role) && player.role && (
+                        {edition !== 'custom' && !rolesList.some((r) => r.id === player.role) && player.role && (
                           <option value={player.role}>{player.role} (not in script)</option>
                         )}
                         {rolesList.map((r) => (
@@ -343,7 +343,7 @@ export function ImportPanel({
                       className="min-w-[120px] rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
                     >
                       <option value="">—</option>
-                      {!inList && currentBluff && (
+                      {edition !== 'custom' && !inList && currentBluff && (
                         <option value={currentBluff}>{fallbackName} (not in script)</option>
                       )}
                       {bluffOptions.map((r) => (
@@ -517,7 +517,7 @@ export function ImportPanel({
             You can also paste new JSON above and click &quot;Replace with pasted JSON&quot; to overwrite.
           </p>
           <div className="flex justify-center rounded-lg border border-border bg-card p-4">
-            <div className="w-full max-w-[min(360px,85vw)]">
+            <div className="w-full max-w-[min(420px,85vw)]">
               <Grimoire
                 isPreGame
                 isDay={false}

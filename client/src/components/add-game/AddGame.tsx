@@ -180,8 +180,8 @@ export function AddGame() {
   const rolesList = useMemo(() => {
     const edition = metaFormValues.edition
     if (edition === 'custom') {
-      const base = customRoles.map((r) => ({ id: r.id, name: r.name }))
-      return [...base, UNKNOWN_ROLE_OPTION]
+      const baseCustom = customRoles.map((r) => ({ id: r.id, name: r.name }))
+      return [...getRolesList(), ...baseCustom, UNKNOWN_ROLE_OPTION]
     }
     if (edition === 'tb' || edition === 'bmr' || edition === 'snv') {
       return [...getRolesListByEdition(edition), UNKNOWN_ROLE_OPTION]
@@ -197,8 +197,12 @@ export function AddGame() {
 
   const playerCount = townSquare?.players.length ?? 0
 
-  const game = townSquare
-    ? townSquareToGame(townSquare, {
+  const game = townSquareToGame(
+    townSquare ?? {
+      bluffs: [],
+      players: [],
+    },
+    {
       gameId: draftId ?? 'draft',
       title: metaFormValues.title || 'Preview',
       subtitle: metaFormValues.subtitle || undefined,
@@ -211,8 +215,8 @@ export function AddGame() {
         customRoles: customRoles.length > 0 ? customRoles : undefined,
       },
       phases: committedPhases.length > 0 ? committedPhases : undefined,
-    })
-    : null
+    },
+  )
   const derivedGame = game ? deriveGame(game) : null
 
   const handleCreateServer = async () => {
@@ -580,7 +584,15 @@ export function AddGame() {
 
         {step === 2 && (
           <ImportPanel
-            townSquare={townSquare}
+            townSquare={
+              townSquare ?? {
+                bluffs: [],
+                edition: { id: metaFormValues.edition || 'tb' },
+                roles: '',
+                fabled: [],
+                players: [],
+              }
+            }
             saving={saving}
             loading={loadingImport}
             rolesList={rolesList}

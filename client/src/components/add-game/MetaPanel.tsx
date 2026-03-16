@@ -34,7 +34,7 @@ export type MetaPanelProps = {
 }
 
 const inputClass =
-  'w-full rounded border border-input bg-background px-3 py-2 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
+  'h-10 w-full rounded border border-input bg-background px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
 
 function FormField({
   label,
@@ -116,6 +116,7 @@ export function MetaPanel({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Pick a date"
+                  className="h-10"
                 />
               )}
             />

@@ -347,6 +347,9 @@ html {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Events editor phase colours */
+  --events-phase-day: #009abf;
+  --events-phase-night: #7c3eb3;
 }
 
 @keyframes game-fade-in-up {
@@ -533,6 +536,8 @@ html {
   --color-placeholder: var(--placeholder);
   --color-badge-good: var(--badge-good-color);
   --color-badge-evil: var(--badge-evil-color);
+  --color-events-phase-day: var(--events-phase-day);
+  --color-events-phase-night: var(--events-phase-night);
   /* ── shadow utilities (values inlined so no circular refs) ───────────*/
   --shadow-primary-sm: 0 1px 4px rgba(155, 29, 32, 0.25);
   --shadow-primary-md: 0 2px 8px rgba(155, 29, 32, 0.3);
