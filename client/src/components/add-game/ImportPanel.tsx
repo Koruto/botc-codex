@@ -7,10 +7,9 @@ import type { DerivedGame } from '@/types'
 import { suggestEditionForRoleIds, EDITION_LABELS, getRolesList } from '@/utils/roles'
 import { Button } from '@/components/Button'
 import { X } from 'lucide-react'
+import { CustomScriptSection } from './CustomScriptSection'
 
 const allRolesMap = new Map(getRolesList().map((r) => [r.id, r.name]))
-
-const DEFAULT_SCRIPT_META = { id: '_meta' as const, name: '', author: '' }
 
 export type ImportPanelProps = {
   townSquare: TownSquareGameState | null
@@ -37,6 +36,38 @@ export type ImportPanelProps = {
   onSwitchScript?: (edition: 'tb' | 'bmr' | 'snv') => void
   /** Save current import/game state to draft. */
   onSaveDraft?: () => void | Promise<void>
+}
+
+function getPlayerRoleOptions(
+  edition: string | undefined,
+  rolesList: RoleOption[],
+  customScript: CustomScript | null | undefined,
+  customRoles: RoleInfo[],
+): { id: string; name: string }[] {
+  const hasCustomScriptRoles = Boolean(customScript?.roles?.length || customRoles.length)
+
+  if (edition === 'custom' && hasCustomScriptRoles) {
+    const entries: (readonly [string, { id: string; name: string }] )[] = [
+      ...(customScript?.roles ?? []).map((id) => {
+        const fromList = rolesList.find((r) => r.id === id)
+        const fromCustom = customRoles.find((r) => r.id === id)
+        return [
+          id,
+          {
+            id,
+            name: fromList?.name || fromCustom?.name || id,
+          },
+        ] as const
+      }),
+      ...customRoles
+        .filter((r) => r.id.trim() !== '')
+        .map((r) => [r.id, { id: r.id, name: r.name || r.id }] as const),
+    ].filter(([id]) => id.trim() !== '')
+
+    return Array.from(new Map(entries).values())
+  }
+
+  return rolesList
 }
 
 export function ImportPanel({
@@ -226,9 +257,19 @@ export function ImportPanel({
         </div>
       </div>
 
-      {/* After import: editable game state + grimoire preview */}
+      {/* After import: editable game state + custom script + grimoire preview */}
       {hasImported && derivedGame && townSquare && (
         <div className="mt-8 border-t border-border pt-6">
+          {edition === 'custom' && onCustomScriptChange && onCustomRolesChange && (
+            <CustomScriptSection
+              rolesList={rolesList}
+              customScript={customScript ?? null}
+              customRoles={customRoles ?? []}
+              onCustomScriptChange={onCustomScriptChange}
+              onCustomRolesChange={onCustomRolesChange}
+            />
+          )}
+
           <h3 className="mb-3 text-md font-medium text-foreground">Game state</h3>
           <p className="mb-3 text-sm text-muted-foreground">
             Edit player names and roles below. Roles are stored by id; changes update the grimoire preview in real time.
@@ -288,8 +329,10 @@ export function ImportPanel({
                         {edition !== 'custom' && !rolesList.some((r) => r.id === player.role) && player.role && (
                           <option value={player.role}>{player.role} (not in script)</option>
                         )}
-                        {rolesList.map((r) => (
-                          <option key={r.id} value={r.id}>{r.name}</option>
+                        {getPlayerRoleOptions(edition, rolesList, customScript, customRoles).map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name || r.id}
+                          </option>
                         ))}
                       </select>
                     </td>
@@ -309,14 +352,15 @@ export function ImportPanel({
                 ))}
               </tbody>
             </table>
-            <div className="border-t border-border px-3 py-2">
-              <button
+            <div className="border-t border-border px-3 py-3">
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={addPlayer}
-                className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
+                className="border border-dashed border-muted-foreground bg-transparent px-3 py-1.5 text-xs text-muted-foreground hover:border-primary hover:text-primary"
               >
                 + Add player
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -367,150 +411,6 @@ export function ImportPanel({
               className="w-full max-w-xs rounded border border-input bg-background px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
-
-          {edition === 'custom' && onCustomScriptChange && onCustomRolesChange && (
-            <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4">
-              <h3 className="mb-3 text-md font-medium text-foreground">Custom script & roles</h3>
-              <div className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Script name</label>
-                    <input
-                      type="text"
-                      value={customScript?.meta?.name ?? ''}
-                      onChange={(e) =>
-                        onCustomScriptChange({
-                          meta: { ...DEFAULT_SCRIPT_META, ...customScript?.meta, name: e.target.value },
-                          roles: customScript?.roles ?? [],
-                        })
-                      }
-                      placeholder="e.g. My Homebrew"
-                      className="w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">Author</label>
-                    <input
-                      type="text"
-                      value={customScript?.meta?.author ?? ''}
-                      onChange={(e) =>
-                        onCustomScriptChange({
-                          meta: { ...DEFAULT_SCRIPT_META, ...customScript?.meta, author: e.target.value },
-                          roles: customScript?.roles ?? [],
-                        })
-                      }
-                      placeholder="Your name"
-                      className="w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Roles in script (add from list)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {(customScript?.roles ?? []).map((roleId, idx) => (
-                      <span
-                        key={`${roleId}-${idx}`}
-                        className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs"
-                      >
-                        {rolesList.find((r) => r.id === roleId)?.name ?? roleId}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onCustomScriptChange({
-                              meta: customScript?.meta ?? { ...DEFAULT_SCRIPT_META },
-                              roles: (customScript?.roles ?? []).filter((_, i) => i !== idx),
-                            })
-                          }
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        const id = e.target.value
-                        if (!id) return
-                        onCustomScriptChange({
-                          meta: customScript?.meta ?? { ...DEFAULT_SCRIPT_META },
-                          roles: [...(customScript?.roles ?? []), id],
-                        })
-                        e.target.value = ''
-                      }}
-                      className="rounded border border-input bg-background px-2 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                    >
-                      <option value="">+ Add role</option>
-                      {rolesList.filter((r) => r.id !== 'unknown').map((r) => (
-                        <option key={r.id} value={r.id}>{r.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Custom role definitions (optional)</label>
-                  <p className="mb-2 text-xs text-muted-foreground">Add homebrew roles so they appear in the role list above.</p>
-                  <div className="space-y-2">
-                    {(customRoles ?? []).map((r, idx) => (
-                      <div key={idx} className="flex flex-wrap items-center gap-2 rounded border border-border bg-background p-2">
-                        <input
-                          type="text"
-                          value={r.id}
-                          onChange={(e) => {
-                            const next = [...(customRoles ?? [])]
-                            next[idx] = { ...next[idx], id: e.target.value }
-                            onCustomRolesChange(next)
-                          }}
-                          placeholder="id (e.g. my_demon)"
-                          className="w-28 rounded border border-input px-2 py-1 text-xs focus:border-primary focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={r.name}
-                          onChange={(e) => {
-                            const next = [...(customRoles ?? [])]
-                            next[idx] = { ...next[idx], name: e.target.value }
-                            onCustomRolesChange(next)
-                          }}
-                          placeholder="Display name"
-                          className="min-w-[100px] rounded border border-input px-2 py-1 text-xs focus:border-primary focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => onCustomRolesChange((customRoles ?? []).filter((_, i) => i !== idx))}
-                          className="text-muted-foreground hover:text-red-400"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onCustomRolesChange([
-                          ...(customRoles ?? []),
-                          {
-                            id: '',
-                            name: '',
-                            edition: '',
-                            team: 'townsfolk',
-                            ability: '',
-                            firstNightReminder: '',
-                            otherNightReminder: '',
-                            reminders: [],
-                            setup: false,
-                          },
-                        ])
-                      }
-                      className="rounded border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
-                    >
-                      + Add custom role
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           <h3 className="mb-3 text-md font-medium text-foreground">Grimoire preview</h3>
           <p className="mb-3 text-sm text-muted-foreground">
