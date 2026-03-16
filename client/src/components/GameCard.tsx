@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import type { GameDocument } from '@/types'
 import { Button } from '@/components/Button'
@@ -19,21 +20,10 @@ export function scriptLine(doc: GameDocument): string {
   return [edition, count].filter(Boolean).join(' · ')
 }
 
-function relativeTime(isoDate: string): string {
+function formatGameDate(isoDate: string): string {
   const date = new Date(isoDate)
-  const now = new Date()
-  const sec = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (sec < 60) return 'just now'
-  const min = Math.floor(sec / 60)
-  if (min < 60) return `${min}m ago`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  if (d < 30) return `${d}d ago`
-  const mo = Math.floor(d / 30)
-  if (mo < 12) return `${mo} mo ago`
-  const y = Math.floor(mo / 12)
-  return `${y}y ago`
+  if (isNaN(date.getTime())) return ''
+  return format(date, 'do MMMM yy')
 }
 
 export interface GameCardProps {
@@ -91,12 +81,9 @@ export function GameCard({
   const isYou = currentUserId && doc.createdBy === currentUserId
   const authorLabel = showAuthor ? (isYou ? 'By You' : doc.createdByUsername ? `By ${doc.createdByUsername}` : null) : null
   const playedOn = doc.meta?.playedOn?.trim()
-  const timeAgo = playedOn
-    ? (() => {
-      const d = new Date(playedOn)
-      return isNaN(d.getTime()) ? '' : relativeTime(playedOn)
-    })()
-    : (doc.updatedAt ? relativeTime(doc.updatedAt) : doc.createdAt ? relativeTime(doc.createdAt) : '')
+  const timeLabel = playedOn
+    ? formatGameDate(playedOn)
+    : (doc.updatedAt ? formatGameDate(doc.updatedAt) : doc.createdAt ? formatGameDate(doc.createdAt) : '')
 
   if (variant === 'row') {
     const gameUrl = doc.slug ? `/game/${doc.slug}` : `/game/${doc.gameId}`
@@ -105,7 +92,7 @@ export function GameCard({
         ? authorLabel
           ? [authorLabel, doc.visibility === 'private' ? 'Private' : 'Public'].join(' · ')
           : null
-        : [script, timeAgo].filter(Boolean).join(' · ')
+        : [script, timeLabel].filter(Boolean).join(' · ')
     const visibilityColor =
       doc.visibility === 'private'
         ? 'text-muted-foreground'

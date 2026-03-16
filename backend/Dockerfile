@@ -1,5 +1,5 @@
 # Base image: Python 3.13 on Debian slim (small, no extra OS cruft).
-FROM python:3.13-slim
+FROM python:latest
 
 # Install Tesseract OCR (system binary). pytesseract in Python only wraps it.
 # -qq = quiet; --no-install-recommends = fewer packages; rm apt lists = smaller image.
@@ -21,4 +21,5 @@ COPY . .
 ENV PORT=8000
 # JSON form = proper signal handling. exec makes uvicorn PID 1 so it gets SIGTERM.
 # ${PORT:-8000} = use PORT if set, else 8000.
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# --no-access-log disables Uvicorn's own access logs; we log requests ourselves.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --no-access-log"]

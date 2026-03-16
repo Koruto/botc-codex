@@ -35,7 +35,7 @@ export function ServerPage() {
   const [games, setGames] = useState<GameDocument[]>([])
   const [total, setTotal] = useState(0)
   const [skip, setSkip] = useState(0)
-  const [gamesSort, setGamesSort] = useState<GamesSortField>('updatedAt')
+  const [gamesSort, setGamesSort] = useState<GamesSortField>('playedOn')
   const [gamesOrder, setGamesOrder] = useState<GamesSortOrder>('desc')
   const [gamesLoading, setGamesLoading] = useState(true)
 
@@ -48,6 +48,34 @@ export function ServerPage() {
   const [renameLoading, setRenameLoading] = useState(false)
 
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const sortParam = searchParams.get('sort') as GamesSortField | null
+    const orderParam = searchParams.get('order') as GamesSortOrder | null
+    const pageParam = parseInt(searchParams.get('page') ?? '1', 10)
+
+    const initialSort: GamesSortField = sortParam && ['playedOn', 'updatedAt', 'edition', 'winner', 'playerCount'].includes(sortParam)
+      ? sortParam
+      : 'playedOn'
+    const initialOrder: GamesSortOrder = orderParam === 'asc' || orderParam === 'desc' ? orderParam : 'desc'
+    const initialPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
+
+    setGamesSort(initialSort)
+    setGamesOrder(initialOrder)
+    setSkip((initialPage - 1) * PAGE_SIZE)
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('sort', initialSort)
+      next.set('order', initialOrder)
+      if (initialPage > 1) {
+        next.set('page', String(initialPage))
+      } else {
+        next.delete('page')
+      }
+      return next
+    }, { replace: true })
+  }, [])
 
   useEffect(() => {
     if (!serverSlug) return
@@ -303,6 +331,13 @@ export function ServerPage() {
                 setGamesSort(s)
                 setGamesOrder(o)
                 setSkip(0)
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev)
+                  next.set('sort', s)
+                  next.set('order', o)
+                  next.delete('page')
+                  return next
+                }, { replace: true })
               }}
               className="rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
             >
@@ -371,7 +406,22 @@ export function ServerPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))}
+              onClick={() => {
+                setSkip((prev) => {
+                  const newSkip = Math.max(0, prev - PAGE_SIZE)
+                  const newPage = Math.floor(newSkip / PAGE_SIZE) + 1
+                  setSearchParams((prevParams) => {
+                    const next = new URLSearchParams(prevParams)
+                    if (newPage > 1) {
+                      next.set('page', String(newPage))
+                    } else {
+                      next.delete('page')
+                    }
+                    return next
+                  }, { replace: true })
+                  return newSkip
+                })
+              }}
               disabled={skip === 0}
             >
               ← Previous
@@ -382,7 +432,22 @@ export function ServerPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setSkip(skip + PAGE_SIZE)}
+              onClick={() => {
+                setSkip((prev) => {
+                  const newSkip = prev + PAGE_SIZE
+                  const newPage = Math.floor(newSkip / PAGE_SIZE) + 1
+                  setSearchParams((prevParams) => {
+                    const next = new URLSearchParams(prevParams)
+                    if (newPage > 1) {
+                      next.set('page', String(newPage))
+                    } else {
+                      next.delete('page')
+                    }
+                    return next
+                  }, { replace: true })
+                  return newSkip
+                })
+              }}
               disabled={skip + PAGE_SIZE >= total}
             >
               Next →
