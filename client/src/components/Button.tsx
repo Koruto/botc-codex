@@ -24,11 +24,11 @@ const variants: Record<ButtonVariant, string> = {
 }
 
 const sizes: Record<ButtonSize, string> = {
-  sm:      'py-1.5 px-3 text-xs',
+  sm: 'py-1.5 px-3 text-xs',
   default: 'py-2 px-4 text-sm',
-  lg:      'py-2.5 px-6 text-sm',
-  xl:      'py-3 px-8 text-base w-full',
-  icon:    'size-9 p-0',
+  lg: 'py-2.5 px-6 text-sm',
+  xl: 'py-2 px-8 text-base w-full',
+  icon: 'size-9 p-0',
 }
 
 export function buttonVariants({ variant = 'primary', size = 'default' }: { variant?: ButtonVariant; size?: ButtonSize } = {}): string {

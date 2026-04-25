@@ -24,6 +24,9 @@ const signupSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 type SignupFormData = z.infer<typeof signupSchema>
 
+const DEMO_USERNAME = 'john_doe'
+const DEMO_PASSWORD = 'clocktowerdemo'
+
 export function LoginPage() {
   const { user, login, signup } = useAuth()
   const navigate = useNavigate()
@@ -33,6 +36,7 @@ export function LoginPage() {
     searchParams.get('tab') === 'signup' ? 'signup' : 'login'
   )
   const [serverError, setServerError] = useState<string | null>(null)
+  const [demoSubmitting, setDemoSubmitting] = useState(false)
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true })
@@ -67,6 +71,19 @@ export function LoginPage() {
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Sign up failed')
+    }
+  }
+
+  const onDemoLogin = async () => {
+    setServerError(null)
+    setDemoSubmitting(true)
+    try {
+      await login(DEMO_USERNAME, DEMO_PASSWORD)
+      navigate(redirectTo, { replace: true })
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Demo login failed')
+    } finally {
+      setDemoSubmitting(false)
     }
   }
 
@@ -146,6 +163,16 @@ export function LoginPage() {
             <Button type="submit" size="xl" disabled={loginSubmitting}>
               {loginSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="xl"
+              className="mt-3"
+              disabled={demoSubmitting || loginSubmitting}
+              onClick={onDemoLogin}
+            >
+              {demoSubmitting ? 'Logging in as demo user…' : 'Login as demo user'}
+            </Button>
           </form>
         ) : (
           <form onSubmit={handleSignup(onSignup)}>
@@ -186,6 +213,16 @@ export function LoginPage() {
             </div>
             <Button type="submit" size="xl" disabled={signupSubmitting}>
               {signupSubmitting ? 'Creating account…' : 'Create account'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="xl"
+              className="mt-3"
+              disabled={demoSubmitting || signupSubmitting}
+              onClick={onDemoLogin}
+            >
+              {demoSubmitting ? 'Logging in as demo user…' : 'Login as demo user'}
             </Button>
             <p className="mt-4 text-center text-xs text-muted-foreground">
               No email required.{' '}

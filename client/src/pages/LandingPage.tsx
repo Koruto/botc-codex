@@ -56,6 +56,8 @@ const FEATURES = [
   { icon: '📸', name: 'Grimoire Scan', body: 'Photograph your grimoire. The Codex reads the tokens and logs the final state of any game automatically.' },
 ] as const
 
+const DEMO_URL = 'https://botc-codex.vercel.app/s/ravenswood-bluff'
+
 export function LandingPage() {
   const { user } = useAuth()
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set())
@@ -149,7 +151,7 @@ export function LandingPage() {
               <Link to="/login">Log your first game</Link>
             </Button>
             <Button variant="secondary" size="lg" className="w-full sm:w-auto" asChild>
-              <Link to="/featured/the-wizards-gambit">See the demo</Link>
+              <a href={DEMO_URL} rel="noreferrer">See the demo</a>
             </Button>
           </div>
 
@@ -412,7 +414,7 @@ export function LandingPage() {
               <Link to="/login">Sign up — it's free</Link>
             </Button>
             <Button variant="secondary" size="lg" asChild>
-              <Link to="/featured/the-wizards-gambit">Browse the demo</Link>
+              <a href={DEMO_URL} rel="noreferrer">Browse the demo</a>
             </Button>
           </div>
         </div>
