@@ -53,6 +53,8 @@ export function LoginPage() {
     handleSubmit: handleSignup,
     formState: { errors: signupErrors, isSubmitting: signupSubmitting },
   } = useForm<SignupFormData>({ resolver: zodResolver(signupSchema) })
+  const loginActionsBusy = loginSubmitting || demoSubmitting
+  const signupActionsBusy = signupSubmitting || demoSubmitting
 
   const onLogin = async (data: LoginFormData) => {
     setServerError(null)
@@ -160,7 +162,7 @@ export function LoginPage() {
                 <p className="mt-1 text-xs text-destructive">{loginErrors.password.message}</p>
               )}
             </div>
-            <Button type="submit" size="xl" disabled={loginSubmitting}>
+            <Button type="submit" size="xl" disabled={loginActionsBusy}>
               {loginSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
             <Button
@@ -168,7 +170,7 @@ export function LoginPage() {
               variant="secondary"
               size="xl"
               className="mt-3"
-              disabled={demoSubmitting || loginSubmitting}
+              disabled={loginActionsBusy}
               onClick={onDemoLogin}
             >
               {demoSubmitting ? 'Logging in as demo user…' : 'Login as demo user'}
@@ -211,7 +213,7 @@ export function LoginPage() {
                 <p className="mt-1 text-xs text-destructive">{signupErrors.password.message}</p>
               )}
             </div>
-            <Button type="submit" size="xl" disabled={signupSubmitting}>
+            <Button type="submit" size="xl" disabled={signupActionsBusy}>
               {signupSubmitting ? 'Creating account…' : 'Create account'}
             </Button>
             <Button
@@ -219,7 +221,7 @@ export function LoginPage() {
               variant="secondary"
               size="xl"
               className="mt-3"
-              disabled={demoSubmitting || signupSubmitting}
+              disabled={signupActionsBusy}
               onClick={onDemoLogin}
             >
               {demoSubmitting ? 'Logging in as demo user…' : 'Login as demo user'}
